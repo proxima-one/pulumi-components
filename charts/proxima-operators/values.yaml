@@ -1,0 +1,54 @@
+kafka-operator:
+  # more details https://github.com/strimzi/strimzi-kafka-operator/blob/main/helm-charts/helm3/strimzi-kafka-operator/values.yaml
+  watchNamespaces: []
+  watchAnyNamespace: true
+
+minio-operator:
+  # more details https://github.com/minio/operator/blob/master/helm/operator/values.yaml
+  operator:
+    ## Setup environment variables for the Operator
+    # env:
+    #   - name: MINIO_OPERATOR_TLS_ENABLE
+    #     value: "off"
+    #   - name: CLUSTER_DOMAIN
+    #     value: "cluster.domain"
+    #   - name: WATCHED_NAMESPACE
+    #     value: ""
+    replicaCount: 1
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      fsGroup: 1000
+    nodeSelector: { }
+    affinity: { }
+    tolerations: [ ]
+    topologySpreadConstraints: [ ]
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+        ephemeral-storage: 500Mi
+
+    console:
+      imagePullSecrets: [ ]
+      initcontainers: [ ]
+      replicaCount: 1
+      nodeSelector: 
+        node-role.deckhouse.io/worker: ''
+      affinity: { }
+      tolerations: [ ]
+      topologySpreadConstraints: [ ]
+      resources: { }
+      securityContext:
+        runAsUser: 1000
+        runAsNonRoot: true
+      ingress:
+        enabled: false
+        ingressClassName: ""
+        labels: { }
+        annotations: { }
+        tls: [ ]
+        host: console.local
+        path: /
+

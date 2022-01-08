@@ -1,0 +1,7 @@
+dockerRegistries:
+  - name: proxima-one-quay-io
+    dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJxdWF5LmlvIjogewogICAgICAiYXV0aCI6ICJjSEp2ZUdsdFlTNXZibVVyYXpoek9sTlBSVEpNVlZaTE5GSTBUMXBVVXpVMlZsSldUVTAwVkRsUU1FRTNTREJUVWxwU1NEQk9PRmxGVEZGSVNGWklSVEJUUkRnM1Z6Qk5ORGM0TURCYVJEWT0iLAogICAgICAiZW1haWwiOiAiIgogICAgfQogIH0KfQ==
+    namespaces: 
+      - proxima-apps
+      - proxima-services
+      - proxima-operators
