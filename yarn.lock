@@ -598,7 +598,14 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
 
-"@pulumi/kubernetes@^3.0.0":
+"@pulumi/kubernetes-cert-manager@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@pulumi/kubernetes-cert-manager/-/kubernetes-cert-manager-0.0.1.tgz#03d2eaca08ed00476c4e42e42f79d623c068c2f8"
+  integrity sha512-W8l4HZZVPxbNVVxJAWD3iP7k7wHVp0Z2Hns3FU1NBvaX3iQCcu57tBoppuQ98sXqyNrlg6R4ScXbc0+ugt73GQ==
+  dependencies:
+    "@pulumi/kubernetes" "^3.7.1"
+
+"@pulumi/kubernetes@^3.0.0", "@pulumi/kubernetes@^3.7.1":
   version "3.13.0"
   resolved "https://registry.yarnpkg.com/@pulumi/kubernetes/-/kubernetes-3.13.0.tgz#2604f44f09ed7a85a60e33a9657021d8dec6f454"
   integrity sha512-GLV8v+EFd0XuorGy4uYwKVtD67pPTfVpGU0IOQqNKPqxmSOHr5hRcLp/elrY0rakyP62jwU/g88uixkafm716g==

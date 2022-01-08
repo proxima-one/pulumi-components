@@ -9,7 +9,6 @@ import * as _ from 'lodash';
 export class Namespaces<
   TNamespaces extends string
 > extends pulumi.ComponentResource {
-
   /**
    * Underlying namespaces
    */

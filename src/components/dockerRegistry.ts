@@ -7,7 +7,7 @@ import * as k8s from '@pulumi/kubernetes';
 export class DockerRegistry extends pulumi.ComponentResource {
   public constructor(
     name: string,
-    args: Args,
+    args: DockerRegistryArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super('proxima-k8s:DockerRegistry', name, args, opts);
@@ -37,12 +37,12 @@ export class DockerRegistry extends pulumi.ComponentResource {
   }
 }
 
-export interface Args {
-  registries: Record<string, DockerRegistry | string>;
+export interface DockerRegistryArgs {
+  registries: Record<string, DockerRegistryInfo | string>;
   namespaces: Record<string, k8s.core.v1.Namespace>;
 }
 
-export interface DockerRegistry {
+export interface DockerRegistryInfo {
   auths?: Record<string, DockerRegistryAuth>;
 }
 
@@ -52,7 +52,7 @@ export interface DockerRegistryAuth {
 }
 
 function toDockerConfigJsonString(
-  dockerRegistry: DockerRegistry | string
+  dockerRegistry: DockerRegistryInfo | string
 ): string | undefined {
   if (typeof dockerRegistry == 'string') return dockerRegistry;
 
@@ -70,6 +70,10 @@ function toDockerConfigJsonString(
               ),
       };
     }
+
+    return Buffer.from(JSON.stringify(encodedAuths, null, 2)).toString(
+      'base64'
+    );
   }
 
   return undefined;
