@@ -67,8 +67,6 @@ export class MinIOOperator extends pulumi.ComponentResource {
       ingressValues.path = args.console.path || "/";
     }
 
-    pulumi.log.info(`Ingress Values ${JSON.stringify(ingressValues)}`);
-
     this.chart = new k8s.helm.v3.Chart(
       'minio-operator',
       {
