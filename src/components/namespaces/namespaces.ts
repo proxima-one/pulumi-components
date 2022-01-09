@@ -16,16 +16,20 @@ export class Namespaces<
 
   public constructor(
     name: string,
-    namespaces: Record<TNamespaces, string>,
+    args: NamespacesArgs<TNamespaces>,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super('proxima-k8s:Namespaces', name, {}, opts);
 
     const output: any = {};
-    for (const key of _.keys(namespaces)) {
+    for (const key of _.keys(args.namespaces)) {
+      const metadata: any = {};
+      if (!args.autoName) metadata.name = args.namespaces[key as TNamespaces]; // TODO: doesn't work!
       output[key] = new k8s.core.v1.Namespace(
-        namespaces[key as TNamespaces],
-        {},
+        args.namespaces[key as TNamespaces],
+        {
+          metadata: metadata,
+        },
         { parent: this }
       );
     }
@@ -34,4 +38,9 @@ export class Namespaces<
 
     this.registerOutputs();
   }
+}
+
+export interface NamespacesArgs<TNamespaces extends string> {
+  namespaces: Record<TNamespaces, string>;
+  autoName?: boolean;
 }

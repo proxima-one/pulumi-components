@@ -17,13 +17,15 @@
     "start": "ts-node -r tsconfig-paths/register src/index.ts",
     "start:app": "yarn start app start --",
     "watch": "yarn build -- --watch",
-    "watch:test": "jest --watch"
+    "watch:test": "jest --watch",
+    "gen:jsonschema:mongodb": "json2ts -i ./src/components/mongodb/values.schema.json -o ./src/components/mongodb/values.ts"
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.16.1",
     "@pulumi/kubernetes": "^3.0.0",
     "@pulumi/kubernetesx": "^0.1.5",
     "@pulumi/pulumi": "^3.0.0",
+    "@pulumi/random": "^4.3.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
@@ -34,6 +36,7 @@
     "@typescript-eslint/parser": "^5.8.1",
     "eslint": "^8.6.0",
     "jest": "^27.4.5",
+    "json-schema-to-typescript": "^10.1.5",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.1.2",

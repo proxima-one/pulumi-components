@@ -27,7 +27,7 @@ export class KafkaOperator extends pulumi.ComponentResource {
       });
 
     this.chart = new k8s.helm.v3.Chart(
-      'kafka-operator',
+      name,
       {
         fetchOpts: {
           repo: 'https://strimzi.io/charts',
