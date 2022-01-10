@@ -19,6 +19,10 @@ export class MinioTenant extends pulumi.ComponentResource {
   public readonly certificate?: k8s.apiextensions.CustomResource;
 
   public readonly resolvedPasswords: pulumi.Output<Record<string, string>>;
+  public readonly connectionDetails: pulumi.Output<MinioConnectionDetails>;
+
+  public readonly publicConsoleEndpoint?: string;
+  public readonly publicApiEndpoint?: string;
 
   public constructor(
     name: string,
@@ -118,6 +122,8 @@ export class MinioTenant extends pulumi.ComponentResource {
         },
         { parent: this }
       );
+
+      this.publicConsoleEndpoint = `https://${args.console.publicHost}`;
     }
 
     if (args.api?.publicHost) {
@@ -153,12 +159,23 @@ export class MinioTenant extends pulumi.ComponentResource {
         },
         { parent: this }
       );
+
+      this.publicApiEndpoint = `https://${args.api.publicHost}`;
     }
 
     this.resolvedPasswords = passwords.getResolvedPasswords();
 
+    this.connectionDetails = pulumi.all([args.namespace.metadata.name, passwords.resolve(args.auth.secretKey)]).apply(([ns, secret]) => {
+      return {
+        endpoint: `http://minio.${ns}.svc.cluster.local`,
+        accessKey: args.auth.accessKey,
+        secretKey: secret,
+      };
+    });
+
     this.registerOutputs({
       resolvedPasswords: this.resolvedPasswords,
+      connectionDetails: this.connectionDetails
     });
   }
 }
@@ -186,4 +203,10 @@ export interface MinioTenantArgs {
     publicHost?: string;
     path?: string;
   };
+}
+
+export interface MinioConnectionDetails {
+  endpoint: string;
+  accessKey: string;
+  secretKey: string;
 }

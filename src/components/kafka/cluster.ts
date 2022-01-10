@@ -12,8 +12,9 @@ export class KafkaCluster extends pulumi.ComponentResource {
    */
   public readonly kafka?: k8s.apiextensions.CustomResource;
 
-  public readonly connectionDetails?: pulumi.Output<ExternalConnectionDetails>;
+  //public readonly connectionDetails?: pulumi.Output<ExternalConnectionDetails>;
   public readonly kafkaUser?: k8s.apiextensions.CustomResource;
+  public readonly connectionDetails: pulumi.Output<KafkaConnectionDetails>;
 
   public constructor(
     name: string,
@@ -150,6 +151,15 @@ export class KafkaCluster extends pulumi.ComponentResource {
       //   .apply(([user, namespace, cluster]) => this.getExternalConnectionDetails(namespace.name, cluster.name));
     }
 
+    this.connectionDetails = pulumi.concat(this.kafka.metadata.name, "-kafka-brokers", ".", this.kafka.metadata.namespace, ".svc.cluster.local:9092")
+      .apply(endpoint => {
+      return {
+        brokers: [endpoint],
+        ssl: false,
+        replicationFactor: args.replicas ?? 1,
+      };
+    });
+
     this.registerOutputs({
       connectionDetails: this.connectionDetails,
     });
@@ -251,11 +261,8 @@ export interface KafkaClusterArgs {
   };
 }
 
-export interface ExternalConnectionDetails {
-  host: string;
-  tls: {
-    ca: string;
-    key: string;
-    cert: string;
-  };
+export interface KafkaConnectionDetails {
+  brokers: string[];
+  ssl: boolean;
+  replicationFactor: number;
 }
