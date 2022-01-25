@@ -3,7 +3,6 @@ import * as k8s from '@pulumi/kubernetes';
 import * as _ from "lodash";
 import * as yaml from "js-yaml";
 import { JsonObject, Resources } from "../types";
-import { input as inputs } from "@pulumi/kubernetes/types";
 
 /**
  * Installs Proxima App with given metadata
