@@ -1,10 +1,14 @@
 {
   "name": "@proxima-one/proxima-k8s",
-  "version": "0.3.1",
-  "description": "pulumi componetns for proxima",
+  "version": "0.3.2",
+  "description": "pulumi components for proxima",
   "repository": "git@github.com:proxima-one/proxima-k8s.git",
-  "main": "dist/index",
-  "types": "dist/index",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "lib"
+  ],
   "scripts": {
     "clean": "rimraf dist && rimraf coverage",
     "format": "prettier --write \"{src,__tests__}/**/*.ts\"",
