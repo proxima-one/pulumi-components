@@ -1,2 +1,2 @@
-export * from './passwords';
-export * from './ingress';
+export * from "./passwords";
+export * from "./ingress";

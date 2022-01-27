@@ -1,15 +1,18 @@
-import { Password } from '../components/types';
-import * as pulumi from '@pulumi/pulumi';
-import * as random from '@pulumi/random';
+import { Password } from "../components/types";
+import * as pulumi from "@pulumi/pulumi";
+import * as random from "@pulumi/random";
 
 export class PasswordResolver {
-  private readonly pendingPasswordsLookup: Record<string, pulumi.Output<string>> = {};
+  private readonly pendingPasswordsLookup: Record<
+    string,
+    pulumi.Output<string>
+  > = {};
 
   public constructor(private readonly baseResource: pulumi.Resource) {}
 
   public resolve(password: Password): pulumi.Output<string> {
     switch (password.type) {
-      case 'random':
+      case "random":
         // cache to allow multiple resolve(name) use
         if (this.pendingPasswordsLookup[password.name])
           return this.pendingPasswordsLookup[password.name];
@@ -21,7 +24,7 @@ export class PasswordResolver {
         ).result;
         this.pendingPasswordsLookup[password.name] = pass;
         return pass;
-      case 'external':
+      case "external":
         return pulumi.Output.create<string>(password.password);
     }
   }
@@ -31,7 +34,9 @@ export class PasswordResolver {
       return pulumi.Output.create<Record<string, string>>({});
 
     // convert to array of output<Tuple(name, pass)>
-    const pendingPasswords = Object.entries(this.pendingPasswordsLookup).map(x => x[1].apply(y => [x[0], y]));
+    const pendingPasswords = Object.entries(this.pendingPasswordsLookup).map(
+      (x) => x[1].apply((y) => [x[0], y])
+    );
     return pulumi.all(pendingPasswords).apply((pendingPasswords) => {
       const res: Record<string, string> = {};
       for (const [name, pass] of pendingPasswords) res[name] = pass;

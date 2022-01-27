@@ -1,5 +1,5 @@
-import * as pulumi from '@pulumi/pulumi';
-import * as k8s from '@pulumi/kubernetes';
+import * as pulumi from "@pulumi/pulumi";
+import * as k8s from "@pulumi/kubernetes";
 
 /**
  * Installs strimzi-kafka-operator helm chart
@@ -15,7 +15,7 @@ export class KafkaOperator extends pulumi.ComponentResource {
     args: KafkaOperatorArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
-    super('proxima-k8s:KafkaOperator', name, args, opts);
+    super("proxima-k8s:KafkaOperator", name, args, opts);
 
     const values = pulumi
       .all(args.watchNamespaces.map((x) => x.metadata))
@@ -30,10 +30,10 @@ export class KafkaOperator extends pulumi.ComponentResource {
       name,
       {
         fetchOpts: {
-          repo: 'https://strimzi.io/charts',
+          repo: "https://strimzi.io/charts",
         },
-        chart: 'strimzi-kafka-operator',
-        version: '0.27.0',
+        chart: "strimzi-kafka-operator",
+        version: "0.27.0",
         namespace: args.namespace.metadata.name,
         values: values,
       },

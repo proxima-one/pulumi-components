@@ -1,7 +1,7 @@
-import * as pulumi from '@pulumi/pulumi';
-import * as k8s from '@pulumi/kubernetes';
-import * as k8sClient from '@kubernetes/client-node';
-import { Resources, NewStorageClaim } from '../types';
+import * as pulumi from "@pulumi/pulumi";
+import * as k8s from "@pulumi/kubernetes";
+import * as k8sClient from "@kubernetes/client-node";
+import { Resources, NewStorageClaim } from "../types";
 
 /**
  * Installs kafka cluster as CustomResource. Kafka operator must be installed first
@@ -21,54 +21,54 @@ export class KafkaCluster extends pulumi.ComponentResource {
     args: KafkaClusterArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
-    super('proxima-k8s:KafkaCluster', name, args, opts);
+    super("proxima-k8s:KafkaCluster", name, args, opts);
 
     this.kafka = new k8s.apiextensions.CustomResource(
       name,
       {
-        apiVersion: 'kafka.strimzi.io/v1beta2',
-        kind: 'Kafka',
+        apiVersion: "kafka.strimzi.io/v1beta2",
+        kind: "Kafka",
         metadata: {
           namespace: args.namespace.metadata.name,
         },
         spec: {
           kafka: {
-            version: '2.8.0',
+            version: "2.8.0",
             replicas: args.replicas ?? 1,
             listeners: [
               {
-                name: 'plain',
+                name: "plain",
                 port: 9092,
-                type: 'internal',
+                type: "internal",
                 tls: false,
               },
               {
-                name: 'tls',
+                name: "tls",
                 port: 9093,
-                type: 'internal',
+                type: "internal",
                 tls: true,
               },
               args.kafka.listeners?.external
                 ? {
-                    name: 'external',
+                    name: "external",
                     port: 9094,
                     type: args.kafka.listeners.external.type,
                     tls: true,
                     authentication: {
-                      type: 'tls',
+                      type: "tls",
                     },
                   }
                 : null,
             ].filter((x) => x),
             config: {
-              'offsets.topic.replication.factor': args.replicas ?? 1,
-              'transaction.state.log.replication.factor': 1,
-              'transaction.state.log.min.isr': 1,
-              'log.message.format.version': '2.8',
-              'inter.broker.protocol.version': '2.8',
+              "offsets.topic.replication.factor": args.replicas ?? 1,
+              "transaction.state.log.replication.factor": 1,
+              "transaction.state.log.min.isr": 1,
+              "log.message.format.version": "2.8",
+              "inter.broker.protocol.version": "2.8",
             },
             storage: {
-              type: 'persistent-claim',
+              type: "persistent-claim",
               deleteClaim: false,
               size: args.kafka.storage.size,
               class: args.kafka.storage.class,
@@ -77,19 +77,19 @@ export class KafkaCluster extends pulumi.ComponentResource {
           zookeeper: {
             replicas: 1,
             storage: {
-              type: 'persistent-claim',
+              type: "persistent-claim",
               deleteClaim: false,
               size: args.zookeeper.storage.size,
               class: args.zookeeper.storage.class,
             },
             resources: args.zookeeper.resources ?? {
               requests: {
-                memory: '400Mi',
-                cpu: '100m',
+                memory: "400Mi",
+                cpu: "100m",
               },
               limits: {
-                memory: '1Gi',
-                cpu: '250m',
+                memory: "1Gi",
+                cpu: "250m",
               },
             },
           },
@@ -109,12 +109,12 @@ export class KafkaCluster extends pulumi.ComponentResource {
             userOperator: {
               resources: {
                 requests: {
-                  memory: '250Mi',
-                  cpu: '50m',
+                  memory: "250Mi",
+                  cpu: "50m",
                 },
                 limits: {
-                  memory: '500Mi',
-                  cpu: '1000m',
+                  memory: "500Mi",
+                  cpu: "1000m",
                 },
               },
             },
@@ -130,17 +130,17 @@ export class KafkaCluster extends pulumi.ComponentResource {
       this.kafkaUser = new k8s.apiextensions.CustomResource(
         `${name}-ext-user`,
         {
-          apiVersion: 'kafka.strimzi.io/v1beta2',
-          kind: 'KafkaUser',
+          apiVersion: "kafka.strimzi.io/v1beta2",
+          kind: "KafkaUser",
           metadata: {
             namespace: args.namespace.metadata.name,
             labels: {
-              'strimzi.io/cluster': this.kafka.metadata.name,
+              "strimzi.io/cluster": this.kafka.metadata.name,
             },
           },
           spec: {
             authentication: {
-              type: 'tls',
+              type: "tls",
             },
           },
         },
@@ -151,14 +151,21 @@ export class KafkaCluster extends pulumi.ComponentResource {
       //   .apply(([user, namespace, cluster]) => this.getExternalConnectionDetails(namespace.name, cluster.name));
     }
 
-    this.connectionDetails = pulumi.concat(this.kafka.metadata.name, "-kafka-brokers", ".", this.kafka.metadata.namespace, ".svc.cluster.local:9092")
-      .apply(endpoint => {
-      return {
-        brokers: [endpoint],
-        ssl: false,
-        replicationFactor: args.replicas ?? 1,
-      };
-    });
+    this.connectionDetails = pulumi
+      .concat(
+        this.kafka.metadata.name,
+        "-kafka-brokers",
+        ".",
+        this.kafka.metadata.namespace,
+        ".svc.cluster.local:9092"
+      )
+      .apply((endpoint) => {
+        return {
+          brokers: [endpoint],
+          ssl: false,
+          replicationFactor: args.replicas ?? 1,
+        };
+      });
 
     this.registerOutputs({
       connectionDetails: this.connectionDetails,
@@ -251,7 +258,7 @@ export interface KafkaClusterArgs {
     resources?: Resources;
     listeners?: {
       external?: {
-        type: 'loadbalancer';
+        type: "loadbalancer";
       };
     };
   };

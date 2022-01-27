@@ -1,2 +1,2 @@
-export * from './operator';
-export * from './tenant';
+export * from "./operator";
+export * from "./tenant";
