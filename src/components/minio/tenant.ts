@@ -200,7 +200,6 @@ export interface MinioTenantArgs {
     storage: NewStorageClaim;
     resources?: Resources;
   }[];
-  buckets?: string[];
   auth?: {
     accessKey: string;
     secretKey: Password;

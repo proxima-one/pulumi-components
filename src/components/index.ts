@@ -3,4 +3,5 @@ export * from "./dockerRegistry";
 export * from "./kafka";
 export * from "./minio";
 export * from "./mongodb";
-export * from "./proxima-app";
+export * from "./proxima-apps";
+export * from "./proxima-services";

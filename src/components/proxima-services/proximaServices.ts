@@ -93,7 +93,7 @@ export class ProximaServices extends pulumi.ComponentResource {
     }
 
     if (notEmpty(args.minioClusters)) {
-      for (const [key, objectStorageArgs] of Object.entries(
+      for (const [minioName, objectStorageArgs] of Object.entries(
         args.minioClusters
       )) {
         if (objectStorageArgs.type != "Provision") continue;
@@ -112,15 +112,15 @@ export class ProximaServices extends pulumi.ComponentResource {
             { parent: this }
           );
         }
-        this.minioClusters[key] = new minio.MinioTenant(
-          key,
+        this.minioClusters[minioName] = new minio.MinioTenant(
+          minioName,
           {
             namespace: ns.services,
             api: {
-              publicHost: `${name}.${args.publicHost}`,
+              publicHost: `minio-${minioName}.${args.publicHost}`,
             },
             console: {
-              publicHost: `${name}-console.${args.publicHost}`,
+              publicHost: `minio-${minioName}-console.${args.publicHost}`,
             },
             ...minioClusterArgs,
           },
@@ -162,8 +162,12 @@ export class ProximaServices extends pulumi.ComponentResource {
           namespace: ns.services.metadata.name,
         },
         data: {
-          "config.yml": this.config.apply((c) => yaml.dump(c, { indent: 2 })),
-          "config.json": this.config.apply((c) => JSON.stringify(c, null, 2)),
+          "config.yml": this.config.apply((c) =>
+            Buffer.from(yaml.dump(c, { indent: 2 })).toString("base64")
+          ),
+          "config.json": this.config.apply((c) =>
+            Buffer.from(JSON.stringify(c, null, 2)).toString("base64")
+          ),
         },
       },
       { parent: this }
