@@ -9,7 +9,7 @@ import * as proximaConfig from "@proxima-one/proxima-config";
 import { mapLookup, ReadonlyLookup } from "../generics";
 import * as yaml from "js-yaml";
 
-export class ProximaNode extends pulumi.ComponentResource {
+export class ProximaServices extends pulumi.ComponentResource {
   public readonly proximaNamespaces: Record<string, pulumi.Output<string>>;
   public readonly resolvedPasswords: pulumi.Output<Record<string, string>>;
   public readonly namespaces: Record<
@@ -33,7 +33,7 @@ export class ProximaNode extends pulumi.ComponentResource {
     args: ProximaNodeArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
-    super("proxima-k8s:ProximaNode", name, args, opts);
+    super("proxima-k8s:ProximaServices", name, args, opts);
 
     this.publicHost = args.publicHost;
     const ns = new namespaces.Namespaces(
@@ -219,79 +219,71 @@ export interface ProximaNodeArgs {
   //streamDbs?: Record<string, StreamDbArgs>;
 }
 
-export interface StreamDbArgs {
+interface StreamDbArgs {
   storageSize: string;
 }
 
-export type MongoDbArgs = ProvisionNewMongoDbArgs | ImportMongoDbArgs;
+type MongoDbArgs = ProvisionNewMongoDbArgs | ImportMongoDbArgs;
 
-export type ProvisionNewMongoDbArgs = Omit<
-  mongodb.MongoDBArgs,
-  "namespaces"
-> & {
+type ProvisionNewMongoDbArgs = Omit<mongodb.MongoDBArgs, "namespaces"> & {
   type: "Provision";
 };
 
-export interface ImportMongoDbArgs {
+interface ImportMongoDbArgs {
   type: "Import";
 
   config: Omit<proximaConfig.MongoDbConfig, "type">;
 }
 
-export type NetworkArgs = ImportNetworkArgs;
+type NetworkArgs = ImportNetworkArgs;
 
-export type ImportNetworkArgs = {
+type ImportNetworkArgs = {
   type: "Import";
   config: proximaConfig.NetworkConfig;
 };
 
-export type BlockIndexerArgs = ImportBlockIndexerArgs;
+type BlockIndexerArgs = ImportBlockIndexerArgs;
 
-export type ImportBlockIndexerArgs = {
+type ImportBlockIndexerArgs = {
   type: "Import";
   config: proximaConfig.BlockIndexerConfig;
 };
 
-export type DocumentCollectionArgs = ImportDocumentCollectionArgs;
+type DocumentCollectionArgs = ImportDocumentCollectionArgs;
 
-export type ImportDocumentCollectionArgs = {
+type ImportDocumentCollectionArgs = {
   type: "Import";
   config: proximaConfig.DocumentCollectionConfig;
 };
 
-export type KafkaClusterArgs =
-  | ProvisionNewKafkaClusterArgs
-  | ImportKafkaClusterArgs;
+type KafkaClusterArgs = ProvisionNewKafkaClusterArgs | ImportKafkaClusterArgs;
 
-export type ProvisionNewKafkaClusterArgs = Omit<
+type ProvisionNewKafkaClusterArgs = Omit<
   kafka.KafkaClusterArgs,
   "namespace"
 > & {
   type: "Provision";
 };
-export type ImportKafkaClusterArgs = {
+type ImportKafkaClusterArgs = {
   type: "Import";
   config: proximaConfig.KafkaJsConfig;
 };
 
-export type StorageArgs = ProvisionNewMinioBucketArgs | ImportStorage;
+type StorageArgs = ProvisionNewMinioBucketArgs | ImportStorage;
 
-export type MinioClusterArgs = ProvisionNewMinioClusterArgs;
+type MinioClusterArgs = ProvisionNewMinioClusterArgs;
 
-export type ProvisionNewMinioClusterArgs = Omit<
-  minio.MinioTenantArgs,
-  "namespace"
-> & {
+type ProvisionNewMinioClusterArgs = Omit<minio.MinioTenantArgs, "namespace"> & {
   type: "Provision";
 };
 
-export type ProvisionNewMinioBucketArgs = {
+type ProvisionNewMinioBucketArgs = {
   type: "ProvisionMinioBucket";
   minio: string;
   bucket: string;
 };
 
-export interface ImportStorage {
+interface ImportStorage {
   type: "Import";
 
   config: proximaConfig.StorageConfig;
@@ -317,7 +309,7 @@ function merge<T>(lookups: Record<string, T>[]): Record<string, T> {
   return result;
 }
 
-export function generateConfig(
+function generateConfig(
   args: ProximaNodeArgs,
   kafkas: ReadonlyLookup<kafka.KafkaConnectionDetails>,
   minios: ReadonlyLookup<minio.MinioConnectionDetails>,

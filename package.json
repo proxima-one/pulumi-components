@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/proxima-k8s",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "pulumi componetns for proxima",
   "repository": "git@github.com:proxima-one/proxima-k8s.git",
   "main": "dist/index",
