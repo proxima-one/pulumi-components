@@ -1,6 +1,13 @@
 interface ComplexValue extends Readonly<Record<string, Value>> {}
 interface ArrayValue extends ReadonlyArray<Value> {}
-type Value = ArrayValue | ComplexValue | string | number | boolean | undefined | null;
+type Value =
+  | ArrayValue
+  | ComplexValue
+  | string
+  | number
+  | boolean
+  | undefined
+  | null;
 
 export type JsonObject = ComplexValue;
 
@@ -24,12 +31,12 @@ export interface ResourceMetric {
 }
 
 export interface NewRandomPassword {
-  type: 'random';
+  type: "random";
   name: string;
 }
 
 export interface ExternalPassword {
-  type: 'external';
+  type: "external";
   password: string;
 }
 

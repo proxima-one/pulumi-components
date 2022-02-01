@@ -1,6 +1,6 @@
-import * as pulumi from '@pulumi/pulumi';
-import * as k8s from '@pulumi/kubernetes';
-import * as _ from 'lodash';
+import * as pulumi from "@pulumi/pulumi";
+import * as k8s from "@pulumi/kubernetes";
+import * as _ from "lodash";
 
 /**
  * Creates multiple kubernetes namespaces and returns a Record of created underlying
@@ -19,12 +19,12 @@ export class Namespaces<
     args: NamespacesArgs<TNamespaces>,
     opts?: pulumi.ComponentResourceOptions
   ) {
-    super('proxima-k8s:Namespaces', name, {}, opts);
+    super("proxima-k8s:Namespaces", name, {}, opts);
 
     const output: any = {};
     for (const key of _.keys(args.namespaces)) {
       const metadata: any = {};
-      if (!args.autoName) metadata.name = args.namespaces[key as TNamespaces]; // TODO: doesn't work!
+      if (!args.autoName) metadata.name = args.namespaces[key as TNamespaces];
       output[key] = new k8s.core.v1.Namespace(
         args.namespaces[key as TNamespaces],
         {

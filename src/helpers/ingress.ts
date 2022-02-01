@@ -1,11 +1,11 @@
-import * as k8s from '@pulumi/kubernetes';
-import * as pulumi from '@pulumi/pulumi';
+import * as k8s from "@pulumi/kubernetes";
+import * as pulumi from "@pulumi/pulumi";
 
 export function ingressSpec(
   args: SimpleIngressArgs
-): k8s.networking.v1.IngressArgs['spec'] {
+): k8s.networking.v1.IngressArgs["spec"] {
   const port: any = {};
-  if (typeof args.backend.service.port == 'string')
+  if (typeof args.backend.service.port == "string")
     port.name = args.backend.service.port;
   else port.number = args.backend.service.port;
 
@@ -17,7 +17,7 @@ export function ingressSpec(
           paths: [
             {
               path: args.path,
-              pathType: 'ImplementationSpecific',
+              pathType: "ImplementationSpecific",
               backend: {
                 service: {
                   name: args.backend.service.name,
@@ -58,13 +58,13 @@ export function ingressAnnotations(
   args: SimpleIngressAnnotations
 ): Record<string, string> {
   const res: Record<string, string> = {
-    'kubernetes.io/ingress.class': 'nginx',
+    "kubernetes.io/ingress.class": "nginx",
   };
   if (args.backendHttps)
-    res['nginx.ingress.kubernetes.io/backend-protocol'] = 'HTTPS';
+    res["nginx.ingress.kubernetes.io/backend-protocol"] = "HTTPS";
 
   if (args.bodySize) {
-    res['nginx.ingress.kubernetes.io/proxy-body-size'] = args.bodySize;
+    res["nginx.ingress.kubernetes.io/proxy-body-size"] = args.bodySize;
   }
   return res;
 }

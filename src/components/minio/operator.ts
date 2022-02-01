@@ -1,6 +1,6 @@
-import * as pulumi from '@pulumi/pulumi';
-import * as k8s from '@pulumi/kubernetes';
-import * as certManager from '../cert-manager';
+import * as pulumi from "@pulumi/pulumi";
+import * as k8s from "@pulumi/kubernetes";
+import * as certManager from "../cert-manager";
 
 /**
  * Installs minio/operator helm chart
@@ -23,7 +23,7 @@ export class MinioOperator extends pulumi.ComponentResource {
     args: MinIOOperatorArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
-    super('proxima-k8s:MinioOperator', name, args, opts);
+    super("proxima-k8s:MinioOperator", name, args, opts);
 
     const ingressValues: any = {
       enabled: false,
@@ -39,7 +39,7 @@ export class MinioOperator extends pulumi.ComponentResource {
       );
 
       ingressValues.enabled = true;
-      ingressValues.ingressClassName = 'nginx';
+      ingressValues.ingressClassName = "nginx";
       ingressValues.tls = [
         {
           hots: [args.console.publicHost],
@@ -47,7 +47,7 @@ export class MinioOperator extends pulumi.ComponentResource {
         },
       ];
       ingressValues.host = args.console.publicHost;
-      ingressValues.path = args.console.path || '/';
+      ingressValues.path = args.console.path || "/";
 
       this.certificate = certificate;
     }
@@ -56,10 +56,10 @@ export class MinioOperator extends pulumi.ComponentResource {
       name,
       {
         fetchOpts: {
-          repo: 'https://operator.min.io/',
+          repo: "https://operator.min.io/",
         },
-        chart: 'operator',
-        version: '4.4.2',
+        chart: "operator",
+        version: "4.4.2",
         namespace: args.namespace.metadata.name,
         values: {
           console: {
