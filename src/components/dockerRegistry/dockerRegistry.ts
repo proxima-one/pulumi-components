@@ -14,40 +14,42 @@ export class DockerRegistry extends pulumi.ComponentResource {
   ) {
     super("proxima-k8s:DockerRegistry", name, args, opts);
 
-    const secrets: pulumi.Output<DockerRegistrySecret>[] = [];
-    for (const [registryKey, registry] of Object.entries(args.registries)) {
-      const dockerconfigjson = toDockerConfigJsonString(registry);
-      if (!dockerconfigjson)
-        throw new Error(`Invalid docker registry input for ${registryKey}`);
+    const registries = pulumi.output(args.registries);
+    this.secrets = registries.apply((x) => {
+      const result: pulumi.Output<DockerRegistrySecret>[] = [];
+      for (const [registryKey, registry] of Object.entries(x)) {
+        const dockerconfigjson = toDockerConfigJsonString(registry);
+        if (!dockerconfigjson)
+          throw new Error(`Invalid docker registry input for ${registryKey}`);
 
-      for (const [nsKey, ns] of Object.entries(args.namespaces)) {
-        const secret = new k8s.core.v1.Secret(
-          `pull-secret-${nsKey}-${registryKey}`,
-          {
-            metadata: {
-              namespace: ns.metadata.name,
+        for (const [nsKey, ns] of Object.entries(args.namespaces)) {
+          const secret = new k8s.core.v1.Secret(
+            `pull-secret-${nsKey.toLowerCase()}-${registryKey.toLowerCase()}`,
+            {
+              metadata: {
+                namespace: ns.metadata.name,
+              },
+              data: {
+                ".dockerconfigjson": dockerconfigjson,
+              },
+              type: "kubernetes.io/dockerconfigjson",
             },
-            data: {
-              ".dockerconfigjson": dockerconfigjson,
-            },
-            type: "kubernetes.io/dockerconfigjson",
-          },
-          { parent: this }
-        );
+            { parent: this }
+          );
 
-        secrets.push(
-          secret.metadata.name.apply((name) => {
-            return {
-              namespaceKey: nsKey,
-              registryKey: registryKey,
-              secretName: name,
-            };
-          })
-        );
+          result.push(
+            secret.metadata.name.apply((name) => {
+              return {
+                namespaceKey: nsKey,
+                registryKey: registryKey,
+                secretName: name,
+              };
+            })
+          );
+        }
       }
-    }
-
-    this.secrets = pulumi.all(secrets);
+      return pulumi.all(result);
+    });
 
     this.registerOutputs({
       secrets: this.secrets,
@@ -71,17 +73,24 @@ export class DockerRegistry extends pulumi.ComponentResource {
 }
 
 export interface DockerRegistryArgs {
-  registries: Record<string, DockerRegistryInfo | string>;
+  registries: pulumi.Input<
+    Record<string, pulumi.Input<DockerRegistryInfo | string>>
+  >;
   namespaces: Record<string, k8s.core.v1.Namespace>;
 }
 
 export interface DockerRegistryInfo {
-  auths?: Record<string, DockerRegistryAuth>;
+  auths?: pulumi.Input<Record<string, pulumi.Input<DockerRegistryAuth>>>;
 }
 
 export interface DockerRegistryAuth {
-  auth: { user: string; password: string } | string;
-  email?: string;
+  auth:
+    | pulumi.Input<{
+        user: pulumi.Input<string>;
+        password: pulumi.Input<string>;
+      }>
+    | pulumi.Input<string>;
+  email?: pulumi.Input<string>;
 }
 
 export interface DockerRegistrySecret {
@@ -91,35 +100,33 @@ export interface DockerRegistrySecret {
 }
 
 function toDockerConfigJsonString(
-  dockerRegistry: DockerRegistryInfo | string
+  dockerRegistry: pulumi.UnwrappedObject<DockerRegistryInfo> | string
 ): string | undefined {
   if (typeof dockerRegistry == "string") return dockerRegistry;
 
-  if (dockerRegistry.auths !== undefined) {
-    const encodedAuths: any = {};
+  if (dockerRegistry.auths == undefined) return undefined;
 
-    for (const [registry, auth] of Object.entries(dockerRegistry.auths)) {
-      encodedAuths[registry] = {
-        email: auth.email ?? "",
-        auth:
-          typeof auth.auth == "string"
-            ? auth.auth
-            : Buffer.from(`${auth.auth.user}:${auth.auth.password}`).toString(
-                "base64"
-              ),
-      };
-    }
+  const encodedAuths: any = {};
 
-    return Buffer.from(
-      JSON.stringify(
-        {
-          auths: encodedAuths,
-        },
-        null,
-        2
-      )
-    ).toString("base64");
+  for (const [registry, auth] of Object.entries(dockerRegistry.auths)) {
+    encodedAuths[registry] = {
+      email: auth.email ?? "",
+      auth:
+        typeof auth.auth == "string"
+          ? auth.auth
+          : Buffer.from(`${auth.auth.user}:${auth.auth.password}`).toString(
+              "base64"
+            ),
+    };
   }
 
-  return undefined;
+  return Buffer.from(
+    JSON.stringify(
+      {
+        auths: encodedAuths,
+      },
+      null,
+      2
+    )
+  ).toString("base64");
 }
