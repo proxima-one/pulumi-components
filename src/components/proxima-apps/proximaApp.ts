@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as _ from "lodash";
 import * as yaml from "js-yaml";
-import { JsonObject, Resources } from "../types";
+import { JsonObject, ResourceRequirements } from "../types";
 
 /**
  * Installs Proxima App with given metadata
@@ -56,6 +56,10 @@ export class ProximaApp extends pulumi.ComponentResource {
           name: "NODE_EXTRA_CA_CERTS",
           value: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         },
+        {
+          name: "NODE_OPTIONS",
+          value: "--max_old_space_size=32768", // set high value, memory limits are handled by k8s scheduler
+        },
       ];
 
       if (args.trace)
@@ -104,6 +108,17 @@ export class ProximaApp extends pulumi.ComponentResource {
       return args;
     });
 
+    const computeResources = args.resources ?? {
+      requests: {
+        memory: "300Mi",
+        cpu: "50m",
+      },
+      limits: {
+        memory: "2Gi",
+        cpu: "1000m",
+      },
+    };
+
     this.deployment = new k8s.apps.v1.Deployment(
       name,
       {
@@ -149,16 +164,7 @@ export class ProximaApp extends pulumi.ComponentResource {
                       subPath: "config.yml",
                     },
                   ],
-                  resources: (args.resources as any) ?? {
-                    requests: {
-                      memory: "300Mi",
-                      cpu: "50m",
-                    },
-                    limits: {
-                      memory: "2Gi",
-                      cpu: "1000m",
-                    },
-                  },
+                  resources: computeResources,
                 },
               ],
             },
@@ -179,7 +185,7 @@ export interface ProximaAppArgs {
   config?: pulumi.Input<JsonObject>;
   configs?: pulumi.Input<JsonObject>[];
   imagePullSecrets?: pulumi.Input<string[]>;
-  resources?: Resources;
+  resources?: ResourceRequirements;
 }
 
 export interface ProximaAppMetadata {

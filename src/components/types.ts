@@ -20,12 +20,12 @@ export interface ExistingStorageClaim {
   name: string;
 }
 
-export interface Resources {
-  requests: ResourceMetric;
-  limits: ResourceMetric;
+export interface ResourceRequirements {
+  requests: ResourceMetrics;
+  limits: ResourceMetrics;
 }
 
-export interface ResourceMetric {
+export interface ResourceMetrics extends Record<string, string> {
   memory: string;
   cpu: string;
 }

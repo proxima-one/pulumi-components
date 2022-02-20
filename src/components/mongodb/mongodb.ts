@@ -7,7 +7,7 @@ import {
   ExistingStorageClaim,
   NewStorageClaim,
   Password,
-  Resources,
+  ResourceRequirements,
 } from "../types";
 
 /**
@@ -103,7 +103,7 @@ export class MongoDB extends pulumi.ComponentResource {
 
 export interface MongoDBArgs {
   namespace: k8s.core.v1.Namespace;
-  resources?: Resources;
+  resources?: ResourceRequirements;
 
   auth?: MongoDBAuth;
   storage: Storage;

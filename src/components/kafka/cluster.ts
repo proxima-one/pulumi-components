@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as k8sClient from "@kubernetes/client-node";
-import { Resources, NewStorageClaim } from "../types";
+import { ResourceRequirements, NewStorageClaim } from "../types";
 
 /**
  * Installs kafka cluster as CustomResource. Kafka operator must be installed first
@@ -255,7 +255,7 @@ export interface KafkaClusterArgs {
   replicas?: number;
   kafka: {
     storage: NewStorageClaim;
-    resources?: Resources;
+    resources?: ResourceRequirements;
     listeners?: {
       external?: {
         type: "loadbalancer";
@@ -264,7 +264,7 @@ export interface KafkaClusterArgs {
   };
   zookeeper: {
     storage: NewStorageClaim;
-    resources?: Resources;
+    resources?: ResourceRequirements;
   };
 }
 
