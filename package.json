@@ -22,7 +22,8 @@
     "start:app": "yarn start app start --",
     "watch": "yarn build -- --watch",
     "watch:test": "jest --watch",
-    "gen:jsonschema:mongodb": "json2ts -i ./src/components/mongodb/values.schema.json -o ./src/components/mongodb/values.ts"
+    "gen:jsonschema:mongodb": "json2ts -i ./src/components/mongodb/values.schema.json -o ./src/components/mongodb/values.ts",
+    "gen:jsonschema:postgresql": "json2ts -i ./src/components/postgresql/values.schema.json -o ./src/components/postgresql/values.ts"
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.16.1",
