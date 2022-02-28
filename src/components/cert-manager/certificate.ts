@@ -23,7 +23,7 @@ export class Certificate extends pulumi.ComponentResource {
     this.certificate = new k8s.apiextensions.CustomResource(
       name,
       {
-        apiVersion: "certmanager.k8s.io/v1alpha1",
+        apiVersion: "cert-manager.io/v1",
         kind: "Certificate",
         metadata: {
           namespace: args.namespace.metadata.name,

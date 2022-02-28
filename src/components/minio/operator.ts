@@ -66,6 +66,7 @@ export class MinioOperator extends pulumi.ComponentResource {
             ingress: ingressValues,
           },
         },
+        apiVersions: ["networking.k8s.io/v1/Ingress"],
       },
       { parent: this }
     );
