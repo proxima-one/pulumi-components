@@ -90,14 +90,16 @@ export class ProximaApp extends pulumi.ComponentResource {
       args.push(meta.executable.appName);
       args.push("--id", meta.id);
 
-      args.push("--target-db", meta.env.db);
-      args.push("--source-db", meta.env.sourceDb ?? meta.env.db);
-
       const sourceStreams =
         meta.env.sourceStreams ??
         (meta.env.sourceStream ? [meta.env.sourceStream] : []);
-      if (sourceStreams.length > 0)
+
+      args.push("--target-db", meta.env.db);
+
+      if (sourceStreams.length > 0) {
+        args.push("--source-db", meta.env.sourceDb ?? meta.env.db);
         args.push("--source-streams", sourceStreams.join(","));
+      }
 
       if (meta.env.namespace) args.push("--namespace", meta.env.namespace);
 
