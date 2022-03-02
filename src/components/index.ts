@@ -6,3 +6,4 @@ export * from "./mongodb";
 export * from "./proxima-apps";
 export * from "./proxima-services";
 export * from "./cert-manager";
+export * from "./postgresql";

@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as helpers from "../../helpers";
 import * as certManager from "../cert-manager";
-import { NewStorageClaim, Password, Resources } from "../types";
+import { NewStorageClaim, Password, ResourceRequirements } from "../types";
 
 /**
  * Installs minio/tenant helm chart
@@ -198,7 +198,7 @@ export interface MinioTenantArgs {
     servers: number;
     volumesPerServer: number;
     storage: NewStorageClaim;
-    resources?: Resources;
+    resources?: ResourceRequirements;
   }[];
   auth?: {
     accessKey: string;

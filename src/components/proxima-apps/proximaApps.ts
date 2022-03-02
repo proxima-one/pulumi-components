@@ -1,6 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
-import { JsonObject } from "../types";
+import { JsonObject, ResourceRequirements } from "../types";
 import { ProximaApp, ProximaAppMetadata } from "./proximaApp";
 
 export class ProximaApps extends pulumi.ComponentResource {
@@ -19,6 +19,7 @@ export class ProximaApps extends pulumi.ComponentResource {
           metadata: app,
           namespace: args.namespace,
           imagePullSecrets: args.imagePullSecrets,
+          resources: app.hostHints?.resources,
         },
         { parent: this }
       );
@@ -33,7 +34,11 @@ export interface ProximaAppsArgs {
   imagePullSecrets?: pulumi.Input<string[]>;
   userConfig: JsonObject;
   clusterConfig: pulumi.Input<JsonObject>;
-  apps: ProximaAppMetadata[];
+  apps: (ProximaAppMetadata & { hostHints?: AppHostHints })[];
+}
+
+export interface AppHostHints {
+  resources?: ResourceRequirements;
 }
 
 function merge<T>(lookups: Record<string, T>[]): Record<string, T> {
