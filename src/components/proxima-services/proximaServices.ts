@@ -5,9 +5,11 @@ import * as kafka from "../kafka";
 import * as minio from "../minio";
 import * as namespaces from "../namespaces";
 import * as mongodb from "../mongodb";
+import * as blockindexer from "../blockindexer";
 import * as proximaConfig from "@proxima-one/proxima-config";
 import { mapLookup, ReadonlyLookup } from "../generics";
 import * as yaml from "js-yaml";
+import { ResourceRequirements } from "../types";
 
 export class ProximaServices extends pulumi.ComponentResource {
   public readonly proximaNamespaces: Record<string, pulumi.Output<string>>;
@@ -26,6 +28,7 @@ export class ProximaServices extends pulumi.ComponentResource {
   public readonly kafkaClusters: Record<string, kafka.KafkaCluster> = {};
   public readonly minioClusters: Record<string, minio.MinioTenant> = {};
   public readonly mongoDbs: Record<string, mongodb.MongoDB> = {};
+  public readonly blockIndexers: Record<string, blockindexer.BlockIndexer> = {};
   public readonly configSecret: k8s.core.v1.Secret;
 
   public constructor(
@@ -145,6 +148,46 @@ export class ProximaServices extends pulumi.ComponentResource {
       }
     }
 
+    if (notEmpty(args.blockIndexers)) {
+      for (const [key, blockIndexerArgs] of Object.entries(
+        args.blockIndexers
+      )) {
+        if (blockIndexerArgs.type != "Provision") continue;
+
+        const { type, ...newBlockIndexerArgs } = blockIndexerArgs;
+        const mongodb = this.mongoDbs[newBlockIndexerArgs.storage.mongodb];
+        this.blockIndexers[key] = new blockindexer.BlockIndexer(
+          `blockindexer-${key}`,
+          {
+            namespace: ns.services.metadata.name,
+            publicHost: newBlockIndexerArgs.publicHost,
+            resources: newBlockIndexerArgs.resources,
+            imagePullSecrets: this.dockerRegistry
+              ? this.dockerRegistry.secrets.apply((secrets) =>
+                  secrets
+                    .filter((x) => x.namespaceKey == "services")
+                    .map((s) => s.secretName)
+                )
+              : [],
+            storage: mongodb.connectionDetails.apply((x) => {
+              return {
+                type: "MongoDB",
+                uri: x.endpoint,
+                database: x.database,
+              };
+            }),
+            auth: {
+              password: {
+                type: "random",
+                name: `${key}-authToken`,
+              },
+            },
+          },
+          { parent: this }
+        );
+      }
+    }
+
     this.resolvedPasswords = pulumi
       .all([
         ...Object.values(this.mongoDbs).map((x) => x.resolvedPasswords),
@@ -195,14 +238,19 @@ export class ProximaServices extends pulumi.ComponentResource {
       mapLookup(this.mongoDbs, (x) => x.connectionDetails)
     );
 
+    const blockIndexers = pulumi.all(
+      mapLookup(this.blockIndexers, (x) => x.connectionDetails)
+    );
+
     return pulumi
       .all([
         provisionedKafkaConnections,
         provisionedMinioConnections,
         provisionedMongoDbs,
+        blockIndexers,
       ])
-      .apply(([kafka, minio, mongos]) =>
-        generateConfig(args, kafka, minio, mongos)
+      .apply(([kafka, minio, mongos, blockIndexers]) =>
+        generateConfig(args, kafka, minio, mongos, blockIndexers)
       );
   }
 }
@@ -246,11 +294,20 @@ type ImportNetworkArgs = {
   config: proximaConfig.NetworkConfig;
 };
 
-type BlockIndexerArgs = ImportBlockIndexerArgs;
+type BlockIndexerArgs = ImportBlockIndexerArgs | ProvisionBlockIndexerArgs;
 
 type ImportBlockIndexerArgs = {
   type: "Import";
   config: proximaConfig.BlockIndexerConfig;
+};
+
+type ProvisionBlockIndexerArgs = {
+  type: "Provision";
+  resources?: ResourceRequirements;
+  publicHost?: pulumi.Input<string>;
+  storage: {
+    mongodb: string;
+  };
 };
 
 type DocumentCollectionArgs = ImportDocumentCollectionArgs;
@@ -317,7 +374,8 @@ function generateConfig(
   args: ProximaNodeArgs,
   kafkas: ReadonlyLookup<kafka.KafkaConnectionDetails>,
   minios: ReadonlyLookup<minio.MinioConnectionDetails>,
-  mongos: ReadonlyLookup<mongodb.MongoDbConnectionDetails>
+  mongos: ReadonlyLookup<mongodb.MongoDbConnectionDetails>,
+  blockIndexers: ReadonlyLookup<blockindexer.BlockIndexerConnectionDetails>
 ): proximaConfig.ProximaNodeConfig {
   return {
     blockIndexers: mapLookup(args.blockIndexers ?? {}, toBlockIndexerConfig),
@@ -340,6 +398,14 @@ function generateConfig(
     switch (args.type) {
       case "Import":
         return args.config;
+      case "Provision": {
+        const connectionDetails = blockIndexers[key];
+        return {
+          type: "grpc",
+          uri: connectionDetails.endpoint,
+          authToken: connectionDetails.authToken,
+        };
+      }
       default:
         throw new Error("not implemented");
     }
