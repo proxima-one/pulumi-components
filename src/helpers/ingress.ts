@@ -41,7 +41,7 @@ export function ingressSpec(
 }
 
 export interface SimpleIngressArgs {
-  host: string;
+  host: pulumi.Input<string>;
   path: string;
   backend: {
     service: {
@@ -63,8 +63,18 @@ export function ingressAnnotations(
   if (args.backendHttps)
     res["nginx.ingress.kubernetes.io/backend-protocol"] = "HTTPS";
 
+  if (args.backendGrpc)
+    res["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC";
+
+  if (args.sslRedirect)
+    res["nginx.ingress.kubernetes.io/ssl-redirect"] = "true";
+
   if (args.bodySize) {
     res["nginx.ingress.kubernetes.io/proxy-body-size"] = args.bodySize;
+  }
+
+  if (args.certIssuer) {
+    res["cert-manager.io/cluster-issuer"] = args.certIssuer;
   }
   return res;
 }
@@ -72,4 +82,7 @@ export function ingressAnnotations(
 export interface SimpleIngressAnnotations {
   backendHttps?: boolean;
   bodySize?: string;
+  certIssuer?: string;
+  sslRedirect?: boolean;
+  backendGrpc?: boolean;
 }
