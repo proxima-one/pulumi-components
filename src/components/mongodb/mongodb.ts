@@ -91,7 +91,7 @@ export class MongoDB extends pulumi.ComponentResource {
       .apply(([ns, pass]) => {
         return {
           database: auth.database,
-          endpoint: `mongodb://${auth.user}:${pass}@${svcName}.${ns}.svc.cluster.local`,
+          endpoint: `mongodb://${auth.user}:${pass}@${svcName}.${ns}.svc.cluster.local/${auth.database}`,
         };
       });
 
