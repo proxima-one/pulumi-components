@@ -12,11 +12,13 @@ import { mapLookup, ReadonlyLookup } from "../generics";
 import * as yaml from "js-yaml";
 import { ResourceRequirements } from "../types";
 
-export class ProximaServices extends pulumi.ComponentResource {
+export class ProximaServices<
+  TNamespaces extends string
+> extends pulumi.ComponentResource {
   public readonly proximaNamespaces: Record<string, pulumi.Output<string>>;
   public readonly resolvedPasswords: pulumi.Output<Record<string, string>>;
   public readonly namespaces: Record<
-    "operators" | "services",
+    "operators" | "services" | TNamespaces,
     k8s.core.v1.Namespace
   >;
   public readonly publicHost: string;
@@ -35,7 +37,7 @@ export class ProximaServices extends pulumi.ComponentResource {
 
   public constructor(
     name: string,
-    args: ProximaNodeArgs,
+    args: ProximaNodeArgs<TNamespaces>,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima-k8s:ProximaServices", name, args, opts);
@@ -47,6 +49,7 @@ export class ProximaServices extends pulumi.ComponentResource {
         namespaces: {
           operators: "operators",
           services: "services",
+          ...args.namespaces,
         },
         autoName: false,
       },
@@ -258,7 +261,7 @@ export class ProximaServices extends pulumi.ComponentResource {
   }
 
   private generateConfig(
-    args: ProximaNodeArgs
+    args: ProximaNodeArgs<TNamespaces>
   ): pulumi.Output<proximaConfig.ProximaNodeConfig> {
     const provisionedKafkaConnections = pulumi.all(
       mapLookup(this.kafkaClusters, (x) => x.connectionDetails)
@@ -289,8 +292,9 @@ export class ProximaServices extends pulumi.ComponentResource {
   }
 }
 
-export interface ProximaNodeArgs {
+export interface ProximaNodeArgs<TNamespaces extends string> {
   publicHost: string;
+  namespaces: Record<TNamespaces, string>;
   dockerRegistries?: Record<string, dockerRegistry.DockerRegistryInfo | string>;
 
   mongoDbs?: Record<string, MongoDbArgs>;
@@ -415,8 +419,8 @@ function merge<T>(lookups: Record<string, T>[]): Record<string, T> {
   return result;
 }
 
-function generateConfig(
-  args: ProximaNodeArgs,
+function generateConfig<TNamespaces extends string>(
+  args: ProximaNodeArgs<TNamespaces>,
   kafkas: ReadonlyLookup<kafka.KafkaConnectionDetails>,
   minios: ReadonlyLookup<minio.MinioConnectionDetails>,
   mongos: ReadonlyLookup<mongodb.MongoDbConnectionDetails>,

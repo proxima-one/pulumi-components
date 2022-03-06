@@ -66,8 +66,10 @@ export function ingressAnnotations(
   if (args.backendHttps)
     res["nginx.ingress.kubernetes.io/backend-protocol"] = "HTTPS";
 
-  if (args.backendGrpc)
+  if (args.backendGrpc) {
     res["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC";
+    res["nginx.ingress.kubernetes.io/configuration-snippet"] = "grpc_read_timeout 120s";
+  }
 
   if (args.sslRedirect)
     res["nginx.ingress.kubernetes.io/ssl-redirect"] = "true";
