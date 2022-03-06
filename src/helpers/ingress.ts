@@ -9,39 +9,42 @@ export function ingressSpec(
     port.name = args.backend.service.port;
   else port.number = args.backend.service.port;
 
-  return {
-    rules: [
-      {
-        host: args.host,
-        http: {
-          paths: [
-            {
-              path: args.path,
-              pathType: "ImplementationSpecific",
-              backend: {
-                service: {
-                  name: args.backend.service.name,
-                  port: port,
+  return pulumi.Output.create(args.host).apply((hostOrHosts) => {
+    const hosts = Array.isArray(hostOrHosts) ? hostOrHosts : [hostOrHosts];
+    return {
+      rules: hosts.map((host) => {
+        return {
+          host: host,
+          http: {
+            paths: [
+              {
+                path: args.path,
+                pathType: "ImplementationSpecific",
+                backend: {
+                  service: {
+                    name: args.backend.service.name,
+                    port: port,
+                  },
                 },
               },
-            },
-          ],
-        },
-      },
-    ],
-    tls: args.tls
-      ? [
-          {
-            secretName: args.tls.secretName,
-            hosts: [args.host],
+            ],
           },
-        ]
-      : [],
-  };
+        };
+      }),
+      tls: args.tls
+        ? [
+            {
+              secretName: args.tls.secretName,
+              hosts: hosts,
+            },
+          ]
+        : [],
+    };
+  });
 }
 
 export interface SimpleIngressArgs {
-  host: pulumi.Input<string>;
+  host: pulumi.Input<string | string[]>;
   path: string;
   backend: {
     service: {

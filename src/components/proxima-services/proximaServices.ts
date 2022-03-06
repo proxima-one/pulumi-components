@@ -333,7 +333,7 @@ type StreamDBArgs = ProvisionStreamDBArgs;
 type ProvisionStreamDBArgs = {
   type: "Provision";
   resources?: ResourceRequirements;
-  publicHost?: pulumi.Input<string>;
+  publicHost?: pulumi.Input<string | string[]>;
   storage: {
     mongodb: string;
   };
@@ -349,7 +349,7 @@ type ImportBlockIndexerArgs = {
 type ProvisionBlockIndexerArgs = {
   type: "Provision";
   resources?: ResourceRequirements;
-  publicHost?: pulumi.Input<string>;
+  publicHost?: pulumi.Input<string | string[]>;
   storage: {
     mongodb: string;
   };

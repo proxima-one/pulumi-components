@@ -15,7 +15,7 @@ export interface StreamDBArgs {
   }>;
   imagePullSecrets?: pulumi.Input<string[]>;
   resources?: ResourceRequirements;
-  publicHost?: pulumi.Input<string>;
+  publicHost?: pulumi.Input<string | string[]>;
   imageTag?: pulumi.Input<string>;
 }
 
