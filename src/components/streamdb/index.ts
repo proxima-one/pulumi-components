@@ -121,13 +121,16 @@ export class StreamDB extends pulumi.ComponentResource {
                     imageTag
                   ),
                   name: "app",
-                  env: [{
-                    name: "STREAMING_BATCH_SIZE",
-                    value: "500",
-                  },{
-                    name: "STREAMING_SLEEP_INTERVAL",
-                    value: "50",
-                  },],
+                  env: [
+                    {
+                      name: "STREAMING_BATCH_SIZE",
+                      value: "500",
+                    },
+                    {
+                      name: "STREAMING_SLEEP_INTERVAL",
+                      value: "50",
+                    },
+                  ],
                   ports: [
                     {
                       name: "app",
