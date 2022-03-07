@@ -23,7 +23,7 @@ export interface StreamDBConnectionDetails {
   endpoint: string;
 }
 
-const defaultImageTag = "0.1.0";
+const defaultImageTag = "0.1.1";
 const appPort = 50051;
 const metricsPort = 2112;
 /**
@@ -121,6 +121,13 @@ export class StreamDB extends pulumi.ComponentResource {
                     imageTag
                   ),
                   name: "app",
+                  env: [{
+                    name: "STREAMING_BATCH_SIZE",
+                    value: "500",
+                  },{
+                    name: "STREAMING_SLEEP_INTERVAL",
+                    value: "50",
+                  },],
                   ports: [
                     {
                       name: "app",
