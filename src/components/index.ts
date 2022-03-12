@@ -9,3 +9,4 @@ export * from "./cert-manager";
 export * from "./postgresql";
 export * from "./blockindexer";
 export * from "./streamdb";
+export * from "./pgadmin";

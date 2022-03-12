@@ -40,6 +40,8 @@ export class MongoDB extends pulumi.ComponentResource {
       },
     };
 
+    //    const metricsPassword = passwords.resolve({type: "random", name: `${name}-metrics-pass`});
+
     const persistence: PersistenceConfiguration = { enabled: true };
     if (args.storage.type == "new") {
       persistence.size = args.storage.size;
@@ -61,6 +63,7 @@ export class MongoDB extends pulumi.ComponentResource {
           auth: passwords.resolve(auth.password).apply((pass) => {
             return {
               enabled: true,
+              rootPassword: pass,
               usernames: [auth.user],
               databases: [auth.database],
               passwords: [pass],

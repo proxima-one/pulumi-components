@@ -20,7 +20,7 @@ export interface StreamDBArgs {
 }
 
 export interface StreamDBConnectionDetails {
-  endpoint: string;
+  endpoints: string[];
 }
 
 const defaultImageTag = "0.1.1";
@@ -191,7 +191,7 @@ export class StreamDB extends pulumi.ComponentResource {
       .all([args.namespace, this.service.metadata.name])
       .apply(([ns, svcName]) => {
         return {
-          endpoint: `${svcName}.${ns}.svc.cluster.local:${appPort}`,
+          endpoints: [`${svcName}.${ns}.svc.cluster.local:${appPort}`],
         };
       });
 
@@ -226,9 +226,12 @@ export class StreamDB extends pulumi.ComponentResource {
 
       this.publicConnectionDetails = pulumi
         .all([pulumi.Output.create(args.publicHost)])
-        .apply(([publicHost]) => {
+        .apply(([hostOrHosts]) => {
+          const hosts = Array.isArray(hostOrHosts)
+            ? hostOrHosts
+            : [hostOrHosts];
           return {
-            endpoint: `${publicHost}:433`,
+            endpoints: hosts.map((x) => `${x}:433`),
           };
         });
     }

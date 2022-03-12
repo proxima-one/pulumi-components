@@ -56,7 +56,7 @@ export class PostgreSQL extends pulumi.ComponentResource {
         },
         chart: "postgresql",
         version: "11.1.1",
-        namespace: args.namespace.metadata.name,
+        namespace: args.namespace,
         values: {
           auth: passwords.resolve(auth.password).apply((pass) => {
             return {
@@ -68,6 +68,8 @@ export class PostgreSQL extends pulumi.ComponentResource {
           }),
           primary: {
             persistence: persistence,
+            nodeSelector: args.nodeSelector,
+            extendedConfiguration: args.extendedConfiguration ?? "",
             resources: args.resources ?? {
               requests: {
                 cpu: "200m",
@@ -88,7 +90,7 @@ export class PostgreSQL extends pulumi.ComponentResource {
     this.resolvedPasswords = passwords.getResolvedPasswords();
 
     this.connectionDetails = pulumi
-      .all([args.namespace.metadata.name, passwords.resolve(auth.password)])
+      .all([args.namespace, passwords.resolve(auth.password)])
       .apply(([ns, pass]) => {
         return {
           database: auth.database,
@@ -104,9 +106,11 @@ export class PostgreSQL extends pulumi.ComponentResource {
 }
 
 export interface PostgreSQLArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
   resources?: ResourceRequirements;
 
+  extendedConfiguration?: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   auth?: PostgreSQLAuth;
   storage: Storage;
 }
