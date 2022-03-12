@@ -18,6 +18,7 @@ export class ProximaApps extends pulumi.ComponentResource {
           configs: [args.userConfig, args.clusterConfig],
           metadata: app,
           namespace: args.namespace,
+          nodeSelector: args.nodeSelector,
           imagePullSecrets: args.imagePullSecrets,
           resources: app.hostHints?.resources,
         },
@@ -30,7 +31,8 @@ export class ProximaApps extends pulumi.ComponentResource {
 }
 
 export interface ProximaAppsArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   imagePullSecrets?: pulumi.Input<string[]>;
   userConfig: JsonObject;
   clusterConfig: pulumi.Input<JsonObject>;

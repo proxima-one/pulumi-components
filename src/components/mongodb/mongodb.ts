@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as helpers from "../../helpers";
 
-import { PersistenceConfiguration, ValuesSchema } from "./values";
+import { PersistenceConfiguration } from "./values";
 import {
   ExistingStorageClaim,
   NewStorageClaim,
@@ -58,7 +58,7 @@ export class MongoDB extends pulumi.ComponentResource {
         },
         chart: "mongodb",
         version: "10.31.1",
-        namespace: args.namespace.metadata.name,
+        namespace: args.namespace,
         values: {
           auth: passwords.resolve(auth.password).apply((pass) => {
             return {
@@ -70,6 +70,7 @@ export class MongoDB extends pulumi.ComponentResource {
             };
           }),
           persistence: persistence,
+          nodeSelector: args.nodeSelector,
           replicaCount: 1,
           resources: args.resources ?? {
             requests: {
@@ -90,7 +91,7 @@ export class MongoDB extends pulumi.ComponentResource {
     this.resolvedPasswords = passwords.getResolvedPasswords();
 
     this.connectionDetails = pulumi
-      .all([args.namespace.metadata.name, passwords.resolve(auth.password)])
+      .all([args.namespace, passwords.resolve(auth.password)])
       .apply(([ns, pass]) => {
         return {
           database: auth.database,
@@ -106,7 +107,8 @@ export class MongoDB extends pulumi.ComponentResource {
 }
 
 export interface MongoDBArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   resources?: ResourceRequirements;
 
   auth?: MongoDBAuth;

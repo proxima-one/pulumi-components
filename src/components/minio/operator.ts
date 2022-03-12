@@ -60,8 +60,11 @@ export class MinioOperator extends pulumi.ComponentResource {
         },
         chart: "operator",
         version: "4.4.2",
-        namespace: args.namespace.metadata.name,
+        namespace: args.namespace,
         values: {
+          operator: {
+            nodeSelector: args.nodeSelector,
+          },
           console: {
             ingress: ingressValues,
           },
@@ -76,7 +79,8 @@ export class MinioOperator extends pulumi.ComponentResource {
 }
 
 export interface MinIOOperatorArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   console?: {
     publicHost?: string;
     path?: string;

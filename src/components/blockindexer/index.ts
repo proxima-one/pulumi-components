@@ -17,6 +17,7 @@ export interface BlockIndexerArgs {
   auth: {
     password: Password;
   };
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   imagePullSecrets?: pulumi.Input<string[]>;
   resources?: ResourceRequirements;
   publicHost?: pulumi.Input<string | string[]>;
@@ -128,6 +129,7 @@ export class BlockIndexer extends pulumi.ComponentResource {
                   },
                 },
               ],
+              nodeSelector: args.nodeSelector,
               containers: [
                 {
                   image: pulumi.concat(

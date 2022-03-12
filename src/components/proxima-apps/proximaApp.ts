@@ -3,6 +3,7 @@ import * as k8s from "@pulumi/kubernetes";
 import * as _ from "lodash";
 import * as yaml from "js-yaml";
 import { JsonObject, ResourceRequirements } from "../types";
+import { parseMemory } from "../../helpers/resources-parser";
 
 /**
  * Installs Proxima App with given metadata
@@ -36,7 +37,7 @@ export class ProximaApp extends pulumi.ComponentResource {
       name,
       {
         metadata: {
-          namespace: args.namespace.metadata.name,
+          namespace: args.namespace,
         },
         data: {
           "config.yml": mergedConfig.apply((x) => yaml.dump(x, { indent: 2 })),
@@ -45,11 +46,25 @@ export class ProximaApp extends pulumi.ComponentResource {
       { parent: this }
     );
 
+    const computeResources = args.resources ?? {
+      requests: {
+        memory: "300Mi",
+        cpu: "50m",
+      },
+      limits: {
+        memory: "2Gi",
+        cpu: "1000m",
+      },
+    };
+
     const metadata = pulumi.Output.create(args.metadata);
     const labels = {
       app: "proxima-app", //metadata.id,
     };
 
+    const memoryLimitMB = _.floor(
+      parseMemory(computeResources.limits.memory) / 1024 ** 2
+    );
     this.envVars = metadata.apply((meta) => {
       const vars = [
         {
@@ -58,7 +73,7 @@ export class ProximaApp extends pulumi.ComponentResource {
         },
         {
           name: "NODE_OPTIONS",
-          value: "--max_old_space_size=32768", // set high value, memory limits are handled by k8s scheduler
+          value: `--max_old_space_size=${memoryLimitMB}`, // set high value, memory limits are handled by k8s scheduler
         },
       ];
 
@@ -110,22 +125,11 @@ export class ProximaApp extends pulumi.ComponentResource {
       return args;
     });
 
-    const computeResources = args.resources ?? {
-      requests: {
-        memory: "300Mi",
-        cpu: "50m",
-      },
-      limits: {
-        memory: "2Gi",
-        cpu: "1000m",
-      },
-    };
-
     this.deployment = new k8s.apps.v1.Deployment(
       name,
       {
         metadata: {
-          namespace: args.namespace.metadata.name,
+          namespace: args.namespace,
           labels: labels,
         },
         spec: {
@@ -169,6 +173,7 @@ export class ProximaApp extends pulumi.ComponentResource {
                   resources: computeResources,
                 },
               ],
+              nodeSelector: args.nodeSelector,
             },
           },
         },
@@ -180,7 +185,8 @@ export class ProximaApp extends pulumi.ComponentResource {
 }
 
 export interface ProximaAppArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   metadata: pulumi.Input<ProximaAppMetadata>;
   trace?: boolean;
   streamEndOffsetTolerance?: string;

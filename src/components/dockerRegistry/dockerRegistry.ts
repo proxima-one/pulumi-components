@@ -14,42 +14,43 @@ export class DockerRegistry extends pulumi.ComponentResource {
   ) {
     super("proxima-k8s:DockerRegistry", name, args, opts);
 
-    const registries = pulumi.output(args.registries);
-    this.secrets = registries.apply((x) => {
-      const result: pulumi.Output<DockerRegistrySecret>[] = [];
-      for (const [registryKey, registry] of Object.entries(x)) {
-        const dockerconfigjson = toDockerConfigJsonString(registry);
-        if (!dockerconfigjson)
-          throw new Error(`Invalid docker registry input for ${registryKey}`);
+    this.secrets = pulumi
+      .all([args.registries, args.namespaces])
+      .apply(([registries, namespaces]) => {
+        const result: pulumi.Output<DockerRegistrySecret>[] = [];
+        for (const [registryKey, registry] of Object.entries(registries)) {
+          const dockerconfigjson = toDockerConfigJsonString(registry);
+          if (!dockerconfigjson)
+            throw new Error(`Invalid docker registry input for ${registryKey}`);
 
-        for (const [nsKey, ns] of Object.entries(args.namespaces)) {
-          const secret = new k8s.core.v1.Secret(
-            `pull-secret-${nsKey.toLowerCase()}-${registryKey.toLowerCase()}`,
-            {
-              metadata: {
-                namespace: ns.metadata.name,
+          for (const [nsKey, ns] of Object.entries(namespaces)) {
+            const secret = new k8s.core.v1.Secret(
+              `pull-secret-${nsKey.toLowerCase()}-${registryKey.toLowerCase()}`,
+              {
+                metadata: {
+                  namespace: ns,
+                },
+                data: {
+                  ".dockerconfigjson": dockerconfigjson,
+                },
+                type: "kubernetes.io/dockerconfigjson",
               },
-              data: {
-                ".dockerconfigjson": dockerconfigjson,
-              },
-              type: "kubernetes.io/dockerconfigjson",
-            },
-            { parent: this }
-          );
+              { parent: this }
+            );
 
-          result.push(
-            secret.metadata.name.apply((name) => {
-              return {
-                namespaceKey: nsKey,
-                registryKey: registryKey,
-                secretName: name,
-              };
-            })
-          );
+            result.push(
+              secret.metadata.name.apply((name) => {
+                return {
+                  namespaceKey: nsKey,
+                  registryKey: registryKey,
+                  secretName: name,
+                };
+              })
+            );
+          }
         }
-      }
-      return pulumi.all(result);
-    });
+        return pulumi.all(result);
+      });
 
     this.registerOutputs({
       secrets: this.secrets,
@@ -76,7 +77,7 @@ export interface DockerRegistryArgs {
   registries: pulumi.Input<
     Record<string, pulumi.Input<DockerRegistryInfo | string>>
   >;
-  namespaces: Record<string, k8s.core.v1.Namespace>;
+  namespaces: pulumi.Input<Record<string, string>>;
 }
 
 export interface DockerRegistryInfo {

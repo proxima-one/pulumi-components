@@ -66,7 +66,7 @@ export class ProximaServices<
       this.dockerRegistry = new dockerRegistry.DockerRegistry(
         "docker-registry",
         {
-          namespaces: ns,
+          namespaces: pulumi.all(mapLookup(ns, (x) => x.metadata.name)),
           registries: args.dockerRegistries,
         },
         { parent: this }
@@ -82,9 +82,10 @@ export class ProximaServices<
           this.kafkaOperator = new kafka.KafkaOperator(
             "kafka-operator",
             {
-              namespace: ns.operators,
+              namespace: ns.operators.metadata.name,
               watchAnyNamespace: false,
-              watchNamespaces: [ns.services],
+              watchNamespaces: pulumi.all([ns.services.metadata.name]),
+              nodeSelector: args.nodeSelector,
             },
             { parent: this }
           );
@@ -93,7 +94,7 @@ export class ProximaServices<
           key,
           {
             ...kafkaClusterArgs,
-            namespace: ns.services,
+            namespace: ns.services.metadata.name,
           },
           { dependsOn: this.kafkaOperator, parent: this }
         );
@@ -111,7 +112,8 @@ export class ProximaServices<
           this.minioOperator = new minio.MinioOperator(
             "minio-operator",
             {
-              namespace: ns.operators,
+              namespace: ns.operators.metadata.name,
+              nodeSelector: args.nodeSelector,
               console: {
                 publicHost: `minio-operator.${args.publicHost}`,
                 path: "/",
@@ -123,14 +125,15 @@ export class ProximaServices<
         this.minioClusters[minioName] = new minio.MinioTenant(
           minioName,
           {
-            namespace: ns.services,
             api: {
               publicHost: `minio-${minioName}.${args.publicHost}`,
             },
             console: {
               publicHost: `minio-${minioName}-console.${args.publicHost}`,
             },
+            nodeSelector: args.nodeSelector,
             ...minioClusterArgs,
+            namespace: ns.services.metadata.name,
           },
           { dependsOn: this.minioOperator, parent: this }
         );
@@ -145,8 +148,9 @@ export class ProximaServices<
         this.mongoDbs[key] = new mongodb.MongoDB(
           key,
           {
+            nodeSelector: args.nodeSelector,
             ...newMongoDbArgs,
-            namespace: ns.services,
+            namespace: ns.services.metadata.name,
           },
           { parent: this }
         );
@@ -187,6 +191,7 @@ export class ProximaServices<
                 name: `${key}-authToken`,
               },
             },
+            nodeSelector: args.nodeSelector,
           },
           { parent: this }
         );
@@ -219,6 +224,7 @@ export class ProximaServices<
                 streams: [],
               };
             }),
+            nodeSelector: args.nodeSelector,
           },
           { parent: this }
         );
@@ -295,6 +301,7 @@ export class ProximaServices<
 export interface ProximaNodeArgs<TNamespaces extends string> {
   publicHost: string;
   namespaces: Record<TNamespaces, string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   dockerRegistries?: Record<string, dockerRegistry.DockerRegistryInfo | string>;
 
   mongoDbs?: Record<string, MongoDbArgs>;

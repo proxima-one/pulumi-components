@@ -33,10 +33,6 @@ export class MinioTenant extends pulumi.ComponentResource {
 
     const passwords = new helpers.PasswordResolver(this);
 
-    const ingressValues: any = {
-      enabled: false,
-    };
-
     const auth: MinioTenantArgs["auth"] = args.auth ?? {
       accessKey: `${name}-key`,
       secretKey: {
@@ -53,12 +49,12 @@ export class MinioTenant extends pulumi.ComponentResource {
         },
         chart: "tenant",
         version: "4.4.2",
-        namespace: args.namespace.metadata.name,
+        namespace: args.namespace,
         values: {
           tenants: [
             {
               name: name,
-              namespace: args.namespace.metadata.name,
+              namespace: args.namespace,
               pools: args.pools.map((p, ind) => {
                 if (p.volumesPerServer < 4)
                   throw new Error(
@@ -69,6 +65,7 @@ export class MinioTenant extends pulumi.ComponentResource {
                   volumesPerServer: p.volumesPerServer,
                   size: p.storage.size,
                   storageClassName: p.storage.class,
+                  nodeSelector: p.nodeSelector ?? args.nodeSelector,
                   resources: p.resources ?? {
                     requests: {
                       memory: "250Mi",
@@ -96,7 +93,7 @@ export class MinioTenant extends pulumi.ComponentResource {
 
     const tenantResourceName = pulumi.concat(
       "minio.min.io/v2/Tenant::",
-      args.namespace.metadata.name,
+      args.namespace,
       "/",
       name
     );
@@ -115,7 +112,7 @@ export class MinioTenant extends pulumi.ComponentResource {
         `${name}-console-ingress`,
         {
           metadata: {
-            namespace: args.namespace.metadata.name,
+            namespace: args.namespace,
             annotations: helpers.ingressAnnotations({}),
           },
           spec: helpers.ingressSpec({
@@ -150,7 +147,7 @@ export class MinioTenant extends pulumi.ComponentResource {
         `${name}-api-ingress`,
         {
           metadata: {
-            namespace: args.namespace.metadata.name,
+            namespace: args.namespace,
             annotations: helpers.ingressAnnotations({
               bodySize: "1000m",
             }),
@@ -176,7 +173,7 @@ export class MinioTenant extends pulumi.ComponentResource {
     this.resolvedPasswords = passwords.getResolvedPasswords();
 
     this.connectionDetails = pulumi
-      .all([args.namespace.metadata.name, passwords.resolve(auth.secretKey)])
+      .all([args.namespace, passwords.resolve(auth.secretKey)])
       .apply(([ns, secret]) => {
         return {
           endpoint: `http://minio.${ns}.svc.cluster.local`,
@@ -193,10 +190,12 @@ export class MinioTenant extends pulumi.ComponentResource {
 }
 
 export interface MinioTenantArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   pools: {
     servers: number;
     volumesPerServer: number;
+    nodeSelector?: pulumi.Input<Record<string, string>>;
     storage: NewStorageClaim;
     resources?: ResourceRequirements;
   }[];

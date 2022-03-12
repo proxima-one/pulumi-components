@@ -8,6 +8,7 @@ import { PasswordResolver } from "../../helpers";
 
 export interface StreamDBArgs {
   namespace: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   storage: pulumi.Input<{
     connectionString: string;
     db: string;
@@ -114,6 +115,7 @@ export class StreamDB extends pulumi.ComponentResource {
                   },
                 },
               ],
+              nodeSelector: args.nodeSelector,
               containers: [
                 {
                   image: pulumi.concat(

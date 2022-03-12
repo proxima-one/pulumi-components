@@ -17,14 +17,15 @@ export class KafkaOperator extends pulumi.ComponentResource {
   ) {
     super("proxima-k8s:KafkaOperator", name, args, opts);
 
-    const values = pulumi
-      .all(args.watchNamespaces.map((x) => x.metadata))
-      .apply((metadatas) => {
+    const values = pulumi.Output.create(args.watchNamespaces).apply(
+      (namespaces) => {
         return {
-          watchNamespaces: metadatas.map((x) => x.name),
+          watchNamespaces: namespaces,
           watchAnyNamespace: args.watchAnyNamespace,
+          nodeSelector: args.nodeSelector,
         };
-      });
+      }
+    );
 
     this.chart = new k8s.helm.v3.Chart(
       name,
@@ -34,7 +35,7 @@ export class KafkaOperator extends pulumi.ComponentResource {
         },
         chart: "strimzi-kafka-operator",
         version: "0.27.0",
-        namespace: args.namespace.metadata.name,
+        namespace: args.namespace,
         values: values,
       },
       { parent: this }
@@ -45,7 +46,8 @@ export class KafkaOperator extends pulumi.ComponentResource {
 }
 
 export interface KafkaOperatorArgs {
-  namespace: k8s.core.v1.Namespace;
-  watchNamespaces: k8s.core.v1.Namespace[];
+  namespace: pulumi.Input<string>;
+  watchNamespaces: pulumi.Input<string[]>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
   watchAnyNamespace: boolean;
 }

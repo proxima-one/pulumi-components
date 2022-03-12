@@ -26,7 +26,7 @@ export class Certificate extends pulumi.ComponentResource {
         apiVersion: "cert-manager.io/v1",
         kind: "Certificate",
         metadata: {
-          namespace: args.namespace.metadata.name,
+          namespace: args.namespace,
         },
         spec: {
           secretName: certSecretName,
@@ -60,6 +60,6 @@ export class Certificate extends pulumi.ComponentResource {
 }
 
 export interface CertificateArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
   domain: string;
 }

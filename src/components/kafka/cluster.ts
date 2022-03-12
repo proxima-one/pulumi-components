@@ -29,7 +29,7 @@ export class KafkaCluster extends pulumi.ComponentResource {
         apiVersion: "kafka.strimzi.io/v1beta2",
         kind: "Kafka",
         metadata: {
-          namespace: args.namespace.metadata.name,
+          namespace: args.namespace,
         },
         spec: {
           kafka: {
@@ -133,7 +133,7 @@ export class KafkaCluster extends pulumi.ComponentResource {
           apiVersion: "kafka.strimzi.io/v1beta2",
           kind: "KafkaUser",
           metadata: {
-            namespace: args.namespace.metadata.name,
+            namespace: args.namespace,
             labels: {
               "strimzi.io/cluster": this.kafka.metadata.name,
             },
@@ -248,7 +248,7 @@ async function sleep(timeout: number): Promise<void> {
 }
 
 export interface KafkaClusterArgs {
-  namespace: k8s.core.v1.Namespace;
+  namespace: pulumi.Input<string>;
   /**
    * Brokers count. Default 1
    */
