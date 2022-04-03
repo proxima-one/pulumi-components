@@ -35,7 +35,7 @@ module.exports = {
     ...packages.reduce(
       (acc, name) => ({
         ...acc,
-        [`${namespace}/${name}$`]: path.resolve(basePath, `${name}/src`),
+        [`${namespace}/pulumi-${name}$`]: path.resolve(basePath, `${name}/src`),
       }),
       {}
     ),
