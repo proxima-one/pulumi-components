@@ -1,36 +1,40 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
+    "composite": true,
     "lib": [
       "ES2019"
     ],
-    "incremental": false,
-    "declaration": true,
-    "declarationMap": true,
     "resolveJsonModule": true,
     "target": "ES2019",
     "module": "commonjs",
     "moduleResolution": "node",
     "jsx": "react",
     "strict": true,
+    "declaration": true,
+    "declarationMap": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "baseUrl": "./packages",
     "forceConsistentCasingInFileNames": true,
     "downlevelIteration": true,
-    "baseUrl": "/",
     "paths": {
-      "@/*": [
+      "@proxima-one/*": [
         "*/src"
       ]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
   "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
+    "node_modules"
+  ],
+  "include": [
+    "src/**/*",
+    "src/**/*.json"
+  ],
+  "files": [],
+  "references": [
+    {
+      "path": "packages/proxima-k8s"
+    }
   ]
 }
