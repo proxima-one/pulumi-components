@@ -10,12 +10,12 @@
     "lib"
   ],
   "scripts": {
-    "clean": "rimraf dist && rimraf coverage",
+    "clean": "rimraf -rf dist && rimraf tsconfig.tsbuildinfo",
     "format": "prettier --write \"{src,__tests__}/**/*.ts\"",
     "lint": "eslint . --ext .ts",
     "prepublishOnly": "yarn build",
     "prebuild": "yarn clean && yarn format && yarn lint && echo Using TypeScript && tsc --version",
-    "build": "tsc --pretty",
+    "build": "tsc --build",
     "test": "jest --passWithNoTests",
     "coverage": "jest --coverage",
     "start": "ts-node -r tsconfig-paths/register src/index.ts",
