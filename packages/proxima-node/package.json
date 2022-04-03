@@ -2,7 +2,7 @@
   "name": "@proxima-one/pulumi-proxima-node",
   "version": "0.10.1",
   "description": "pulumi components for proxima",
-  "repository": "git@github.com:proxima-one/proxima-k8s.git",
+  "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -55,5 +55,6 @@
   },
   "jest": {
     "preset": "<rootDir>/"
-  }
+  },
+  "gitHead": "2412b8ad89fbf18ee838367b774b07b21a62900c"
 }
