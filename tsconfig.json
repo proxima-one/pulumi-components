@@ -19,7 +19,7 @@
     "forceConsistentCasingInFileNames": true,
     "downlevelIteration": true,
     "paths": {
-      "@proxima-one/*": [
+      "@proxima-one/pulumi-*": [
         "*/src"
       ]
     }
@@ -34,7 +34,7 @@
   "files": [],
   "references": [
     {
-      "path": "packages/proxima-k8s"
+      "path": "packages/proxima-node"
     }
   ]
 }
