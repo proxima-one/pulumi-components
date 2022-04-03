@@ -10,3 +10,4 @@ export * from "./postgresql";
 export * from "./blockindexer";
 export * from "./streamdb";
 export * from "./pgadmin";
+export * from "./generics";
