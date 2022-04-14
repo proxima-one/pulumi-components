@@ -34,6 +34,9 @@
   "files": [],
   "references": [
     {
+      "path": "packages/geth"
+    },
+    {
       "path": "packages/proxima-node"
     }
   ]
