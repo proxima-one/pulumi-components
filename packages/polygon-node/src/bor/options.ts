@@ -1,7 +1,7 @@
 import { geth } from "@proxima-one/pulumi-ethereum-node";
 
 export type BorOptions = geth.GethOptions & {
-  network?: Network;
+  network?: BorNetwork;
   misc?: MiscOptions;
 };
 
@@ -11,7 +11,7 @@ interface MiscOptions {
   borLogs?: boolean;
 }
 
-type Network = "bor-mainnet" | "bor-mumbai" | string;
+export type BorNetwork = "bor-mainnet" | "bor-mumbai" | string;
 
 export function optionsToArgs(options: BorOptions): string[] {
   const args: string[] = [];
