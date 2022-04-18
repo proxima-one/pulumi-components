@@ -18,7 +18,7 @@ export interface DockerHeimdallArgs {
   /*
   Expose host ports: { [hostPort]: [containerPort]}
    */
-  ports?: HeimdallPorts;
+  ports?: pulumi.Input<HeimdallPorts | undefined>;
 }
 
 export interface HeimdallPorts {
@@ -34,10 +34,11 @@ const defaultOptions: HeimdallOptions = {
   network: "mainnet-v1",
 };
 
+export type HeimdallNetwork = "mainnet-v1" | "testnet-v4";
 export interface HeimdallOptions {
   ethRpcUrl?: pulumi.Input<string>;
   borRpcUrl?: pulumi.Input<string>;
-  network?: pulumi.Input<"mainnet-v1" | "testnet-v4">;
+  network?: pulumi.Input<HeimdallNetwork>;
   seeds?: string[];
 }
 
@@ -74,6 +75,7 @@ export class DockerHeimdall extends pulumi.ComponentResource {
       { parent: this }
     );
 
+    const resolvedArgs = pulumi.output(args);
     this.heimdallOptions = pulumi.Output.create(
       args.heimdallOptions ?? {}
     ).apply((options) => _.merge(defaultOptions, options));
@@ -114,9 +116,9 @@ export class DockerHeimdall extends pulumi.ComponentResource {
         image: "rabbitmq:3-alpine",
         networksAdvanced: [{ name: networkName }],
         restart: "unless-stopped",
-        ports: args.ports?.rabbitmq
-          ? [{ external: args.ports?.rabbitmq, internal: 5672 }]
-          : [],
+        ports: resolvedArgs.ports?.apply((ports) =>
+          ports?.rabbitmq ? [{ external: ports?.rabbitmq, internal: 5672 }] : []
+        ),
       },
       { parent: this }
     );
@@ -142,14 +144,10 @@ export class DockerHeimdall extends pulumi.ComponentResource {
         entrypoints: [entrypointPath],
         command: this.cliArgs,
         volumes: volumes,
-        ports: [
-          ...(args.ports?.p2p
-            ? [{ external: args.ports?.p2p, internal: 26656 }]
-            : []),
-          ...(args.ports?.rpc
-            ? [{ external: args.ports?.rpc, internal: 26657 }]
-            : []),
-        ],
+        ports: resolvedArgs.ports?.apply((ports) => [
+          ...(ports?.p2p ? [{ external: ports?.p2p, internal: 26656 }] : []),
+          ...(ports?.rpc ? [{ external: ports?.rpc, internal: 26657 }] : []),
+        ]),
         uploads: [
           {
             file: entrypointPath,
@@ -199,11 +197,11 @@ export class DockerHeimdall extends pulumi.ComponentResource {
           this.daemonContainer.name.apply((x) => `tcp://${x}:26657`),
         ],
         volumes: volumes,
-        ports: [
-          ...(args.ports?.restServer
-            ? [{ external: args.ports?.restServer, internal: 1317 }]
-            : []),
-        ],
+        ports: resolvedArgs.ports?.apply((ports) =>
+          ports?.restServer
+            ? [{ external: ports?.restServer, internal: 1317 }]
+            : []
+        ),
       },
       { parent: this, dependsOn: this.daemonContainer }
     );

@@ -11,7 +11,7 @@ interface MiscOptions {
   borLogs?: boolean;
 }
 
-type Network = "bor-mainnet" | "bor-mumbai";
+type Network = "bor-mainnet" | "bor-mumbai" | string;
 
 export function optionsToArgs(options: BorOptions): string[] {
   const args: string[] = [];

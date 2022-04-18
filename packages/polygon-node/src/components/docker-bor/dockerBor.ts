@@ -17,7 +17,7 @@ export interface DockerBorArgs {
   /*
   Expose host ports: { [hostPort]: [containerPort]}
    */
-  ports?: BorPorts;
+  ports?: pulumi.Input<BorPorts | undefined>;
 }
 
 export interface BorPorts {
@@ -82,6 +82,7 @@ export class DockerBor extends pulumi.ComponentResource {
         ].concat(x)
       );
 
+    const resolvedArgs = pulumi.output(args);
     const entrypointPath = "/scripts/entrypoint.sh";
     this.container = new docker.Container(
       name,
@@ -93,28 +94,24 @@ export class DockerBor extends pulumi.ComponentResource {
         entrypoints: [entrypointPath],
         command: this.cliArgs,
         volumes: volumes,
-        ports: [
-          ...(args.ports?.rpc
-            ? [{ external: args.ports?.rpc, internal: 8545 }]
-            : []),
-          ...(args.ports?.ws
-            ? [{ external: args.ports?.ws, internal: 8546 }]
-            : []),
-          ...(args.ports?.peers
+        ports: resolvedArgs.ports?.apply((ports) => [
+          ...(ports?.rpc ? [{ external: ports?.rpc, internal: 8545 }] : []),
+          ...(ports?.ws ? [{ external: ports?.ws, internal: 8546 }] : []),
+          ...(ports?.peers
             ? [
                 {
-                  external: args.ports?.peers,
+                  external: ports?.peers,
                   internal: 30303,
                   protocol: "tcp",
                 },
                 {
-                  external: args.ports?.peers,
+                  external: ports?.peers,
                   internal: 30303,
                   protocol: "udp",
                 },
               ]
             : []),
-        ],
+        ]),
         uploads: [
           {
             file: entrypointPath,
