@@ -24,6 +24,7 @@ export interface GethOptions {
   networking?: NetworkingOptions;
   api?: ApiOptions;
   cache?: CacheOptions;
+  extraArgs?: string[];
 }
 
 interface ApiOptions {
@@ -76,11 +77,17 @@ interface WsOptions {
   origins?: string[];
 }
 
-type GethApi = "eth" | "net" | "web3" | "personal";
+type GethApi = "eth" | "net" | "web3" | "personal" | string;
 type SyncMode = "snap" | "full" | "light" | string;
-type Network = "mainnet" | "goerli" | "rinkeby" | "ropsten" | "sepolia";
+type Network =
+  | "mainnet"
+  | "goerli"
+  | "rinkeby"
+  | "ropsten"
+  | "sepolia"
+  | string;
 
-export function gethArgs(options: GethOptions): string[] {
+export function optionsToArgs(options: GethOptions): string[] {
   const args: string[] = [];
 
   if (options.syncMode != undefined) args.push("--syncmode", options.syncMode);
@@ -100,6 +107,8 @@ export function gethArgs(options: GethOptions): string[] {
 
   if (options.networking != undefined)
     args.push(...networkingArgs(options.networking));
+
+  if (options.extraArgs != undefined) args.push(...options.extraArgs);
 
   return args;
 }

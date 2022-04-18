@@ -1,5 +1,5 @@
 {
-  "name": "@proxima-one/pulumi-geth",
+  "name": "@proxima-one/pulumi-ethereum-node",
   "version": "0.1.0",
   "description": "pulumi components to run geth",
   "repository": "git@github.com:proxima-one/pulumi-components.git",

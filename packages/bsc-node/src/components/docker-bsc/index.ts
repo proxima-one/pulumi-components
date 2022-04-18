@@ -2,13 +2,13 @@ import * as pulumi from "@pulumi/pulumi";
 import * as docker from "@pulumi/docker";
 import * as _ from "lodash";
 import { input as inputs } from "@pulumi/docker/types";
-import { gethArgs, GethOptions } from "../../options";
+import { BscOptions, optionsToArgs } from "../../bsc/options";
 
 export interface DockerGethArgs {
-  imageName: pulumi.Input<string>;
+  imageName?: pulumi.Input<string>;
   existingNetwork?: pulumi.Input<string>;
   existingDataVolume?: pulumi.Input<string>;
-  gethOptions?: pulumi.Input<GethOptions>;
+  bscOptions?: pulumi.Input<BscOptions>;
   extraVolumes?: pulumi.Input<pulumi.Input<inputs.ContainerVolume>[]>;
   /*
   Expose host ports: { [hostPort]: [containerPort]}
@@ -16,15 +16,17 @@ export interface DockerGethArgs {
   ports?: Record<number, number>;
 }
 
-const defaultGethOptions: GethOptions = {
-  dataDir: "/vat/geth/data",
+const defaultBscOptions: BscOptions = {
+  dataDir: "/var/bsc/data",
 };
 
-export class DockerGeth extends pulumi.ComponentResource {
-  public readonly gethOptions: pulumi.Output<GethOptions>;
-  public readonly gethCommandArgs: pulumi.Output<string[]>;
-  public readonly network?: docker.Network;
+const defaultImageName = "quay.io/proxima.one/bsc-geth:1.1.8";
+
+export class DockerEth extends pulumi.ComponentResource {
+  public readonly bscOptions: pulumi.Output<BscOptions>;
+  public readonly bscCommandArgs: pulumi.Output<string[]>;
   public readonly container: docker.Container;
+  public readonly network?: docker.Network;
   public readonly dataVolume?: docker.Volume;
 
   public constructor(
@@ -32,7 +34,7 @@ export class DockerGeth extends pulumi.ComponentResource {
     args: DockerGethArgs,
     opts?: pulumi.CustomResourceOptions
   ) {
-    super("proxima:DockerGeth", name, args, opts);
+    super("proxima:DockerBsc", name, args, opts);
 
     if (args.existingNetwork == undefined)
       this.network = new docker.Network(name, {}, { parent: this });
@@ -42,17 +44,17 @@ export class DockerGeth extends pulumi.ComponentResource {
     const gethImage = new docker.RemoteImage(
       name,
       {
-        name: args.imageName,
+        name: args.imageName ?? defaultImageName,
         keepLocally: true,
       },
       { parent: this }
     );
 
-    this.gethOptions = pulumi.Output.create(args.gethOptions ?? {}).apply(
-      (options) => _.merge(defaultGethOptions, options)
+    this.bscOptions = pulumi.Output.create(args.bscOptions ?? {}).apply(
+      (options) => _.merge(defaultBscOptions, options)
     );
-    this.gethCommandArgs = this.gethOptions.apply((options) =>
-      gethArgs(options)
+    this.bscCommandArgs = this.bscOptions.apply((options) =>
+      optionsToArgs(options)
     );
 
     if (args.existingDataVolume == undefined)
@@ -67,7 +69,7 @@ export class DockerGeth extends pulumi.ComponentResource {
         [
           {
             volumeName: dataVolumeName,
-            containerPath: this.gethOptions.apply((x) => x.dataDir!),
+            containerPath: this.bscOptions.apply((x) => x.dataDir!),
           } as pulumi.Input<inputs.ContainerVolume>,
         ].concat(x)
       );
@@ -79,7 +81,7 @@ export class DockerGeth extends pulumi.ComponentResource {
         restart: "on-failure",
         networksAdvanced: [{ name: networkName }],
         envs: [],
-        command: this.gethCommandArgs,
+        command: this.bscCommandArgs,
         volumes: volumes,
         ports: Object.entries(args.ports ?? {}).map(
           ([hostPort, containerPort]) => {
@@ -93,6 +95,6 @@ export class DockerGeth extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    this.registerOutputs([this.gethOptions, this.gethCommandArgs]);
+    this.registerOutputs([this.bscOptions, this.bscCommandArgs]);
   }
 }

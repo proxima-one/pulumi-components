@@ -34,7 +34,16 @@
   "files": [],
   "references": [
     {
-      "path": "packages/geth"
+      "path": "packages/bsc-node"
+    },
+    {
+      "path": "packages/ethereum-node"
+    },
+    {
+      "path": "packages/helpers"
+    },
+    {
+      "path": "packages/polygon-node"
     },
     {
       "path": "packages/proxima-node"

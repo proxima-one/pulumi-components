@@ -1,2 +1,2 @@
 export * from "./components";
-export * from "./options";
+export * as bor from "./bor";

@@ -1,8 +1,8 @@
-import { gethArgs } from "./options";
+import { optionsToArgs } from "./options";
 
-describe("gethArgs", () => {
+describe("optionsToArgs", () => {
   it("it should convert options to args", () => {
-    const actual = gethArgs({
+    const actual = optionsToArgs({
       syncMode: "snap",
       network: "mainnet",
       txLookupLimit: 0,
