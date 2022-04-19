@@ -62,7 +62,7 @@ interface CacheOptions {
 
 interface HttpOptions {
   address?: string;
-  port?: string | number;
+  port?: number;
   api?: GethApi[];
   rpcPrefix?: string;
   corsDomain?: string;
@@ -71,7 +71,7 @@ interface HttpOptions {
 
 interface WsOptions {
   address?: string;
-  port?: string | number;
+  port?: number;
   api?: GethApi[];
   rpcPrefix?: string;
   origins?: string[];
