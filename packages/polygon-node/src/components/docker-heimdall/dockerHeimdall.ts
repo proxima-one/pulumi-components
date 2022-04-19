@@ -40,14 +40,14 @@ export interface HeimdallOptions {
   borRpcUrl?: pulumi.Input<string>;
   network?: pulumi.Input<HeimdallNetwork>;
   seeds?: string[];
+  logLevel?: string;
 }
 
 const dataDir = "/root/.heimdalld";
-const defaultImageName = "maticnetwork/heimdall:v0.2.9";
+const defaultImageName = "0xpolygon/heimdall:0.2.9";
 
 export class DockerHeimdall extends pulumi.ComponentResource {
   public readonly heimdallOptions: pulumi.Output<Unwrap<HeimdallOptions>>;
-  public readonly cliArgs: pulumi.Output<string[]>;
   public readonly network?: docker.Network;
   public readonly daemonContainer: docker.Container;
   public readonly restServerContainer: docker.Container;
@@ -79,13 +79,14 @@ export class DockerHeimdall extends pulumi.ComponentResource {
     this.heimdallOptions = pulumi.Output.create(
       args.heimdallOptions ?? {}
     ).apply((options) => _.merge(defaultOptions, options));
-    this.cliArgs = this.heimdallOptions.apply((options) => [
-      "start",
-      "--moniker",
-      name,
-      "--rpc.laddr",
-      "tcp://0.0.0.0:26657",
-    ]);
+
+    const commonCliArgs = this.heimdallOptions.apply((options) => {
+      const res = [];
+
+      if (options.logLevel) res.push("--log_level", options.logLevel);
+
+      return res;
+    });
 
     if (args.existingDataVolume == undefined)
       this.dataVolume = new docker.Volume(name, {}, { parent: this });
@@ -134,49 +135,62 @@ export class DockerHeimdall extends pulumi.ComponentResource {
         });
       });
 
+    const heimdallCommon = {
+      networksAdvanced: [{ name: networkName }],
+      envs: [pulumi.concat(`DATA_DIR=`, dataDir)],
+      image: heimdallImage.name,
+      restart: "unless-stopped",
+      volumes: volumes,
+      entrypoints: [entrypointPath],
+      uploads: [
+        {
+          file: entrypointPath,
+          executable: true,
+          source: path.resolve(__dirname, "entrypoint.sh"),
+        },
+        {
+          file: "/proxima/genesis.json",
+          source: genesisFile,
+        },
+        {
+          file: "/proxima/heimdall-config.toml",
+          content: ctx.apply((x) =>
+            FileHelpers.template(
+              path.resolve(__dirname, "heimdall-config.toml.hbs"),
+              x
+            ).toString("utf8")
+          ),
+        },
+        {
+          file: "/proxima/config.toml",
+          content: ctx.apply((x) =>
+            FileHelpers.template(
+              path.resolve(__dirname, "config.toml.hbs"),
+              x
+            ).toString("utf8")
+          ),
+        },
+      ],
+    };
+
     this.daemonContainer = new docker.Container(
       `${name}-daemon`,
       {
-        image: heimdallImage.name,
-        restart: "unless-stopped",
-        networksAdvanced: [{ name: networkName }],
-        envs: [pulumi.concat(`DATA_DIR=`, dataDir)],
-        entrypoints: [entrypointPath],
-        command: this.cliArgs,
-        volumes: volumes,
+        ...heimdallCommon,
+        command: commonCliArgs.apply((x) => [
+          "start",
+          "--home",
+          dataDir,
+          "--moniker",
+          name,
+          "--rpc.laddr",
+          "tcp://0.0.0.0:26657",
+          ...x,
+        ]),
         ports: resolvedArgs.ports?.apply((ports) => [
           ...(ports?.p2p ? [{ external: ports?.p2p, internal: 26656 }] : []),
           ...(ports?.rpc ? [{ external: ports?.rpc, internal: 26657 }] : []),
         ]),
-        uploads: [
-          {
-            file: entrypointPath,
-            executable: true,
-            source: path.resolve(__dirname, "entrypoint.sh"),
-          },
-          {
-            file: pulumi.concat(dataDir, "/proxima/genesis.json"),
-            source: genesisFile,
-          },
-          {
-            file: pulumi.concat(dataDir, "/proxima/heimdall-config.toml"),
-            content: ctx.apply((x) =>
-              FileHelpers.template(
-                path.resolve(__dirname, "heimdall-config.toml.hbs"),
-                x
-              ).toString("utf8")
-            ),
-          },
-          {
-            file: pulumi.concat(dataDir, "/proxima/config.toml"),
-            content: ctx.apply((x) =>
-              FileHelpers.template(
-                path.resolve(__dirname, "config.toml.hbs"),
-                x
-              ).toString("utf8")
-            ),
-          },
-        ],
       },
       { parent: this, dependsOn: this.rabbitMqContainer }
     );
@@ -184,19 +198,17 @@ export class DockerHeimdall extends pulumi.ComponentResource {
     this.restServerContainer = new docker.Container(
       `${name}-rest-server`,
       {
-        image: heimdallImage.name,
-        restart: "unless-stopped",
-        networksAdvanced: [{ name: networkName }],
-        command: [
-          "heimdalld",
+        ...heimdallCommon,
+        command: commonCliArgs.apply((x) => [
           "rest-server",
-          //"--chain-id", "",
+          "--home",
+          dataDir,
           "--laddr",
           "tcp://0.0.0.0:1317",
           "--node",
           this.daemonContainer.name.apply((x) => `tcp://${x}:26657`),
-        ],
-        volumes: volumes,
+          ...x,
+        ]),
         ports: resolvedArgs.ports?.apply((ports) =>
           ports?.restServer
             ? [{ external: ports?.restServer, internal: 1317 }]
@@ -206,6 +218,6 @@ export class DockerHeimdall extends pulumi.ComponentResource {
       { parent: this, dependsOn: this.daemonContainer }
     );
 
-    this.registerOutputs([this.heimdallOptions, this.cliArgs]);
+    this.registerOutputs([this.heimdallOptions]);
   }
 }

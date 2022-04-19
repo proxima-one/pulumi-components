@@ -7,13 +7,13 @@ echo "Proxima: Heimdall entrypoint..."
 
 initializedFile=$DATA_DIR/.initialized
 
-configOverrideFile=$DATA_DIR/proxima/config.toml
+configOverrideFile=/proxima/config.toml
 configFile=$DATA_DIR/config/config.toml
 
-heimdallConfigOverrideFile=$DATA_DIR/proxima/heimdall-config.toml
+heimdallConfigOverrideFile=/proxima/heimdall-config.toml
 heimdallConfigFile=$DATA_DIR/config/heimdall-config.toml
 
-genesisOverrideFile=$DATA_DIR/proxima/genesis.json
+genesisOverrideFile=/proxima/genesis.json
 genesisFile=$DATA_DIR/config/genesis.json
 
 if [ ! -f "$initializedFile" ]; then
