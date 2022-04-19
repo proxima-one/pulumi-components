@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-ethereum-node",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "pulumi components to run geth",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
@@ -24,10 +24,10 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@pulumi/pulumi": "^3.0.0",
-    "@pulumi/random": "^4.3.1",
     "@pulumi/command": "^0.0.3",
     "@pulumi/docker": "^3.1.0",
+    "@pulumi/pulumi": "^3.0.0",
+    "@pulumi/random": "^4.3.1",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21"
   },
