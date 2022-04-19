@@ -3,26 +3,35 @@ import * as docker from "@pulumi/docker";
 import * as _ from "lodash";
 import { input as inputs } from "@pulumi/docker/types";
 import { BscOptions, optionsToArgs } from "../../bsc/options";
+import path from "path";
 
-export interface DockerGethArgs {
+export interface DockerBscArgs {
   imageName?: pulumi.Input<string>;
   existingNetwork?: pulumi.Input<string>;
   existingDataVolume?: pulumi.Input<string>;
   bscOptions?: pulumi.Input<BscOptions>;
   extraVolumes?: pulumi.Input<pulumi.Input<inputs.ContainerVolume>[]>;
-  /*
-  Expose host ports: { [hostPort]: [containerPort]}
-   */
-  ports?: Record<number, number>;
+  ports?: pulumi.Input<BscPorts | undefined>;
+
+  configFile?: pulumi.Input<string | undefined>;
+  genesisFile?: pulumi.Input<string | undefined>;
+}
+
+export interface BscPorts {
+  rpc?: number;
+  ws?: number;
+  peers?: number;
 }
 
 const defaultBscOptions: BscOptions = {
-  dataDir: "/var/bsc/data",
+  dataDir: "/root/.ethereum",
 };
 
 const defaultImageName = "quay.io/proxima.one/bsc-geth:1.1.8";
 
-export class DockerEth extends pulumi.ComponentResource {
+const entrypointPath = "/scripts/entrypoint.sh";
+const configFilePath = "/proxima/config.toml";
+export class DockerBsc extends pulumi.ComponentResource {
   public readonly bscOptions: pulumi.Output<BscOptions>;
   public readonly bscCommandArgs: pulumi.Output<string[]>;
   public readonly container: docker.Container;
@@ -31,7 +40,7 @@ export class DockerEth extends pulumi.ComponentResource {
 
   public constructor(
     name: string,
-    args: DockerGethArgs,
+    args: DockerBscArgs,
     opts?: pulumi.CustomResourceOptions
   ) {
     super("proxima:DockerBsc", name, args, opts);
@@ -41,7 +50,7 @@ export class DockerEth extends pulumi.ComponentResource {
 
     const networkName = args.existingNetwork ?? this.network!.name;
 
-    const gethImage = new docker.RemoteImage(
+    const bscImage = new docker.RemoteImage(
       name,
       {
         name: args.imageName ?? defaultImageName,
@@ -50,12 +59,20 @@ export class DockerEth extends pulumi.ComponentResource {
       { parent: this }
     );
 
+    const resolvedArgs = pulumi.output(args);
+
     this.bscOptions = pulumi.Output.create(args.bscOptions ?? {}).apply(
       (options) => _.merge(defaultBscOptions, options)
     );
-    this.bscCommandArgs = this.bscOptions.apply((options) =>
-      optionsToArgs(options)
-    );
+    this.bscCommandArgs = pulumi
+      .all([resolvedArgs, this.bscOptions])
+      .apply(([args, options]) => {
+        const res = optionsToArgs(options);
+
+        if (args.configFile) res.push("--config", configFilePath);
+
+        return res;
+      });
 
     if (args.existingDataVolume == undefined)
       this.dataVolume = new docker.Volume(name, {}, { parent: this });
@@ -74,23 +91,79 @@ export class DockerEth extends pulumi.ComponentResource {
         ].concat(x)
       );
 
+    const containerCommon = {
+      networksAdvanced: [{ name: networkName }],
+      envs: [pulumi.concat(`DATA_DIR=`, this.bscOptions.dataDir)],
+      image: bscImage.name,
+      restart: "unless-stopped",
+      volumes: volumes,
+      entrypoints: [entrypointPath],
+      uploads: resolvedArgs.apply((args) => [
+        {
+          file: entrypointPath,
+          executable: true,
+          source: path.resolve(__dirname, "entrypoint.sh"),
+        },
+        ...(args.genesisFile
+          ? [
+              {
+                file: "/proxima/genesis.json",
+                content: args.genesisFile,
+              },
+            ]
+          : []),
+        ...(args.configFile
+          ? [
+              {
+                file: configFilePath,
+                content: args.configFile,
+              },
+            ]
+          : []),
+      ]),
+    };
+
     this.container = new docker.Container(
       name,
       {
-        image: gethImage.name,
-        restart: "on-failure",
-        networksAdvanced: [{ name: networkName }],
-        envs: [],
+        ...containerCommon,
         command: this.bscCommandArgs,
-        volumes: volumes,
-        ports: Object.entries(args.ports ?? {}).map(
-          ([hostPort, containerPort]) => {
-            return {
-              internal: containerPort,
-              external: parseInt(hostPort),
-            };
-          }
-        ),
+        ports: resolvedArgs.ports?.apply((ports) => [
+          ...(ports?.rpc
+            ? [
+                {
+                  external: ports?.rpc,
+                  internal: this.bscOptions.apply(
+                    (x) => x.api?.http?.port ?? 8545
+                  ),
+                },
+              ]
+            : []),
+          ...(ports?.ws
+            ? [
+                {
+                  external: ports?.ws,
+                  internal: this.bscOptions.apply(
+                    (x) => x.api?.ws?.port ?? 8546
+                  ),
+                },
+              ]
+            : []),
+          ...(ports?.peers
+            ? [
+                {
+                  external: ports?.peers,
+                  internal: 30303,
+                  protocol: "tcp",
+                },
+                {
+                  external: ports?.peers,
+                  internal: 30303,
+                  protocol: "udp",
+                },
+              ]
+            : []),
+        ]),
       },
       { parent: this }
     );

@@ -21,6 +21,9 @@
   "references": [
     {
       "path": "../ethereum-node"
+    },
+    {
+      "path": "../helpers"
     }
   ]
 }
