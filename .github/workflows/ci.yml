@@ -1,0 +1,21 @@
+name: ci
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - master
+
+jobs:
+  node-lib-lerna:
+    uses: proxima-one/github-workflows/.github/workflows/node-lib-lerna.yml@master
+    with:
+      preview: ${{ github.event_name == 'pull_request' }}
+      publish: true
+      preid: preview
+    secrets:
+      CI_NPM_TOKEN: ${{ secrets.CI_NPM_TOKEN }}
+      CI_PUBLIC_NPM_TOKEN: ${{ secrets.CI_PUBLIC_NPM_TOKEN }}
