@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.11.1...@proxima-one/pulumi-proxima-node@0.12.0) (2022-04-21)
+
+
+### Features
+
+* **@proxima-one/pulumi-proxima-node:** use application id as 'app' label ([57bbc81](https://github.com/proxima-one/pulumi-components/commit/57bbc818f43e8bd8b52a757defafb1c2ad9c8b07))
+
+
+
+
+
 ## [0.11.1](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.11.0...@proxima-one/pulumi-proxima-node@0.11.1) (2022-04-03)
 
 **Note:** Version bump only for package @proxima-one/pulumi-proxima-node
