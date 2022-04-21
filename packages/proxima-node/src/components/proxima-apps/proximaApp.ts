@@ -59,7 +59,7 @@ export class ProximaApp extends pulumi.ComponentResource {
 
     const metadata = pulumi.Output.create(args.metadata);
     const labels = {
-      app: "proxima-app", //metadata.id,
+      app: metadata.id,
     };
 
     const memoryLimitMB = _.floor(
