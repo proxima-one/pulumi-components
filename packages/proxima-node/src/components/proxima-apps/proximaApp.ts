@@ -139,6 +139,9 @@ export class ProximaApp extends pulumi.ComponentResource {
           selector: {
             matchLabels: labels,
           },
+          strategy: {
+            type: "Recreate"
+          },
           template: {
             metadata: {
               labels: labels,
