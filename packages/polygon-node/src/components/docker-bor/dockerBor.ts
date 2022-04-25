@@ -88,6 +88,8 @@ export class DockerBor extends pulumi.ComponentResource {
       name,
       {
         image: borImage.name,
+        hostname: name,
+        domainname: name,
         restart: "unless-stopped",
         networksAdvanced: [{ name: networkName }],
         envs: [],

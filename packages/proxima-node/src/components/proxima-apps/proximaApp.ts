@@ -4,6 +4,7 @@ import * as _ from "lodash";
 import * as yaml from "js-yaml";
 import { JsonObject, ResourceRequirements } from "../types";
 import { parseMemory } from "../../helpers/resources-parser";
+import crypto from "crypto";
 
 /**
  * Installs Proxima App with given metadata
@@ -58,9 +59,9 @@ export class ProximaApp extends pulumi.ComponentResource {
     };
 
     const metadata = pulumi.Output.create(args.metadata);
-    const labels = metadata.apply(m => {
+    const labels = metadata.apply((m) => {
       return {
-        app: m.id.length < 64 ? m.id : m.id.substring(0, 63),
+        app: createAppLabel(m.id),
       };
     });
 
@@ -137,6 +138,9 @@ export class ProximaApp extends pulumi.ComponentResource {
         spec: {
           selector: {
             matchLabels: labels,
+          },
+          strategy: {
+            type: "Recreate"
           },
           template: {
             metadata: {
@@ -222,4 +226,24 @@ export interface DockerAppExecutable {
 
   image: string;
   appName: string;
+}
+
+function createAppLabel(id: string): string {
+  // max length - 63, alphanumeric, "-", "_" and "." allowed, and begins and ends with alphanumeric
+  const regExps = [
+    /^[a-zA-Z0-9-_\.]{0,63}$/,
+    /^[a-zA-Z0-9].*$/,
+    /^.*[a-zA-Z0-9]$/,
+  ];
+
+  const succeed = regExps.filter((regExp) => !regExp.test(id)).length == 0;
+
+  if (succeed) return id;
+
+  const hash = sha256(id);
+  return `proxima-app-${hash}`.substring(0, 63);
+}
+
+function sha256(data: string): string {
+  return crypto.createHash("sha256").update(data).digest("hex");
 }

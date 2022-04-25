@@ -177,6 +177,8 @@ export class DockerHeimdall extends pulumi.ComponentResource {
       `${name}-daemon`,
       {
         ...heimdallCommon,
+        hostname: `${name}-daemon`,
+        domainname: `${name}-daemon`,
         command: commonCliArgs.apply((x) => [
           "start",
           "--home",
@@ -199,6 +201,8 @@ export class DockerHeimdall extends pulumi.ComponentResource {
       `${name}-rest-server`,
       {
         ...heimdallCommon,
+        hostname: `${name}-rest-server`,
+        domainname: `${name}-rest-server`,
         command: commonCliArgs.apply((x) => [
           "rest-server",
           "--home",
@@ -206,7 +210,7 @@ export class DockerHeimdall extends pulumi.ComponentResource {
           "--laddr",
           "tcp://0.0.0.0:1317",
           "--node",
-          this.daemonContainer.name.apply((x) => `tcp://${x}:26657`),
+          this.daemonContainer.domainname.apply((x) => `tcp://${x}:26657`),
           ...x,
         ]),
         ports: resolvedArgs.ports?.apply((ports) =>
