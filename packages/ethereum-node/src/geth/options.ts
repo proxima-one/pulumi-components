@@ -11,6 +11,10 @@ export interface GethOptions {
   syncMode?: SyncMode;
 
   /*
+  Sets gcmode = archive flag
+   */
+  archival?: boolean;
+  /*
   Number of recent blocks to maintain transactions index for (default = about one year, 0 = entire chain) (default: 2350000)
   */
   txLookupLimit?: number;
@@ -94,6 +98,8 @@ export function optionsToArgs(options: GethOptions): string[] {
 
   if (options.txLookupLimit != undefined)
     args.push("--txlookuplimit", options.txLookupLimit.toString());
+
+  if (options.archival) args.push("--gcmode", "archive");
 
   if (options.dataDir != undefined) args.push("--datadir", options.dataDir);
 
