@@ -13,10 +13,6 @@ export interface AppDefinition {
   hostHints?: AppHostHints;
 }
 
-export interface HostingOptions {
-  hints?: AppHostHints;
-}
-
 export interface AppHostingOptions {
   dockerRepo: string;
   eventStore?: {

@@ -140,7 +140,7 @@ export class ProximaApp extends pulumi.ComponentResource {
             matchLabels: labels,
           },
           strategy: {
-            type: "Recreate"
+            type: "Recreate",
           },
           template: {
             metadata: {

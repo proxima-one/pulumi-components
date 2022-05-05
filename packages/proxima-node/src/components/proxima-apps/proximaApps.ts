@@ -36,7 +36,11 @@ export interface ProximaAppsArgs {
   imagePullSecrets?: pulumi.Input<string[]>;
   userConfig: JsonObject;
   clusterConfig: pulumi.Input<JsonObject>;
-  apps: (ProximaAppMetadata & { hostHints?: AppHostHints })[];
+  apps: (ProximaAppMetadata & ProximaAppHostingOptions)[];
+}
+
+export interface ProximaAppHostingOptions {
+  hostHints?: AppHostHints;
 }
 
 export interface AppHostHints {
