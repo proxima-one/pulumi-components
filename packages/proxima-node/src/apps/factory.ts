@@ -1,12 +1,8 @@
 import * as _ from "lodash";
-import {
-  AppDefinition,
-  AppEnvironment,
-  AppHostingOptions,
-  HostingOptions,
-} from "./interfaces";
+import { AppDefinition, AppEnvironment, AppHostingOptions } from "./interfaces";
 import {
   AppExecutable,
+  ProximaAppHostingOptions,
   ProximaAppEnvironment,
   ProximaAppMetadata,
 } from "../components";
@@ -18,8 +14,8 @@ export class ProximaAppFactory {
     env: AppEnvironment,
     namespace: string,
     appDefs: Record<string, AppDefinition>
-  ): (ProximaAppMetadata & HostingOptions)[] {
-    const apps: (ProximaAppMetadata & HostingOptions)[] = [];
+  ): (ProximaAppMetadata & ProximaAppHostingOptions)[] {
+    const apps: (ProximaAppMetadata & ProximaAppHostingOptions)[] = [];
 
     for (const [appKey, appDef] of _.entries(appDefs)) {
       const id = `${namespace}.${appKey}${appDef.version}`;
@@ -37,7 +33,7 @@ export class ProximaAppFactory {
           { outputStream: appDef.output },
           appDef.args
         ),
-        hints: appDef.hostHints,
+        hostHints: appDef.hostHints,
       });
     }
 
