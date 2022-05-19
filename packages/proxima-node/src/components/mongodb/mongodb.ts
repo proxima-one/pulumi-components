@@ -23,7 +23,7 @@ export class MongoDB extends pulumi.ComponentResource {
 
   public readonly connectionDetails: pulumi.Output<MongoDbConnectionDetails>;
 
-  public readonly adminPassword: string
+  public readonly adminPassword: pulumi.Output<string>
 
   public constructor(
     name: string,
