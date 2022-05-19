@@ -113,6 +113,7 @@ export class MongoExpress extends pulumi.ComponentResource {
     this.username = auth.username;
     this.password = passwords.resolve(auth.password);
 
+
     this.registerOutputs({
       username: this.username,
       password: this.password,
