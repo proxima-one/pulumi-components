@@ -14,7 +14,6 @@ export interface MongoExpressArgs {
   mongoAdminAuth: MongoExpressDbAuth;
   auth?: MongoExpressAuth;
   publicHost?: pulumi.Input<string>;
-  storage: Storage;
 }
 
 export interface MongoExpressDbAuth {
