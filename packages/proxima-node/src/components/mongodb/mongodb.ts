@@ -23,6 +23,8 @@ export class MongoDB extends pulumi.ComponentResource {
 
   public readonly connectionDetails: pulumi.Output<MongoDbConnectionDetails>;
 
+  public readonly adminPassword: pulumi.Output<string>
+
   public constructor(
     name: string,
     args: MongoDBArgs,
@@ -89,6 +91,7 @@ export class MongoDB extends pulumi.ComponentResource {
 
     const svcName = `${name}-mongodb`;
     this.resolvedPasswords = passwords.getResolvedPasswords();
+    this.adminPassword = passwords.resolve(auth.password)
 
     this.connectionDetails = pulumi
       .all([args.namespace, passwords.resolve(auth.password)])
@@ -101,7 +104,7 @@ export class MongoDB extends pulumi.ComponentResource {
 
     this.registerOutputs({
       resolvedPasswords: this.resolvedPasswords,
-      adminPassword: passwords.resolve(auth.password),
+      adminPassword: this.adminPassword,
       connectionDetails: this.connectionDetails,
     });
   }

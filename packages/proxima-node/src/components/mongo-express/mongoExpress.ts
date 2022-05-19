@@ -31,6 +31,8 @@ export class MongoExpress extends pulumi.ComponentResource {
   public readonly chart: k8s.helm.v3.Chart;
 
   public readonly resolvedPasswords: pulumi.Output<Record<string, string>>;
+  public readonly username: pulumi.Output<string>;
+  public readonly password: pulumi.Output<string>;
   public readonly ingress?: k8s.networking.v1.Ingress;
 
   public constructor(
@@ -106,10 +108,12 @@ export class MongoExpress extends pulumi.ComponentResource {
     }
 
     this.resolvedPasswords = passwords.getResolvedPasswords();
+    this.username = auth.username;
+    this.password = passwords.resolve(auth.password);
 
     this.registerOutputs({
-      username: auth.username,
-      password: passwords.resolve(auth.password),
+      username: this.username,
+      password: this.password,
     });
   }
 }
