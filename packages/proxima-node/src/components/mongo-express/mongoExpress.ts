@@ -11,6 +11,7 @@ export interface MongoExpressArgs {
   namespace: pulumi.Input<string>;
   resources?: ResourceRequirements;
 
+  mongodbServer: pulumi.Input<string>;
   mongoAdminAuth: MongoExpressDbAuth;
   auth?: MongoExpressAuth;
   publicHost?: pulumi.Input<string>;
@@ -64,6 +65,7 @@ export class MongoExpress extends pulumi.ComponentResource {
           service: {
             port: 80
           },
+          mongodbServer: args.mongodbServer,
           mongodbEnableAdmin: true,
           mongodbAdminUsername: args.mongoAdminAuth.username,
           mongodbAdminPassword: args.mongoAdminAuth.password,
