@@ -18,7 +18,7 @@ export interface MongoExpressArgs {
 
 export interface MongoExpressDbAuth {
   username: string;
-  password: string;
+  password: pulumi.Input<string>;
 }
 
 export interface MongoExpressAuth {
