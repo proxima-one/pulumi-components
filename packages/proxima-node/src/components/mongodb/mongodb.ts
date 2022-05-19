@@ -101,6 +101,7 @@ export class MongoDB extends pulumi.ComponentResource {
 
     this.registerOutputs({
       resolvedPasswords: this.resolvedPasswords,
+      adminPassword: passwords.resolve(auth.password),
       connectionDetails: this.connectionDetails,
     });
   }
