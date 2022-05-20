@@ -98,10 +98,12 @@ export class MongoDB extends pulumi.ComponentResource {
       .all([args.namespace])
       .apply(([ns]) => `${svcName}.${ns}.svc.cluster.local`);
 
-    this.connectionDetails = passwords.resolve(auth.password).apply(pass => {
+    this.connectionDetails = pulumi
+      .all([args.namespace, passwords.resolve(auth.password)])
+      .apply(([ns, pass]) => {
         return {
           database: auth.database,
-          endpoint: `mongodb://${auth.user}:${pass}@${this.dbAddress}/${auth.database}`,
+          endpoint: `mongodb://${auth.user}:${pass}@${svcName}.${ns}.svc.cluster.local/${auth.database}`,
         };
       });
 
