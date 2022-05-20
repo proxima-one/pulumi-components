@@ -63,7 +63,7 @@ export class MongoExpress extends pulumi.ComponentResource {
         namespace: args.namespace,
         values: {
           service: {
-            port: 80
+            port: "80"
           },
           mongodbServer: args.mongodbServer,
           mongodbEnableAdmin: true,
