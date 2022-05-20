@@ -94,7 +94,9 @@ export class MongoDB extends pulumi.ComponentResource {
     const svcName = `${name}-mongodb`;
     this.resolvedPasswords = passwords.getResolvedPasswords();
     this.adminPassword = passwords.resolve(auth.password);
-    this.dbAddress = args.namespace.apply(ns => `${svcName}.${ns}.svc.cluster.local`);
+    this.dbAddress = pulumi
+      .all([args.namespace])
+      .apply(([ns]) => `${svcName}.${ns}.svc.cluster.local`);
 
     this.connectionDetails = passwords.resolve(auth.password).apply(pass => {
         return {
