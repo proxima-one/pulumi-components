@@ -86,7 +86,6 @@ export class MongoExpress extends pulumi.ComponentResource {
             namespace: args.namespace,
             annotations: helpers.ingressAnnotations({
               certIssuer: "letsencrypt",
-              backendHttps: true,
               sslRedirect: true,
               bodySize: "300m",
             }),
