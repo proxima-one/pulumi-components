@@ -76,7 +76,7 @@ export class MongoExpress extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    const svcName = `${name}-mongo-express`;
+    const svcName = `${name}`;
 
     if (args.publicHost) {
       this.ingress = new k8s.networking.v1.Ingress(
@@ -86,7 +86,7 @@ export class MongoExpress extends pulumi.ComponentResource {
             namespace: args.namespace,
             annotations: helpers.ingressAnnotations({
               certIssuer: "letsencrypt",
-              backendGrpc: true,
+              backendHttps: true,
               sslRedirect: true,
               bodySize: "300m",
             }),
