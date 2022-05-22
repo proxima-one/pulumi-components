@@ -78,7 +78,7 @@ export class ProximaServices<
         if (clusterArgs.type != "Provision") continue;
 
         const { type, ...kafkaClusterArgs } = clusterArgs;
-        if (!this.kafkaOperator) {
+        if (!this.kafkaOperator && args.omitKafkaOperator !== true) {
           this.kafkaOperator = new kafka.KafkaOperator(
             "kafka-operator",
             {
@@ -108,7 +108,7 @@ export class ProximaServices<
         if (objectStorageArgs.type != "Provision") continue;
 
         const { type, ...minioClusterArgs } = objectStorageArgs;
-        if (!this.minioOperator) {
+        if (!this.minioOperator && args.omitMinioOperator !== true) {
           this.minioOperator = new minio.MinioOperator(
             "minio-operator",
             {
@@ -313,6 +313,9 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
   streamDBs?: Record<string, StreamDBArgs>;
   documentCollections?: Record<string, DocumentCollectionArgs>;
   networks?: Record<string, NetworkArgs>;
+
+  omitMinioOperator?: boolean;
+  omitKafkaOperator?: boolean;
 
   //streamDbs?: Record<string, StreamDbArgs>;
 }
