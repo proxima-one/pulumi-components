@@ -2,10 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as helpers from "../../helpers";
 
-import {
-  Password,
-  ResourceRequirements,
-} from "../types";
+import { Password, ResourceRequirements } from "../types";
 
 export interface MongoExpressArgs {
   namespace: pulumi.Input<string>;
@@ -28,7 +25,6 @@ export interface MongoExpressAuth {
 }
 
 export class MongoExpress extends pulumi.ComponentResource {
-
   public readonly chart: k8s.helm.v3.Chart;
 
   public readonly resolvedPasswords: pulumi.Output<Record<string, string>>;
@@ -70,7 +66,7 @@ export class MongoExpress extends pulumi.ComponentResource {
           mongodbAdminUsername: args.mongoAdminAuth.username,
           mongodbAdminPassword: args.mongoAdminAuth.password,
           basicAuthUsername: auth.username,
-          basicAuthPassword: passwords.resolve(auth.password)
+          basicAuthPassword: passwords.resolve(auth.password),
         },
       },
       { parent: this }
@@ -111,7 +107,6 @@ export class MongoExpress extends pulumi.ComponentResource {
     this.resolvedPasswords = passwords.getResolvedPasswords();
     this.username = auth.username;
     this.password = passwords.resolve(auth.password);
-
 
     this.registerOutputs({
       username: this.username,
