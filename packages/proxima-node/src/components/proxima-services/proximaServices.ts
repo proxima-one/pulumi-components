@@ -6,10 +6,14 @@ import * as minio from "../minio";
 import * as namespaces from "../namespaces";
 import * as mongodb from "../mongodb";
 import * as blockindexer from "../blockindexer";
+import * as ethindexer from "../eth-indexer";
 import * as streamdb from "../streamdb";
 import * as proximaConfig from "@proxima-one/proxima-config";
+import { strict as assert } from "assert";
 import { mapLookup, ReadonlyLookup } from "../generics";
 import * as yaml from "js-yaml";
+import * as _ from "lodash";
+import * as utils from "@proxima-one/proxima-utils";
 import { ResourceRequirements } from "../types";
 
 export class ProximaServices<
@@ -32,6 +36,7 @@ export class ProximaServices<
   public readonly minioClusters: Record<string, minio.MinioTenant> = {};
   public readonly mongoDbs: Record<string, mongodb.MongoDB> = {};
   public readonly blockIndexers: Record<string, blockindexer.BlockIndexer> = {};
+  public readonly ethIndexers: Record<string, ethindexer.EthIndexer> = {};
   public readonly streamDBs: Record<string, streamdb.StreamDB> = {};
   public readonly configSecret: k8s.core.v1.Secret;
 
@@ -198,6 +203,45 @@ export class ProximaServices<
       }
     }
 
+    if (notEmpty(args.ethIndexers)) {
+      for (const [key, ethIndexerArgs] of Object.entries(args.ethIndexers)) {
+        if (ethIndexerArgs.type != "Provision") continue;
+
+        const mongodb = this.mongoDbs[ethIndexerArgs.storage.mongodb];
+        this.ethIndexers[key] = new ethindexer.EthIndexer(
+          `ethindexer-${key}`,
+          {
+            namespace: ns.services.metadata.name,
+            publicHost: ethIndexerArgs.publicHost,
+            resources: ethIndexerArgs.resources,
+            imagePullSecrets: this.dockerRegistry
+              ? this.dockerRegistry.secrets.apply((secrets) =>
+                  secrets
+                    .filter((x) => x.namespaceKey == "services")
+                    .map((s) => s.secretName)
+                )
+              : [],
+            connection: ethIndexerArgs.connection,
+            storage: mongodb.connectionDetails.apply((x) => {
+              return {
+                type: "MongoDB",
+                uri: x.endpoint,
+                database: x.database,
+              };
+            }),
+            auth: {
+              password: {
+                type: "random",
+                name: `${key}-authToken`,
+              },
+            },
+            nodeSelector: args.nodeSelector,
+          },
+          { parent: this }
+        );
+      }
+    }
+
     if (notEmpty(args.streamDBs)) {
       for (const [key, streamDBArgs] of Object.entries(args.streamDBs)) {
         if (streamDBArgs.type != "Provision") continue;
@@ -310,6 +354,7 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
   storages?: Record<string, StorageArgs>;
 
   blockIndexers?: Record<string, BlockIndexerArgs>;
+  ethIndexers?: Record<string, EthIndexerArgs>;
   streamDBs?: Record<string, StreamDBArgs>;
   documentCollections?: Record<string, DocumentCollectionArgs>;
   networks?: Record<string, NetworkArgs>;
@@ -320,9 +365,9 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
   //streamDbs?: Record<string, StreamDbArgs>;
 }
 
-interface StreamDbArgs {
-  storageSize: string;
-}
+// interface StreamDbArgs {
+//   storageSize: string;
+// }
 
 type MongoDbArgs = ProvisionNewMongoDbArgs | ImportMongoDbArgs;
 
@@ -352,6 +397,21 @@ type ProvisionStreamDBArgs = {
     mongodb: string;
   };
 };
+
+type EthIndexerArgs = ProvisionEthIndexerArgs;
+
+interface ProvisionEthIndexerArgs {
+  type: "Provision";
+  connection: {
+    http?: pulumi.Input<string>;
+    wss?: pulumi.Input<string>;
+  };
+  storage: {
+    mongodb: string;
+  };
+  resources?: ResourceRequirements;
+  publicHost?: pulumi.Input<string | string[]>;
+}
 
 type BlockIndexerArgs = ImportBlockIndexerArgs | ProvisionBlockIndexerArgs;
 

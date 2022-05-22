@@ -1707,6 +1707,14 @@
   resolved "https://npm.pkg.github.com/download/@proxima-one/proxima-config/0.2.3/ca23b5581450de292e5f7e22a1503d44dece7758675ebb2abe8120ba608c4bba#f01b9fd69961ca925f2fe80b54305914494258c1"
   integrity sha512-PwqIf7SP/mivzgIk0JKuDJ/QOXzDrwhLsMgnk1YEKcHpOT9DNiPb7wlFo2IetdhAfGvwOukFKmtIbkXTZNQFaQ==
 
+"@proxima-one/proxima-utils@^0.1.5":
+  version "0.1.5"
+  resolved "https://npm.pkg.github.com/download/@proxima-one/proxima-utils/0.1.5/583a7d583f9f8725bc0571cd5f3bcfb27d9ccfeb11b3d0b6f6297c7d534f17cc#a5cce9161803e28a276742cc8fa6236a7cdc3532"
+  integrity sha512-0n+k131gEGST4/RoWG8m7CTs+JcvdojoTy6qK5TuJFvanGx8+37ptcrTAWYU+WcPgrIy0l+5TR7h5Gu54qiPeg==
+  dependencies:
+    "@types/long" "^4.0.1"
+    long "^4.0.0"
+
 "@pulumi/command@^0.0.3":
   version "0.0.3"
   resolved "https://registry.yarnpkg.com/@pulumi/command/-/command-0.0.3.tgz#99a8a2dbcfafbb742016793130e6174b2d4c670b"

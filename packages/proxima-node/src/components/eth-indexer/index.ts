@@ -19,7 +19,7 @@ export interface EthIndexerArgs {
   connection: {
     http?: pulumi.Input<string>;
     wss?: pulumi.Input<string>;
-  }
+  };
   nodeSelector?: pulumi.Input<Record<string, string>>;
   imagePullSecrets?: pulumi.Input<string[]>;
   resources?: ResourceRequirements;
@@ -108,11 +108,17 @@ export class EthIndexer extends pulumi.ComponentResource {
       ? pulumi.Output.create(args.indexerApiImageTag)
       : pulumi.Output.create(defaultIndexerApiImageTag);
 
-    const rpcIndexerArgs: pulumi.Input<pulumi.Input<string>[]> =
-        ["--storage.uri", resolvedArgs.apply(x => x.storage.uri), "--storage.database", resolvedArgs.apply(x => x.storage.database)];
+    const rpcIndexerArgs: pulumi.Input<pulumi.Input<string>[]> = [
+      "--storage.uri",
+      resolvedArgs.apply((x) => x.storage.uri),
+      "--storage.database",
+      resolvedArgs.apply((x) => x.storage.database),
+    ];
 
     if (!args.connection.http && !args.connection.wss) {
-      throw new Error("Invalid arguments: at least one argument of http.url or ws.url should be specified.");
+      throw new Error(
+        "Invalid arguments: at least one argument of http.url or ws.url should be specified."
+      );
     }
 
     if (args.connection.http) {
@@ -208,8 +214,7 @@ export class EthIndexer extends pulumi.ComponentResource {
       {
         metadata: {
           namespace: args.namespace,
-          labels: {
-          },
+          labels: {},
         },
         spec: {
           selector: labels,
