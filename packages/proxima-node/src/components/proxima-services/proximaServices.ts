@@ -8,13 +8,14 @@ import * as mongodb from "../mongodb";
 import * as blockindexer from "../blockindexer";
 import * as ethindexer from "../eth-indexer";
 import * as streamdb from "../streamdb";
+import * as stateManager from "../state-manager";
 import * as proximaConfig from "@proxima-one/proxima-config";
 import { strict as assert } from "assert";
 import { mapLookup, ReadonlyLookup } from "../generics";
 import * as yaml from "js-yaml";
 import * as _ from "lodash";
 import * as utils from "@proxima-one/proxima-utils";
-import { ResourceRequirements } from "../types";
+import { NewStorageClaim, ResourceRequirements } from "../types";
 
 export class ProximaServices<
   TNamespaces extends string
@@ -38,6 +39,7 @@ export class ProximaServices<
   public readonly blockIndexers: Record<string, blockindexer.BlockIndexer> = {};
   public readonly ethIndexers: Record<string, ethindexer.EthIndexer> = {};
   public readonly streamDBs: Record<string, streamdb.StreamDB> = {};
+  public readonly stateManagers: Record<string, stateManager.StateManager> = {};
   public readonly configSecret: k8s.core.v1.Secret;
 
   public constructor(
@@ -77,6 +79,13 @@ export class ProximaServices<
         { parent: this }
       );
     }
+    const servicesImagePullSecrets = this.dockerRegistry
+      ? this.dockerRegistry.secrets.apply((secrets) =>
+          secrets
+            .filter((x) => x.namespaceKey == "services")
+            .map((s) => s.secretName)
+        )
+      : [];
 
     if (notEmpty(args.kafkaClusters)) {
       for (const [key, clusterArgs] of Object.entries(args.kafkaClusters)) {
@@ -176,13 +185,7 @@ export class ProximaServices<
             namespace: ns.services.metadata.name,
             publicHost: newBlockIndexerArgs.publicHost,
             resources: newBlockIndexerArgs.resources,
-            imagePullSecrets: this.dockerRegistry
-              ? this.dockerRegistry.secrets.apply((secrets) =>
-                  secrets
-                    .filter((x) => x.namespaceKey == "services")
-                    .map((s) => s.secretName)
-                )
-              : [],
+            imagePullSecrets: servicesImagePullSecrets,
             storage: mongodb.connectionDetails.apply((x) => {
               return {
                 type: "MongoDB",
@@ -214,13 +217,7 @@ export class ProximaServices<
             namespace: ns.services.metadata.name,
             publicHost: ethIndexerArgs.publicHost,
             resources: ethIndexerArgs.resources,
-            imagePullSecrets: this.dockerRegistry
-              ? this.dockerRegistry.secrets.apply((secrets) =>
-                  secrets
-                    .filter((x) => x.namespaceKey == "services")
-                    .map((s) => s.secretName)
-                )
-              : [],
+            imagePullSecrets: servicesImagePullSecrets,
             connection: ethIndexerArgs.connection,
             storage: mongodb.connectionDetails.apply((x) => {
               return {
@@ -254,13 +251,7 @@ export class ProximaServices<
             namespace: ns.services.metadata.name,
             publicHost: newStreamDBArgs.publicHost,
             resources: newStreamDBArgs.resources,
-            imagePullSecrets: this.dockerRegistry
-              ? this.dockerRegistry.secrets.apply((secrets) =>
-                  secrets
-                    .filter((x) => x.namespaceKey == "services")
-                    .map((s) => s.secretName)
-                )
-              : [],
+            imagePullSecrets: servicesImagePullSecrets,
             storage: mongodb.connectionDetails.apply((x) => {
               return {
                 connectionString: x.endpoint,
@@ -268,6 +259,29 @@ export class ProximaServices<
                 streams: [],
               };
             }),
+            nodeSelector: args.nodeSelector,
+          },
+          { parent: this }
+        );
+      }
+    }
+
+    if (notEmpty(args.stateManagers)) {
+      for (const [key, stateManagerArgs] of Object.entries(
+        args.stateManagers
+      )) {
+        if (stateManagerArgs.type != "Provision") continue;
+
+        const { type, ...newStateManager } = stateManagerArgs;
+        this.stateManagers[key] = new stateManager.StateManager(
+          `state-manager-${key}`,
+          {
+            namespace: ns.services.metadata.name,
+            imageName: newStateManager.imageName,
+            imagePullSecrets: servicesImagePullSecrets,
+            publicHost: newStateManager.publicHost,
+            resources: newStateManager.resources,
+            storage: newStateManager.storage,
             nodeSelector: args.nodeSelector,
           },
           { parent: this }
@@ -356,6 +370,7 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
   blockIndexers?: Record<string, BlockIndexerArgs>;
   ethIndexers?: Record<string, EthIndexerArgs>;
   streamDBs?: Record<string, StreamDBArgs>;
+  stateManagers?: Record<string, StateManagerArgs>;
   documentCollections?: Record<string, DocumentCollectionArgs>;
   networks?: Record<string, NetworkArgs>;
 
@@ -396,6 +411,15 @@ type ProvisionStreamDBArgs = {
   storage: {
     mongodb: string;
   };
+};
+
+type StateManagerArgs = ProvisionStateManagerArgs;
+type ProvisionStateManagerArgs = {
+  type: "Provision";
+  imageName: pulumi.Input<string>;
+  resources?: ResourceRequirements;
+  storage: NewStorageClaim;
+  publicHost?: pulumi.Input<string | string[]>;
 };
 
 type EthIndexerArgs = ProvisionEthIndexerArgs;

@@ -8,7 +8,7 @@ export interface AppDefinition {
   };
   version: string;
   input?: string | string[];
-  output?: string | Record<string ,string>;
+  output?: string | Record<string, string>;
   args?: any;
   hostHints?: AppHostHints;
 }
