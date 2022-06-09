@@ -1702,10 +1702,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
 
-"@proxima-one/proxima-config@^0.2.3":
-  version "0.2.3"
-  resolved "https://npm.pkg.github.com/download/@proxima-one/proxima-config/0.2.3/ca23b5581450de292e5f7e22a1503d44dece7758675ebb2abe8120ba608c4bba#f01b9fd69961ca925f2fe80b54305914494258c1"
-  integrity sha512-PwqIf7SP/mivzgIk0JKuDJ/QOXzDrwhLsMgnk1YEKcHpOT9DNiPb7wlFo2IetdhAfGvwOukFKmtIbkXTZNQFaQ==
+"@proxima-one/proxima-config@^0.3.0":
+  version "0.3.0"
+  resolved "https://npm.pkg.github.com/download/@proxima-one/proxima-config/0.3.0/04b4199f47b8a10356c76c02c86ea3d6f091a226c4dc047dc0c674c3cc641061#4bea403752a3a0288b19975bf1f3cc05f3574f33"
+  integrity sha512-bnUV0cAL88gvur67yZl+Z3syK/m9lo5GBLRBnRyQv3XPxJRjDt8pyYg6B+sw4Xf+mgMOyDhy9SebFQ4GYBEjCg==
 
 "@proxima-one/proxima-utils@^0.1.5":
   version "0.1.5"

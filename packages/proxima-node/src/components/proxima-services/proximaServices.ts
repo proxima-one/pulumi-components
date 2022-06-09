@@ -343,15 +343,20 @@ export class ProximaServices<
       mapLookup(this.blockIndexers, (x) => x.connectionDetails)
     );
 
+    const stateManagerConnections = pulumi.all(
+      mapLookup(this.stateManagers, (x) => x.connectionDetails)
+    );
+
     return pulumi
       .all([
         provisionedKafkaConnections,
         provisionedMinioConnections,
         provisionedMongoDbs,
         blockIndexers,
+        stateManagerConnections,
       ])
-      .apply(([kafka, minio, mongos, blockIndexers]) =>
-        generateConfig(args, kafka, minio, mongos, blockIndexers)
+      .apply(([kafka, minio, mongos, blockIndexers, stateManagers]) =>
+        generateConfig(args, kafka, minio, mongos, blockIndexers, stateManagers)
       );
   }
 }
@@ -518,13 +523,18 @@ function generateConfig<TNamespaces extends string>(
   kafkas: ReadonlyLookup<kafka.KafkaConnectionDetails>,
   minios: ReadonlyLookup<minio.MinioConnectionDetails>,
   mongos: ReadonlyLookup<mongodb.MongoDbConnectionDetails>,
-  blockIndexers: ReadonlyLookup<blockindexer.BlockIndexerConnectionDetails>
+  blockIndexers: ReadonlyLookup<blockindexer.BlockIndexerConnectionDetails>,
+  stateManagers: ReadonlyLookup<stateManager.StateManagerConnectionDetails>
 ): proximaConfig.ProximaNodeConfig {
   return {
     blockIndexers: mapLookup(args.blockIndexers ?? {}, toBlockIndexerConfig),
     databases: {
       ...mapLookup(args.kafkaClusters ?? {}, toKafkaConfig),
       ...mapLookup(args.mongoDbs ?? {}, toMongoDbConfig),
+      ..._.mapKeys(
+        mapLookup(args.stateManagers ?? {}, toStateManagerConfig),
+        (_value, key) => `state-manager-${key}`
+      ),
     },
     documentCollections: mapLookup(
       args.documentCollections ?? {},
@@ -635,6 +645,20 @@ function generateConfig<TNamespaces extends string>(
           type: "mongodb",
           uri: connectionDetails.endpoint,
           db: connectionDetails.database,
+        };
+    }
+  }
+
+  function toStateManagerConfig(
+    args: StateManagerArgs,
+    key: string
+  ): proximaConfig.DatabaseConfig {
+    switch (args.type) {
+      case "Provision":
+        const connectionDetails = stateManagers[key];
+        return {
+          type: "state-manager",
+          uri: connectionDetails.endpoint,
         };
     }
   }
