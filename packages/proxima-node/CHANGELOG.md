@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.1](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.13.0...@proxima-one/pulumi-proxima-node@0.13.1) (2022-06-09)
+
+
+### Bug Fixes
+
+* Add state manager connection info to generated config ([7311164](https://github.com/proxima-one/pulumi-components/commit/7311164b52f44d8c21726dc6ccff2917afd8af98))
+
+
+
+
+
 # [0.13.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.12.21...@proxima-one/pulumi-proxima-node@0.13.0) (2022-06-09)
 
 
