@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.13.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.12.21...@proxima-one/pulumi-proxima-node@0.13.0) (2022-06-09)
+
+
+### Features
+
+* Add StateManager component ([380ad3d](https://github.com/proxima-one/pulumi-components/commit/380ad3dc7170a71e2567ae7eb9ff1ac658892897))
+
+
+
+
+
 ## [0.12.21](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.12.20...@proxima-one/pulumi-proxima-node@0.12.21) (2022-05-31)
 
 **Note:** Version bump only for package @proxima-one/pulumi-proxima-node
