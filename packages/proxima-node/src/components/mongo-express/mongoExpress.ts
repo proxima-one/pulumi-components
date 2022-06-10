@@ -1,8 +1,9 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as helpers from "../../helpers";
+import * as random from "@pulumi/random";
 
-import { Password, ResourceRequirements } from "../types";
+import {Password, ResourceRequirements} from "../types";
 
 export interface MongoExpressArgs {
   namespace: pulumi.Input<string>;
@@ -67,9 +68,15 @@ export class MongoExpress extends pulumi.ComponentResource {
           mongodbAdminPassword: args.mongoAdminAuth.password,
           basicAuthUsername: auth.username,
           basicAuthPassword: passwords.resolve(auth.password),
+          siteCookieSecret: new random.RandomPassword(`${name}-site-cookie-secret`,
+            {length: 32, special: false},
+            {parent: this}),
+          siteSessionSecret: new random.RandomPassword(`${name}-site-session-secret`,
+            {length: 32, special: false},
+            {parent: this}),
         },
       },
-      { parent: this }
+      {parent: this}
     );
 
     const svcName = `${name}`;
@@ -100,7 +107,7 @@ export class MongoExpress extends pulumi.ComponentResource {
             },
           }),
         },
-        { parent: this }
+        {parent: this}
       );
     }
 
