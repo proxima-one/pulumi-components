@@ -19,7 +19,7 @@ export class PasswordResolver {
 
         const pass = new random.RandomPassword(
           password.name,
-          { length: 30, special: false },
+          { length: password.length ?? 30, special: false },
           { parent: this.baseResource }
         ).result;
         this.pendingPasswordsLookup[password.name] = pass;

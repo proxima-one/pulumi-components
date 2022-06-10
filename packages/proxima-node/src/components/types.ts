@@ -32,6 +32,7 @@ export interface ResourceMetrics extends Record<string, string> {
 
 export interface NewRandomPassword {
   type: "random";
+  length?: number;
   name: string;
 }
 

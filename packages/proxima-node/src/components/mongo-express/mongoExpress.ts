@@ -48,6 +48,16 @@ export class MongoExpress extends pulumi.ComponentResource {
         name: `${name}-secret`,
       },
     };
+    const siteCookieSecret: Password = {
+      type: "random",
+      length: 32,
+      name: `${name}-site-cookie-secret`,
+    }
+    const siteSessionSecret: Password = {
+      type: "random",
+      length: 32,
+      name: `${name}-site-session-secret`,
+    }
 
     this.chart = new k8s.helm.v3.Chart(
       name,
@@ -59,21 +69,14 @@ export class MongoExpress extends pulumi.ComponentResource {
         version: "2.6.5",
         namespace: args.namespace,
         values: {
-          // service: {
-          //   port: "80"
-          // },
           mongodbServer: args.mongodbServer,
           mongodbEnableAdmin: true,
           mongodbAdminUsername: args.mongoAdminAuth.username,
           mongodbAdminPassword: args.mongoAdminAuth.password,
           basicAuthUsername: auth.username,
           basicAuthPassword: passwords.resolve(auth.password),
-          siteCookieSecret: new random.RandomPassword(`${name}-site-cookie-secret`,
-            {length: 32, special: false},
-            {parent: this}),
-          siteSessionSecret: new random.RandomPassword(`${name}-site-session-secret`,
-            {length: 32, special: false},
-            {parent: this}),
+          siteCookieSecret: passwords.resolve(siteCookieSecret),
+          siteSessionSecret: passwords.resolve(siteSessionSecret),
         },
       },
       {parent: this}
