@@ -10,6 +10,7 @@ export * from "./cert-manager";
 export * from "./postgresql";
 export * from "./blockindexer";
 export * from "./eth-indexer";
+export * from "./near-indexer";
 export * from "./streamdb";
 export * from "./pgadmin";
 export * from "./generics";
