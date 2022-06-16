@@ -209,7 +209,7 @@ export class StateManager extends pulumi.ComponentResource {
         args.publicHost
       ).apply((publicHost) => {
         return {
-          endpoint: `${publicHost}:${appPort}`,
+          endpoint: `${publicHost}:443`,
         };
       });
     }
