@@ -24,7 +24,6 @@ export interface EthIndexerArgs {
   imagePullSecrets?: pulumi.Input<string[]>;
   resources?: ResourceRequirements;
   publicHost?: pulumi.Input<string | string[]>;
-  indexerImageTag?: pulumi.Input<string>;
   indexerApiImageTag?: pulumi.Input<string>;
 }
 
@@ -33,8 +32,7 @@ export interface EthIndexerConnectionDetails {
   authToken: string;
 }
 
-const defaultIndexerImageTag = "rpc-indexer-0.0.1";
-const defaultIndexerApiImageTag = "rpc-indexer-api-0.0.1";
+const defaultIndexerApiImageTag = "rpc-indexer-api-0.0.2-a10c85c";
 const appPort = 50052;
 const metricsPort = 2112;
 /**
@@ -69,6 +67,13 @@ export class EthIndexer extends pulumi.ComponentResource {
       },
     };
 
+    if (!args.connection.http && !args.connection.wss) {
+      throw new Error(
+        "Invalid arguments: at least one argument of http.url or ws.url should be specified."
+      );
+    }
+
+    const resolvedArgs = pulumi.output(args);
     const passwords = new PasswordResolver(this);
     this.config = new k8s.core.v1.ConfigMap(
       name,
@@ -89,6 +94,10 @@ export class EthIndexer extends pulumi.ComponentResource {
                     metricsPort: metricsPort,
                     superUserToken: password,
                   },
+                  "rpc-endpoint": {
+                    http: args.connection.http,
+                    ws: args.connection.wss,
+                  }
                 },
                 { indent: 2 }
               )
@@ -98,36 +107,9 @@ export class EthIndexer extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    const resolvedArgs = pulumi.output(args);
-
-    const indexerImageTag = args.indexerImageTag
-      ? pulumi.Output.create(args.indexerImageTag)
-      : pulumi.Output.create(defaultIndexerImageTag);
-
     const indexerApiImageTag = args.indexerApiImageTag
       ? pulumi.Output.create(args.indexerApiImageTag)
       : pulumi.Output.create(defaultIndexerApiImageTag);
-
-    const rpcIndexerArgs: pulumi.Input<pulumi.Input<string>[]> = [
-      "--storage.uri",
-      resolvedArgs.apply((x) => x.storage.uri),
-      "--storage.database",
-      resolvedArgs.apply((x) => x.storage.database),
-    ];
-
-    if (!args.connection.http && !args.connection.wss) {
-      throw new Error(
-        "Invalid arguments: at least one argument of http.url or ws.url should be specified."
-      );
-    }
-
-    if (args.connection.http) {
-      rpcIndexerArgs.push("--http.url", args.connection.http);
-    }
-
-    if (args.connection.wss) {
-      rpcIndexerArgs.push("--ws.url", args.connection.wss);
-    }
 
     this.deployment = new k8s.apps.v1.Deployment(
       name,
@@ -169,19 +151,10 @@ export class EthIndexer extends pulumi.ComponentResource {
                 {
                   image: pulumi.concat(
                     "quay.io/proxima.one/services:",
-                    indexerImageTag
-                  ),
-                  args: rpcIndexerArgs,
-                  name: "indexer",
-                  ports: [],
-                  resources: computeResources,
-                },
-                {
-                  image: pulumi.concat(
-                    "quay.io/proxima.one/services:",
                     indexerApiImageTag
                   ),
                   name: "api",
+                  args: ["--config", "/app/config.yaml", "--indexer", "--server"],
                   ports: [
                     {
                       name: "api",
