@@ -3,7 +3,7 @@ import * as k8s from "@pulumi/kubernetes";
 import * as helpers from "../../helpers";
 import * as random from "@pulumi/random";
 
-import {Password, ResourceRequirements} from "../types";
+import { Password, ResourceRequirements } from "../types";
 
 export interface MongoExpressArgs {
   namespace: pulumi.Input<string>;
@@ -52,12 +52,12 @@ export class MongoExpress extends pulumi.ComponentResource {
       type: "random",
       length: 32,
       name: `${name}-site-cookie-secret`,
-    }
+    };
     const siteSessionSecret: Password = {
       type: "random",
       length: 32,
       name: `${name}-site-session-secret`,
-    }
+    };
 
     this.chart = new k8s.helm.v3.Chart(
       name,
@@ -79,7 +79,7 @@ export class MongoExpress extends pulumi.ComponentResource {
           siteSessionSecret: passwords.resolve(siteSessionSecret),
         },
       },
-      {parent: this}
+      { parent: this }
     );
 
     const svcName = `${name}`;
@@ -110,7 +110,7 @@ export class MongoExpress extends pulumi.ComponentResource {
             },
           }),
         },
-        {parent: this}
+        { parent: this }
       );
     }
 
