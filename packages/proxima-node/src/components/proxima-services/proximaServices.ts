@@ -246,14 +246,15 @@ export class ProximaServices<
         if (nearIndexerArgs.type != "Provision") continue;
 
         const mongodb = this.mongoDbs[nearIndexerArgs.storage.mongodb];
-        this.ethIndexers[key] = new ethindexer.EthIndexer(
-          `ethindexer-${key}`,
+        this.nearIndexers[key] = new nearindexer.NearIndexer(
+          `nearindexer-${key}`,
           {
             namespace: ns.services.metadata.name,
             publicHost: nearIndexerArgs.publicHost,
             resources: nearIndexerArgs.resources,
             imagePullSecrets: servicesImagePullSecrets,
             connection: nearIndexerArgs.connection,
+            network: nearIndexerArgs.network,
             storage: mongodb.connectionDetails.apply((x) => {
               return {
                 type: "MongoDB",
@@ -482,8 +483,9 @@ type NearIndexerArgs = ProvisionNearIndexerArgs;
 interface ProvisionNearIndexerArgs {
   type: "Provision";
   connection: {
-    http?: pulumi.Input<string>;
+    http: pulumi.Input<string>;
   };
+  network: string;
   storage: {
     mongodb: string;
   };
