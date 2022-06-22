@@ -97,7 +97,9 @@ export class EthIndexer extends pulumi.ComponentResource {
                   "rpc-endpoint": {
                     http: args.connection.http,
                     ws: args.connection.wss,
-                  }
+                  },
+                  logging: true,
+                  "goroutines-limit": 20,
                 },
                 { indent: 2 }
               )
