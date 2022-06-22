@@ -7,6 +7,7 @@ import * as namespaces from "../namespaces";
 import * as mongodb from "../mongodb";
 import * as blockindexer from "../blockindexer";
 import * as ethindexer from "../eth-indexer";
+import * as nearindexer from "../near-indexer";
 import * as streamdb from "../streamdb";
 import * as stateManager from "../state-manager";
 import * as proximaConfig from "@proxima-one/proxima-config";
@@ -38,6 +39,7 @@ export class ProximaServices<
   public readonly mongoDbs: Record<string, mongodb.MongoDB> = {};
   public readonly blockIndexers: Record<string, blockindexer.BlockIndexer> = {};
   public readonly ethIndexers: Record<string, ethindexer.EthIndexer> = {};
+  public readonly nearIndexers: Record<string, nearindexer.NearIndexer> = {};
   public readonly streamDBs: Record<string, streamdb.StreamDB> = {};
   public readonly stateManagers: Record<string, stateManager.StateManager> = {};
   public readonly configSecret: k8s.core.v1.Secret;
@@ -239,6 +241,39 @@ export class ProximaServices<
       }
     }
 
+    if (notEmpty(args.nearIndexers)) {
+      for (const [key, nearIndexerArgs] of Object.entries(args.nearIndexers)) {
+        if (nearIndexerArgs.type != "Provision") continue;
+
+        const mongodb = this.mongoDbs[nearIndexerArgs.storage.mongodb];
+        this.ethIndexers[key] = new ethindexer.EthIndexer(
+          `ethindexer-${key}`,
+          {
+            namespace: ns.services.metadata.name,
+            publicHost: nearIndexerArgs.publicHost,
+            resources: nearIndexerArgs.resources,
+            imagePullSecrets: servicesImagePullSecrets,
+            connection: nearIndexerArgs.connection,
+            storage: mongodb.connectionDetails.apply((x) => {
+              return {
+                type: "MongoDB",
+                uri: x.endpoint,
+                database: x.database,
+              };
+            }),
+            auth: {
+              password: {
+                type: "random",
+                name: `${key}-authToken`,
+              },
+            },
+            nodeSelector: args.nodeSelector,
+          },
+          { parent: this }
+        );
+      }
+    }
+
     if (notEmpty(args.streamDBs)) {
       for (const [key, streamDBArgs] of Object.entries(args.streamDBs)) {
         if (streamDBArgs.type != "Provision") continue;
@@ -374,6 +409,7 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
 
   blockIndexers?: Record<string, BlockIndexerArgs>;
   ethIndexers?: Record<string, EthIndexerArgs>;
+  nearIndexers?: Record<string, NearIndexerArgs>;
   streamDBs?: Record<string, StreamDBArgs>;
   stateManagers?: Record<string, StateManagerArgs>;
   documentCollections?: Record<string, DocumentCollectionArgs>;
@@ -434,6 +470,19 @@ interface ProvisionEthIndexerArgs {
   connection: {
     http?: pulumi.Input<string>;
     wss?: pulumi.Input<string>;
+  };
+  storage: {
+    mongodb: string;
+  };
+  resources?: ResourceRequirements;
+  publicHost?: pulumi.Input<string | string[]>;
+}
+
+type NearIndexerArgs = ProvisionNearIndexerArgs;
+interface ProvisionNearIndexerArgs {
+  type: "Provision";
+  connection: {
+    http?: pulumi.Input<string>;
   };
   storage: {
     mongodb: string;
