@@ -32,7 +32,7 @@ export interface EthIndexerConnectionDetails {
   authToken: string;
 }
 
-const defaultIndexerApiImageTag = "rpc-indexer-api-0.0.2-a10c85c";
+const defaultIndexerApiImageTag = "rpc-indexer-api-0.0.2-19a39c8";
 const appPort = 50052;
 const metricsPort = 2112;
 /**

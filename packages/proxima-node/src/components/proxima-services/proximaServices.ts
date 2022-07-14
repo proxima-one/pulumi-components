@@ -226,6 +226,7 @@ export class ProximaServices<
                 type: "MongoDB",
                 uri: x.endpoint,
                 database: x.database,
+                compress: "zlib",
               };
             }),
             auth: {
