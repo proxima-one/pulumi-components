@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.11](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.13.10...@proxima-one/pulumi-proxima-node@0.13.11) (2022-07-14)
+
+**Note:** Version bump only for package @proxima-one/pulumi-proxima-node
+
+
+
+
+
 ## [0.13.10](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.13.9...@proxima-one/pulumi-proxima-node@0.13.10) (2022-06-29)
 
 **Note:** Version bump only for package @proxima-one/pulumi-proxima-node
