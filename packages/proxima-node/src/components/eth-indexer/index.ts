@@ -73,7 +73,6 @@ export class EthIndexer extends pulumi.ComponentResource {
       );
     }
 
-    const resolvedArgs = pulumi.output(args);
     const passwords = new PasswordResolver(this);
     this.config = new k8s.core.v1.ConfigMap(
       name,
