@@ -9,6 +9,7 @@ import {
   Password,
   ResourceRequirements,
 } from "../types";
+import {MongoExpress} from "@proxima-one/pulumi-proxima-node";
 
 /**
  * Installs strimzi-kafka-operator helm chart
@@ -26,6 +27,8 @@ export class MongoDB extends pulumi.ComponentResource {
   public readonly dbAddress: pulumi.Output<string>;
 
   public readonly adminPassword: pulumi.Output<string>;
+
+  public readonly mongoExpress?: MongoExpress;
 
   public constructor(
     name: string,
@@ -107,11 +110,29 @@ export class MongoDB extends pulumi.ComponentResource {
         };
       });
 
+    if (args.mongoExpress) {
+      const mongoExpressArgs = pulumi.output(args.mongoExpress)
+      this.mongoExpress = new MongoExpress(name + "-mongo-express", {
+        namespace: args.namespace,
+        mongodbServer: this.dbAddress,
+        mongoAdminAuth: {
+          username: "root",
+          password: this.adminPassword
+        },
+        auth: {
+          username: "mongo-express",
+          password: {type: "random", name: name + "-mongo-express"}
+        },
+        publicHost: name + `-mongo-express.${mongoExpressArgs.endpoint}`
+      }, opts)
+    }
+
     this.registerOutputs({
       dbAddress: this.dbAddress,
       resolvedPasswords: this.resolvedPasswords,
       adminPassword: this.adminPassword,
       connectionDetails: this.connectionDetails,
+      mongoExpress: this.mongoExpress,
     });
   }
 }
@@ -123,6 +144,10 @@ export interface MongoDBArgs {
 
   auth?: MongoDBAuth;
   storage: Storage;
+
+  mongoExpress?: pulumi.Input<{
+    endpoint: string;
+  }>;
 }
 
 export interface MongoDBAuth {
