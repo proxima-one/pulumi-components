@@ -131,6 +131,7 @@ export class MongoDB extends pulumi.ComponentResource {
       resolvedPasswords: this.resolvedPasswords,
       adminPassword: this.adminPassword,
       connectionDetails: this.connectionDetails,
+      mongoExpress: this.mongoExpress,
     });
   }
 }
