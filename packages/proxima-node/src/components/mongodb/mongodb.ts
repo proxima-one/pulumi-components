@@ -110,7 +110,8 @@ export class MongoDB extends pulumi.ComponentResource {
         };
       });
 
-    if (args.mongoExpressEndpoint) {
+    if (args.mongoExpress) {
+      const mongoExpressArgs = pulumi.output(args.mongoExpress)
       this.mongoExpress = new MongoExpress(name + "-mongo-express", {
         namespace: args.namespace,
         mongodbServer: this.dbAddress,
@@ -122,7 +123,7 @@ export class MongoDB extends pulumi.ComponentResource {
           username: "mongo-express",
           password: {type: "random", name: name + "-mongo-express"}
         },
-        publicHost: name + `-mongo-express.${args.mongoExpressEndpoint}`
+        publicHost: name + `-mongo-express.${mongoExpressArgs.endpoint}`
       }, opts)
     }
 
@@ -144,7 +145,9 @@ export interface MongoDBArgs {
   auth?: MongoDBAuth;
   storage: Storage;
 
-  mongoExpressEndpoint?: pulumi.Input<string>;
+  mongoExpress?: pulumi.Input<{
+    endpoint: string;
+  }>;
 }
 
 export interface MongoDBAuth {
