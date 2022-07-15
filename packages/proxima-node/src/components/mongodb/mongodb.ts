@@ -121,9 +121,9 @@ export class MongoDB extends pulumi.ComponentResource {
         },
         auth: {
           username: "mongo-express",
-          password: {type: "random", name: name + "-mongo-express"}
+          password: {type: "random", name: name + "-express"}
         },
-        publicHost: name + `-mongo-express.${mongoExpressArgs.endpoint}`
+        publicHost: mongoExpressArgs.endpoint
       }, opts)
     }
 
