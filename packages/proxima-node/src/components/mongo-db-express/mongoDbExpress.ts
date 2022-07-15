@@ -31,12 +31,8 @@ export class MongoDbExpress extends pulumi.ComponentResource {
     }, opts)
 
     this.registerOutputs({
-      dbAddress: this.mongoDb.dbAddress,
-      resolvedPasswords: this.mongoDb.resolvedPasswords,
-      adminPassword: this.mongoDb.adminPassword,
-      connectionDetails: this.mongoDb.connectionDetails,
-      username: this.mongoExpress.username,
-      password: this.mongoExpress.password,
+      mongoDb: this.mongoDb,
+      mongoExpress: this.mongoExpress
     });
 
   }
