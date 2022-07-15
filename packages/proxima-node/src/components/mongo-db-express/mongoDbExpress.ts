@@ -2,6 +2,10 @@ import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import {MongoDB, MongoDBArgs, MongoExpress} from "@proxima-one/pulumi-proxima-node";
 
+interface MongoDbExpressArgs extends MongoDBArgs {
+  mongoExpressPublicHost: string
+}
+
 export class MongoDbExpress extends pulumi.ComponentResource {
 
   public readonly mongoDb: MongoDB;
@@ -9,8 +13,7 @@ export class MongoDbExpress extends pulumi.ComponentResource {
 
   public constructor(
     name: string,
-    args: MongoDBArgs,
-    mongoExpressPublicHost: string,
+    args: MongoDbExpressArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima-k8s:MongoExpress", name, args, opts);
@@ -27,7 +30,7 @@ export class MongoDbExpress extends pulumi.ComponentResource {
         username: "mongo-express",
         password: {type: "random", name: name + "-mongo-express"}
       },
-      publicHost: name + `-mongo-express.${mongoExpressPublicHost}`
+      publicHost: name + `-mongo-express.${args.mongoExpressPublicHost}`
     }, opts)
 
     this.registerOutputs({
