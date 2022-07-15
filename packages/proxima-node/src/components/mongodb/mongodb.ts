@@ -112,7 +112,7 @@ export class MongoDB extends pulumi.ComponentResource {
 
     if (args.mongoExpress) {
       const mongoExpressArgs = pulumi.output(args.mongoExpress)
-      this.mongoExpress = new MongoExpress(name + "-mongo-express", {
+      this.mongoExpress = new MongoExpress(name + "-express", {
         namespace: args.namespace,
         mongodbServer: this.dbAddress,
         mongoAdminAuth: {
