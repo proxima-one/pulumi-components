@@ -146,7 +146,7 @@ export interface MongoDBArgs {
   storage: Storage;
 
   mongoExpress?: pulumi.Input<{
-    endpoint: string;
+    endpoint: pulumi.Input<string>;
   }>;
 }
 
