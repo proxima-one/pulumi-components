@@ -20,16 +20,6 @@ export interface ExistingStorageClaim {
   name: string;
 }
 
-export interface ResourceRequirements {
-  requests: ResourceMetrics;
-  limits: ResourceMetrics;
-}
-
-export interface ResourceMetrics extends Record<string, string> {
-  memory: string;
-  cpu: string;
-}
-
 export interface NewRandomPassword {
   type: "random";
   length?: number;

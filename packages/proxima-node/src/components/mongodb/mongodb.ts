@@ -7,7 +7,6 @@ import {
   ExistingStorageClaim,
   NewStorageClaim,
   Password,
-  ResourceRequirements,
 } from "../types";
 import {MongoExpress} from "@proxima-one/pulumi-proxima-node";
 
@@ -140,7 +139,7 @@ export class MongoDB extends pulumi.ComponentResource {
 export interface MongoDBArgs {
   namespace: pulumi.Input<string>;
   nodeSelector?: pulumi.Input<Record<string, string>>;
-  resources?: ResourceRequirements;
+  resources?: k8s.types.input.core.v1.ResourceRequirements;
 
   auth?: MongoDBAuth;
   storage: Storage;
