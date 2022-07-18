@@ -1,3 +1,5 @@
+import * as k8s from "@pulumi/kubernetes";
+
 interface ComplexValue extends Readonly<Record<string, Value>> {}
 interface ArrayValue extends ReadonlyArray<Value> {}
 type Value =
@@ -19,6 +21,8 @@ export interface NewStorageClaim {
 export interface ExistingStorageClaim {
   name: string;
 }
+
+export interface ResourceRequirements extends k8s.types.input.core.v1.ResourceRequirements {}
 
 export interface NewRandomPassword {
   type: "random";
