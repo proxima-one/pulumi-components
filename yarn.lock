@@ -1744,6 +1744,20 @@
     shell-quote "^1.6.1"
     tmp "^0.0.33"
 
+"@pulumi/kubernetes@^3.17.0":
+  version "3.20.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/kubernetes/-/kubernetes-3.20.0.tgz#9141cc1d3f90cdace6bc70ccace506361dfa7cc0"
+  integrity sha512-gl5wGIDaXMlh6iEvaOHE5z6Ge25iKwn+fiFKLfeNXlrOlOTfv3fLYXV4JKWwi1Y+kv6gGvJ0j5EernCTb331nw==
+  dependencies:
+    "@pulumi/pulumi" "^3.25.0"
+    "@types/glob" "^5.0.35"
+    "@types/node-fetch" "^2.1.4"
+    "@types/tmp" "^0.0.33"
+    glob "^7.1.2"
+    node-fetch "^2.3.0"
+    shell-quote "^1.6.1"
+    tmp "^0.0.33"
+
 "@pulumi/kubernetesx@^0.1.5":
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/@pulumi/kubernetesx/-/kubernetesx-0.1.6.tgz#61518ae6a7d37c17998561b8d5290546815bad1d"
@@ -1774,6 +1788,27 @@
     require-from-string "^2.0.1"
     semver "^6.1.0"
     source-map-support "^0.4.16"
+    ts-node "^7.0.1"
+    typescript "~3.7.3"
+    upath "^1.1.0"
+
+"@pulumi/pulumi@^3.25.0":
+  version "3.36.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.36.0.tgz#f57b52c3a311cbc550329a410c0634bdb12e52d2"
+  integrity sha512-xQqIZvEXXvhdH6rw/kPOGyGGvpIVrWTXIOi0YsKFFfm5rX/4Ja7PbxtwGLazjCGTy8qUJSCPVQdm5OA2h3+L6A==
+  dependencies:
+    "@grpc/grpc-js" "~1.3.8"
+    "@logdna/tail-file" "^2.0.6"
+    "@pulumi/query" "^0.3.0"
+    google-protobuf "^3.5.0"
+    ini "^2.0.0"
+    js-yaml "^3.14.0"
+    minimist "^1.2.6"
+    normalize-package-data "^2.4.0"
+    read-package-tree "^5.3.1"
+    require-from-string "^2.0.1"
+    semver "^6.1.0"
+    source-map-support "^0.5.6"
     ts-node "^7.0.1"
     typescript "~3.7.3"
     upath "^1.1.0"
