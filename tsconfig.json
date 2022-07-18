@@ -43,9 +43,6 @@
       "path": "packages/helpers"
     },
     {
-      "path": "packages/indexer"
-    },
-    {
       "path": "packages/polygon-node"
     },
     {
