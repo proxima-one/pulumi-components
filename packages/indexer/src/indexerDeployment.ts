@@ -8,12 +8,10 @@ export interface IndexerDeploymentArgs {
   containerArgs?: pulumi.Input<string>[]
   replicas?: pulumi.Input<number>
   env?: Record<string, pulumi.Input<string>>
-
-  endpoints?: IndexerEndpoint[]
-
   imagePullSecret: pulumi.Input<string>
   resources: ResourceRequirements
   namespace: pulumi.Input<string>
+  endpoints?: IndexerEndpoint[]
 }
 
 export interface IndexerEndpoint {

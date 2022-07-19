@@ -1,4 +1,3 @@
-
 import * as pulumi from "@pulumi/pulumi";
 
 export interface ShardMetadata {
@@ -10,6 +9,23 @@ export interface Shard {
   name: pulumi.Input<string>
   metadata: ShardMetadata
   configuration: ShardResources
+}
+
+export interface ShardResources {
+  consumer: ShardDeploymentConfig
+  server?: ShardDeploymentConfig
+  storage?: ShardStorageResources
+}
+
+export interface ShardDeploymentConfig {
+  resources: ResourceRequirements
+  env?: Record<string, pulumi.Input<string>>
+  scale?: pulumi.Input<number>
+}
+
+export interface ShardStorageResources {
+  size: string
+  resources: ResourceRequirements
 }
 
 export interface ResourceRequirements {
@@ -38,21 +54,4 @@ export function ParseResourceRequirements(req: ResourceRequirements): PulumiReso
       memory: req.memory.split("/")[1],
     },
   }
-}
-
-export interface ShardDeploymentConfig {
-  resources: ResourceRequirements
-  env?: Record<string, pulumi.Input<string>>
-  scale?: pulumi.Input<number>
-}
-
-export interface ShardStorageResources {
-  size: string
-  resources: ResourceRequirements
-}
-
-export interface ShardResources {
-  consumer: ShardDeploymentConfig
-  server?: ShardDeploymentConfig
-  storage?: ShardStorageResources
 }
