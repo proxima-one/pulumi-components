@@ -26,7 +26,8 @@
   },
   "dependencies": {
     "@pulumi/pulumi": "^3.0.0",
-    "@pulumi/kubernetes": "^3.17.0"
+    "@pulumi/kubernetes": "^3.17.0",
+    "@proxima-one/pulumi-proxima-node": "^0.13.16"
   },
   "engines": {
     "node": ">=16.0.0"
