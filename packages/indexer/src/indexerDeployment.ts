@@ -64,7 +64,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
     }, {parent: this});
 
     if (args.endpoints) {
-      const service = new k8s.core.v1.Service("active-tokens-apis", {
+      const service = new k8s.core.v1.Service(`${name}`, {
         metadata: {
           namespace: args.namespace,
         },
