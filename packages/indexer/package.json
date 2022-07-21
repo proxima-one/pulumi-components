@@ -1,0 +1,39 @@
+{
+  "name": "@proxima-one/pulumi-indexer",
+  "version": "0.1.0",
+  "description": "pulumi components to run geth",
+  "repository": "git@github.com:proxima-one/pulumi-components.git",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "lib"
+  ],
+  "scripts": {
+    "clean": "rimraf -rf dist && rimraf tsconfig.tsbuildinfo",
+    "format": "prettier --write \"{src,__tests__}/**/*.ts\"",
+    "lint": "eslint . --ext .ts",
+    "prepublishOnly": "yarn build",
+    "prebuild": "yarn clean && yarn format && yarn lint && echo Using TypeScript && tsc --version",
+    "build": "tsc --build && yarn copy-content-files",
+    "test": "jest --passWithNoTests",
+    "copy-content-files": "yarn copyfiles -u 1 \"src/**/*\" dist/",
+    "coverage": "jest --coverage",
+    "start": "ts-node -r tsconfig-paths/register src/index.ts",
+    "start:app": "yarn start app start --",
+    "watch": "yarn build -- --watch",
+    "watch:test": "jest --watch"
+  },
+  "dependencies": {
+    "@pulumi/pulumi": "^3.0.0",
+    "@pulumi/kubernetes": "^3.17.0",
+    "@proxima-one/pulumi-proxima-node": "^0.13.16"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "jest": {
+    "preset": "<rootDir>/"
+  },
+  "gitHead": "2412b8ad89fbf18ee838367b774b07b21a62900c"
+}
