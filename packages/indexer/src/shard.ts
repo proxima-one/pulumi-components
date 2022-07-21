@@ -12,7 +12,7 @@ export interface Shard {
 }
 
 export interface ShardResources {
-  consumer: ShardDeploymentConfig
+  consumers: ShardDeploymentConfig[]
   server?: ShardDeploymentConfig
   storage?: ShardStorageResources
 }
