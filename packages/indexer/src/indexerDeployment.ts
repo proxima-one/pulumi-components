@@ -26,7 +26,8 @@ export class IndexerDeployment extends pulumi.ComponentResource {
     super("proxima-k8s:IndexerDeployment", name, args, opts);
 
     const labels: Record<string, string> = {
-      app: name
+      app: name,
+      monitoring: "true",
     }
 
     const deployment = new k8s.apps.v1.Deployment(name, {
