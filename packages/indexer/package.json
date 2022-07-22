@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-indexer",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "pulumi components to run geth",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
