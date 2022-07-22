@@ -100,7 +100,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
               },
             },
             tls: {
-              secretName: `${endpoint.name}-tls`,
+              secretName: `${endpoint.endpoint}-${endpoint.name}-tls`,
             },
           }),
         }, {dependsOn: service, parent: this});
