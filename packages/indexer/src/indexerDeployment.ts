@@ -14,6 +14,11 @@ function GetStringHash(s: string): number {
   return hash;
 }
 
+export interface Port {
+  name: string
+  port: number
+}
+
 export interface IndexerDeploymentArgs {
   image: pulumi.Input<string>
   containerArgs?: pulumi.Input<string>[]
@@ -21,6 +26,7 @@ export interface IndexerDeploymentArgs {
   env?: Record<string, pulumi.Input<string>>
   imagePullSecret: pulumi.Input<string>
   resources: ResourceRequirements
+  containerPorts?: Port[]
   namespace: pulumi.Input<string>
   endpoints?: IndexerEndpoint[]
 }
@@ -67,6 +73,11 @@ export class IndexerDeployment extends pulumi.ComponentResource {
                 ([key, value]: [string, pulumi.Input<string>]) => ({
                   name: key,
                   value: value
+                })) : []),
+              ports: (args.ports ? args.ports.map(
+                (port: Port) => ({
+                  name: port.name,
+                  containerPort: port.port
                 })) : []),
               resources: ParseResourceRequirements(args.resources)
             }],
