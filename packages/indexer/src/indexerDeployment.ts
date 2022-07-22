@@ -3,6 +3,17 @@ import * as k8s from "@pulumi/kubernetes";
 import * as ingress from "./ingress"
 import {ResourceRequirements, ParseResourceRequirements} from "./shard";
 
+function GetStringHash(s: string): number {
+  let hash = 0, i, chr;
+  if (s.length === 0) return hash;
+  for (i = 0; i < s.length; i++) {
+    chr = s.charCodeAt(i);
+    hash = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
+
 export interface IndexerDeploymentArgs {
   image: pulumi.Input<string>
   containerArgs?: pulumi.Input<string>[]
@@ -102,7 +113,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
             },
             tls: {
               secretName: pulumi.all([endpoint.endpoint, endpoint.name])
-                .apply(([endpoint, name]: [string, string]) => `${endpoint}-${name}-tls`),
+                .apply(([endpoint, name]: [string, string]) => GetStringHash(`${endpoint}-${name}-tls`).toString()),
             },
           }),
         }, {dependsOn: service, parent: this});
