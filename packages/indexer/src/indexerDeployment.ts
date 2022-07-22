@@ -74,7 +74,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
                   name: key,
                   value: value
                 })) : []),
-              ports: (args.ports ? args.ports.map(
+              ports: (args.containerPorts ? args.containerPorts.map(
                 (port: Port) => ({
                   name: port.name,
                   containerPort: port.port
