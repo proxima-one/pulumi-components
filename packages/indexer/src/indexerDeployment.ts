@@ -101,7 +101,8 @@ export class IndexerDeployment extends pulumi.ComponentResource {
               },
             },
             tls: {
-              secretName: `${endpoint.endpoint}-${endpoint.name}-tls`,
+              secretName: pulumi.all([endpoint.endpoint, endpoint.name])
+                .apply(([endpoint, name]: [string, string]) => `${endpoint}-${name}-tls`),
             },
           }),
         }, {dependsOn: service, parent: this});
