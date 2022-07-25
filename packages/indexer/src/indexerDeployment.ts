@@ -123,7 +123,9 @@ export class IndexerDeployment extends pulumi.ComponentResource {
               },
             },
             // tls: {
-            //   secretName: `${name}-${endpoint.name}-tls`,
+            //   secretName: pulumi.all([endpoint.endpoint, endpoint.name])
+            //     .apply(([endpoint, name]: [string, string]) =>
+            //       Math.abs(GetStringHash(`${endpoint}-${name}-tls`)).toString()),
             // },
           }),
         }, {dependsOn: service, parent: this});
