@@ -55,3 +55,10 @@ export function ParseResourceRequirements(req: ResourceRequirements): PulumiReso
     },
   }
 }
+
+export interface DeployedShard {
+  name: pulumi.Input<string>
+  networks: pulumi.Input<string>[]
+  internalEndpoint: pulumi.Input<string>
+  endpoint: pulumi.Input<string>
+}
