@@ -124,7 +124,7 @@ export class MongoDB extends pulumi.ComponentResource {
           password: {type: "random", name: name + "-mongo-express"}
         },
         publicHost: mongoExpressArgs.endpoint
-      }, opts)
+      }, {...opts, dependsOn: this.chart})
     }
 
     this.registerOutputs({

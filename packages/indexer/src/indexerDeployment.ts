@@ -3,6 +3,22 @@ import * as k8s from "@pulumi/kubernetes";
 import * as ingress from "./ingress"
 import {ResourceRequirements, ParseResourceRequirements} from "./shard";
 
+function GetStringHash(s: string): number {
+  let hash = 0, i, chr;
+  if (s.length === 0) return hash;
+  for (i = 0; i < s.length; i++) {
+    chr = s.charCodeAt(i);
+    hash = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+export interface Port {
+  name: string
+  port: number
+}
+
 export interface IndexerDeploymentArgs {
   image: pulumi.Input<string>
   containerArgs?: pulumi.Input<string>[]
@@ -10,6 +26,7 @@ export interface IndexerDeploymentArgs {
   env?: Record<string, pulumi.Input<string>>
   imagePullSecret: pulumi.Input<string>
   resources: ResourceRequirements
+  containerPorts?: Port[]
   namespace: pulumi.Input<string>
   endpoints?: IndexerEndpoint[]
 }
@@ -26,7 +43,8 @@ export class IndexerDeployment extends pulumi.ComponentResource {
     super("proxima-k8s:IndexerDeployment", name, args, opts);
 
     const labels: Record<string, string> = {
-      app: name
+      app: name,
+      monitoring: "true",
     }
 
     const deployment = new k8s.apps.v1.Deployment(name, {
@@ -55,6 +73,11 @@ export class IndexerDeployment extends pulumi.ComponentResource {
                 ([key, value]: [string, pulumi.Input<string>]) => ({
                   name: key,
                   value: value
+                })) : []),
+              ports: (args.containerPorts ? args.containerPorts.map(
+                (port: Port) => ({
+                  name: port.name,
+                  containerPort: port.port
                 })) : []),
               resources: ParseResourceRequirements(args.resources)
             }],
