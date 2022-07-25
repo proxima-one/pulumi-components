@@ -71,6 +71,7 @@ export function ingressAnnotations(
 
   if (args.sslRedirect)
     res["nginx.ingress.kubernetes.io/ssl-redirect"] = "true";
+    res["nginx.org/hsts"] = "false"
 
   if (args.bodySize) {
     res["nginx.ingress.kubernetes.io/proxy-body-size"] = args.bodySize;
