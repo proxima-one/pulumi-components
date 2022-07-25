@@ -39,6 +39,10 @@ export interface IndexerEndpoint {
 }
 
 export class IndexerDeployment extends pulumi.ComponentResource {
+  public readonly deployment: k8s.apps.v1.Deployment;
+
+  public readonly service: k8s.core.v1.Service | undefined;
+
   public constructor(name: string, args: IndexerDeploymentArgs, opts: pulumi.ComponentResourceOptions) {
     super("proxima-k8s:IndexerDeployment", name, args, opts);
 
@@ -47,7 +51,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
       monitoring: "true",
     }
 
-    const deployment = new k8s.apps.v1.Deployment(name, {
+    this.deployment = new k8s.apps.v1.Deployment(name, {
       metadata: {
         namespace: args.namespace,
       },
@@ -87,7 +91,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
     }, {parent: this});
 
     if (args.endpoints) {
-      const service = new k8s.core.v1.Service(`${name}`, {
+      this.service = new k8s.core.v1.Service(`${name}`, {
         metadata: {
           namespace: args.namespace,
         },
@@ -100,7 +104,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
             targetPort: endpoint.servicePort,
           })),
         }
-      }, {dependsOn: deployment, parent: this});
+      }, {dependsOn: this.deployment, parent: this});
 
       for (const endpoint of args.endpoints) {
         new k8s.networking.v1.Ingress(`${name}-${endpoint.name}`, {
@@ -119,7 +123,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
             path: "/",
             backend: {
               service: {
-                name: service.id.apply(s => s.split("/")[1]),  // This is needed as Pulumi sets physical name in k8s as resource_name+random_hash
+                name: this.service.id.apply(s => s.split("/")[1]),  // This is needed as Pulumi sets physical name in k8s as resource_name+random_hash
                 port: endpoint.servicePort,
               },
             },
@@ -129,7 +133,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
             //       Math.abs(GetStringHash(`${endpoint}-${name}-tls`)).toString()),
             // },
           }),
-        }, {dependsOn: service, parent: this});
+        }, {dependsOn: this.service, parent: this});
       }
     }
   }
