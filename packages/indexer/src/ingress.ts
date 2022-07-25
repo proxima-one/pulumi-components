@@ -72,8 +72,8 @@ export function ingressAnnotations(
   if (args.sslRedirect != undefined)
     res["nginx.ingress.kubernetes.io/ssl-redirect"] = args.sslRedirect.toString();
 
-  if (args.disableHsts != undefined)
-    res["nginx.org/hsts"] = args.disableHsts.toString();
+  if (args.hsts != undefined)
+    res["nginx.org/hsts"] = args.hsts.toString();
 
   if (args.bodySize) {
     res["nginx.ingress.kubernetes.io/proxy-body-size"] = args.bodySize;
@@ -90,6 +90,6 @@ export interface SimpleIngressAnnotations {
   bodySize?: string;
   certIssuer?: string;
   sslRedirect?: boolean;
-  disableHsts?: boolean;
+  hsts?: boolean;
   backendGrpc?: boolean;
 }

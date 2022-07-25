@@ -109,7 +109,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
             annotations: ingress.ingressAnnotations({
               // certIssuer: "letsencrypt",
               sslRedirect: false,
-              disableHsts: true,
+              hsts: false,
               backendGrpc: endpoint.type == "grpc",
               bodySize: "300m",
             }),
