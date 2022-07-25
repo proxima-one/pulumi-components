@@ -107,8 +107,9 @@ export class IndexerDeployment extends pulumi.ComponentResource {
           metadata: {
             namespace: args.namespace,
             annotations: ingress.ingressAnnotations({
-              certIssuer: "letsencrypt",
-              sslRedirect: true,
+              // certIssuer: "letsencrypt",
+              sslRedirect: false,
+              hsts: false,
               backendGrpc: endpoint.type == "grpc",
               bodySize: "300m",
             }),
@@ -122,11 +123,11 @@ export class IndexerDeployment extends pulumi.ComponentResource {
                 port: endpoint.servicePort,
               },
             },
-            tls: {
-              secretName: pulumi.all([endpoint.endpoint, endpoint.name])
-                .apply(([endpoint, name]: [string, string]) =>
-                  Math.abs(GetStringHash(`${endpoint}-${name}-tls`)).toString()),
-            },
+            // tls: {
+            //   secretName: pulumi.all([endpoint.endpoint, endpoint.name])
+            //     .apply(([endpoint, name]: [string, string]) =>
+            //       Math.abs(GetStringHash(`${endpoint}-${name}-tls`)).toString()),
+            // },
           }),
         }, {dependsOn: service, parent: this});
       }
