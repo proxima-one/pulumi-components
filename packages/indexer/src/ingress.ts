@@ -69,10 +69,10 @@ export function ingressAnnotations(
   if (args.backendGrpc)
     res["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC";
 
-  if (args.sslRedirect)
-    res["nginx.ingress.kubernetes.io/ssl-redirect"] = "true";
+  if (args.sslRedirect != undefined)
+    res["nginx.ingress.kubernetes.io/ssl-redirect"] = args.sslRedirect.toString();
 
-  if (args.hsts)
+  if (args.disableHsts)
     res["nginx.org/hsts"] = "false";
 
   if (args.bodySize) {
@@ -90,6 +90,6 @@ export interface SimpleIngressAnnotations {
   bodySize?: string;
   certIssuer?: string;
   sslRedirect?: boolean;
-  hsts?: boolean;
+  disableHsts?: boolean;
   backendGrpc?: boolean;
 }
