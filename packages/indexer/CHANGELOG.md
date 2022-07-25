@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.12](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-indexer@0.1.11...@proxima-one/pulumi-indexer@0.1.12) (2022-07-25)
+
+**Note:** Version bump only for package @proxima-one/pulumi-indexer
+
+
+
+
+
 ## [0.1.11](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-indexer@0.1.10...@proxima-one/pulumi-indexer@0.1.11) (2022-07-25)
 
 **Note:** Version bump only for package @proxima-one/pulumi-indexer
