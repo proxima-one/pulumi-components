@@ -8,6 +8,7 @@ import { Password, ResourceRequirements } from "../types";
 export interface MongoExpressArgs {
   namespace: pulumi.Input<string>;
   resources?: ResourceRequirements;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
 
   mongodbServer: pulumi.Input<string>;
   mongoAdminAuth: MongoExpressDbAuth;
@@ -69,6 +70,7 @@ export class MongoExpress extends pulumi.ComponentResource {
         version: "2.6.5",
         namespace: args.namespace,
         values: {
+          nodeSelector: args.nodeSelector,
           mongodbServer: args.mongodbServer,
           mongodbEnableAdmin: true,
           mongodbAdminUsername: args.mongoAdminAuth.username,
