@@ -21,6 +21,7 @@ export interface Port {
 
 export interface IndexerDeploymentArgs {
   image: pulumi.Input<string>
+  nodeSelector: pulumi.Output<Record<string, string>>
   containerArgs?: pulumi.Input<string>[]
   replicas?: pulumi.Input<number>
   env?: Record<string, pulumi.Input<string>>
@@ -66,6 +67,7 @@ export class IndexerDeployment extends pulumi.ComponentResource {
           },
           spec: {
             restartPolicy: "Always",
+            nodeSelector: args.nodeSelector,
             imagePullSecrets: [{
               name: args.imagePullSecret
             }],
