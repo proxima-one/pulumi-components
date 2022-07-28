@@ -9,6 +9,7 @@ import * as blockindexer from "../blockindexer";
 import * as ethindexer from "../eth-indexer";
 import * as nearindexer from "../near-indexer";
 import * as streamdb from "../streamdb";
+import * as monitoring from "../streams-monitoring";
 import * as stateManager from "../state-manager";
 import * as proximaConfig from "@proxima-one/proxima-config";
 import { strict as assert } from "assert";
@@ -41,6 +42,7 @@ export class ProximaServices<
   public readonly ethIndexers: Record<string, ethindexer.EthIndexer> = {};
   public readonly nearIndexers: Record<string, nearindexer.NearIndexer> = {};
   public readonly streamDBs: Record<string, streamdb.StreamDB> = {};
+  public readonly streamsMonitoring: Record<string, monitoring.StreamsMonitoring> = {};
   public readonly stateManagers: Record<string, stateManager.StateManager> = {};
   public readonly configSecret: k8s.core.v1.Secret;
 
@@ -303,6 +305,30 @@ export class ProximaServices<
       }
     }
 
+     if (notEmpty(args.streamsMonitoring)) {
+      for (const [key, monitoringArgs] of Object.entries(args.streamsMonitoring)) {
+        if (monitoringArgs.type != "Provision") continue;
+
+        const mongodb = this.mongoDbs[monitoringArgs.storage.mongodb];
+        this.streamsMonitoring[key] = new monitoring.StreamsMonitoring(
+          `streams-monitoring-${key}`,
+          {
+            namespace: ns.services.metadata.name,
+            resources: monitoringArgs.resources,
+            imagePullSecrets: servicesImagePullSecrets,
+            storage: mongodb.connectionDetails.apply((x) => {
+              return {
+                uri: x.endpoint,
+                database: x.database
+              };
+            }),
+            nodeSelector: args.nodeSelector,
+          },
+          { parent: this }
+        );
+      }
+    }
+
     if (notEmpty(args.stateManagers)) {
       for (const [key, stateManagerArgs] of Object.entries(
         args.stateManagers
@@ -413,6 +439,7 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
   ethIndexers?: Record<string, EthIndexerArgs>;
   nearIndexers?: Record<string, NearIndexerArgs>;
   streamDBs?: Record<string, StreamDBArgs>;
+  streamsMonitoring?: Record<string, StreamsMonitoringArgs>;
   stateManagers?: Record<string, StateManagerArgs>;
   documentCollections?: Record<string, DocumentCollectionArgs>;
   networks?: Record<string, NetworkArgs>;
@@ -492,6 +519,15 @@ interface ProvisionNearIndexerArgs {
   };
   resources?: ResourceRequirements;
   publicHost?: pulumi.Input<string | string[]>;
+}
+
+type StreamsMonitoringArgs = ProvisionStreamsMonitoringArgs;
+interface ProvisionStreamsMonitoringArgs {
+  type: "Provision";
+  storage: {
+    mongodb: string;
+  };
+  resources?: ResourceRequirements;
 }
 
 type BlockIndexerArgs = ImportBlockIndexerArgs | ProvisionBlockIndexerArgs;
