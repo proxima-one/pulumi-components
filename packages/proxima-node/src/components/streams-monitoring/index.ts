@@ -35,6 +35,7 @@ export class StreamsMonitoring extends pulumi.ComponentResource {
     super("proxima-k8s:StreamsMonitoring", name, args, opts);
     const labels: Record<string, string> = {
       app: name,
+      monitoring: "true",
     };
 
     const computeResources = args.resources ?? {
