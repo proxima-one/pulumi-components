@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-indexer",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "pulumi components to run geth",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
@@ -25,7 +25,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-proxima-node": "^0.13.20",
+    "@proxima-one/pulumi-proxima-node": "^0.13.21",
     "@pulumi/kubernetes": "^3.17.0",
     "@pulumi/pulumi": "^3.0.0"
   },
