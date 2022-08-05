@@ -112,7 +112,7 @@ export class ProximaApp extends pulumi.ComponentResource {
         meta.env.sourceStreams ??
         (meta.env.sourceStream ? [meta.env.sourceStream] : []);
 
-      args.push("--target-db", meta.env.db);
+      if (meta.newRuntime == false) args.push("--target-db", meta.env.db);
 
       if (sourceStreams.length > 0) {
         args.push("--source-db", meta.env.sourceDb ?? meta.env.db);
@@ -208,6 +208,8 @@ export interface ProximaAppMetadata {
 
   env: ProximaAppEnvironment;
   args?: JsonObject;
+
+  newRuntime: boolean;
   // additional files??
 }
 

@@ -13,7 +13,8 @@ export class ProximaAppFactory {
   public create(
     env: AppEnvironment,
     namespace: string,
-    appDefs: Record<string, AppDefinition>
+    appDefs: Record<string, AppDefinition>,
+    newRuntime: boolean = false
   ): (ProximaAppMetadata & ProximaAppHostingOptions)[] {
     const apps: (ProximaAppMetadata & ProximaAppHostingOptions)[] = [];
 
@@ -31,8 +32,11 @@ export class ProximaAppFactory {
           {},
           env.defaultArgs ?? {},
           { outputStream: appDef.output },
+          { output: appDef.output },
+          { db: env.targetDb },
           appDef.args
         ),
+        newRuntime: newRuntime,
         hostHints: appDef.hostHints,
       });
     }
@@ -59,6 +63,7 @@ export class ProximaAppFactory {
               eventStoreStream: to,
             },
             id: `eventStore.${from}`,
+            newRuntime: newRuntime,
             executable: proximaStreamingApp(
               this.options.dockerRepo,
               eventStore.executable
