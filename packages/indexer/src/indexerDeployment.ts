@@ -29,6 +29,9 @@ export interface IndexerDeploymentArgs {
   resources: ResourceRequirements
   containerPorts?: Port[]
   namespace: pulumi.Input<string>
+  proximaEnv: string
+  shardId: string
+  indexerName: string
   endpoints?: IndexerEndpoint[]
 }
 
@@ -50,6 +53,9 @@ export class IndexerDeployment extends pulumi.ComponentResource {
     const labels: Record<string, string> = {
       app: name,
       monitoring: "true",
+      env: args.proximaEnv,
+      index: args.indexerName,
+      shard: args.shardId
     }
 
     this.deployment = new k8s.apps.v1.Deployment(name, {
