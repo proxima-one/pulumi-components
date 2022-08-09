@@ -14,8 +14,8 @@ export interface StreamDBArgs {
     db: string;
     streams: { id: string; collection: string }[];
   }>;
-  relayer: pulumi.Input<{
-    streams: Map<string, {name: string; connectTo: string;}>
+  relayer?: pulumi.Input<{
+    streams: Map<string, { name: string; connectTo: string }>;
   }>;
   imagePullSecrets?: pulumi.Input<string[]>;
   resources?: ResourceRequirements;
@@ -73,7 +73,7 @@ export class StreamDB extends pulumi.ComponentResource {
             yaml.dump(
               {
                 storage: storage,
-                relayer: relayer,
+                relayer: relayer || {},
               },
               { indent: 2 }
             )
