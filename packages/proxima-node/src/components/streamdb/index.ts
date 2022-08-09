@@ -123,7 +123,7 @@ export class StreamDB extends pulumi.ComponentResource {
               containers: [
                 {
                   image: pulumi.concat(
-                    "quay.io/proxima.one/services/",
+                    "quay.io/proxima.one/services:",
                     imageTag
                   ),
                   name: "app",
