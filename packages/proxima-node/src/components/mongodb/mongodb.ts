@@ -76,7 +76,9 @@ export class MongoDB extends pulumi.ComponentResource {
               passwords: [pass],
             };
           }),
-          nameOverride: svcName,
+          service: {
+            nameOverride: svcName,
+          },
           persistence: persistence,
           nodeSelector: args.nodeSelector,
           replicaCount: 1,
