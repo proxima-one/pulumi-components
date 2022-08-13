@@ -151,7 +151,7 @@ export interface MongoDBArgs {
 
   auth?: MongoDBAuth;
   storage: Storage;
-  replicaSet?: pulumi.Input<boolean>; 
+  replicaSet?: pulumi.Input<boolean>;
 
   mongoExpress?: pulumi.Input<{
     endpoint: pulumi.Input<string>;
