@@ -33,11 +33,11 @@ export function ingressSpec(
       }),
       tls: args.tls
         ? [
-          {
-            secretName: args.tls.secretName,
-            hosts: hosts,
-          },
-        ]
+            {
+              secretName: args.tls.secretName,
+              hosts: hosts,
+            },
+          ]
         : [],
     };
   });
@@ -70,10 +70,10 @@ export function ingressAnnotations(
     res["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC";
 
   if (args.sslRedirect != undefined)
-    res["nginx.ingress.kubernetes.io/ssl-redirect"] = args.sslRedirect.toString();
+    res["nginx.ingress.kubernetes.io/ssl-redirect"] =
+      args.sslRedirect.toString();
 
-  if (args.hsts != undefined)
-    res["nginx.org/hsts"] = args.hsts.toString();
+  if (args.hsts != undefined) res["nginx.org/hsts"] = args.hsts.toString();
 
   if (args.bodySize) {
     res["nginx.ingress.kubernetes.io/proxy-body-size"] = args.bodySize;

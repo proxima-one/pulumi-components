@@ -42,7 +42,10 @@ export class ProximaServices<
   public readonly ethIndexers: Record<string, ethindexer.EthIndexer> = {};
   public readonly nearIndexers: Record<string, nearindexer.NearIndexer> = {};
   public readonly streamDBs: Record<string, streamdb.StreamDB> = {};
-  public readonly streamsMonitoring: Record<string, monitoring.StreamsMonitoring> = {};
+  public readonly streamsMonitoring: Record<
+    string,
+    monitoring.StreamsMonitoring
+  > = {};
   public readonly stateManagers: Record<string, stateManager.StateManager> = {};
   public readonly configSecret: k8s.core.v1.Secret;
 
@@ -305,8 +308,10 @@ export class ProximaServices<
       }
     }
 
-     if (notEmpty(args.streamsMonitoring)) {
-      for (const [key, monitoringArgs] of Object.entries(args.streamsMonitoring)) {
+    if (notEmpty(args.streamsMonitoring)) {
+      for (const [key, monitoringArgs] of Object.entries(
+        args.streamsMonitoring
+      )) {
         if (monitoringArgs.type != "Provision") continue;
 
         const mongodb = this.mongoDbs[monitoringArgs.storage.mongodb];
@@ -319,7 +324,7 @@ export class ProximaServices<
             storage: mongodb.connectionDetails.apply((x) => {
               return {
                 uri: x.endpoint,
-                database: x.database
+                database: x.database,
               };
             }),
             nodeSelector: args.nodeSelector,

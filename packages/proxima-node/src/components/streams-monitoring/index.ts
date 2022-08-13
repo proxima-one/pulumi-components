@@ -16,7 +16,6 @@ export interface StreamsMonitoringArgs {
   imageTag?: pulumi.Input<string>;
 }
 
-
 const defaultIndexerApiImageTag = "streams-monitoring-0.0.1-3656dba";
 const metricsPort = 2112;
 /**
@@ -56,20 +55,18 @@ export class StreamsMonitoring extends pulumi.ComponentResource {
           namespace: args.namespace,
         },
         data: {
-          "config.yml": pulumi
-            .all([args.storage])
-            .apply(([storage]) =>
-              yaml.dump(
-                {
-                  storage: storage,
-                  server: {
-                    host: "0.0.0.0",
-                    metricsPort: metricsPort,
-                  },
+          "config.yml": pulumi.all([args.storage]).apply(([storage]) =>
+            yaml.dump(
+              {
+                storage: storage,
+                server: {
+                  host: "0.0.0.0",
+                  metricsPort: metricsPort,
                 },
-                { indent: 2 }
-              )
-            ),
+              },
+              { indent: 2 }
+            )
+          ),
         },
       },
       { parent: this }
