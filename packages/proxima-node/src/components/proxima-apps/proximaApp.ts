@@ -112,9 +112,9 @@ export class ProximaApp extends pulumi.ComponentResource {
         meta.env.sourceStreams ??
         (meta.env.sourceStream ? [meta.env.sourceStream] : []);
 
-      args.push("--target-db", meta.env.db);
+      if (meta.env.db) args.push("--target-db", meta.env.db);
 
-      if (sourceStreams.length > 0) {
+      if (sourceStreams.length > 0 && meta.env.db) {
         args.push("--source-db", meta.env.sourceDb ?? meta.env.db);
         args.push("--source-streams", sourceStreams.join(","));
       }
@@ -124,7 +124,10 @@ export class ProximaApp extends pulumi.ComponentResource {
       if (streamingServerSyntax) args.push("--process-args");
       else args.push("--app-args");
 
-      args.push(JSON.stringify(meta.args ?? {}));
+      const resolvedArgs = meta.args ?? {};
+
+      args.push(JSON.stringify(resolvedArgs));
+
       return args;
     });
 
@@ -212,7 +215,7 @@ export interface ProximaAppMetadata {
 }
 
 export interface ProximaAppEnvironment {
-  db: string;
+  db?: string;
   sourceStreams?: string[];
   sourceStream?: string;
   sourceDb?: string; // if different
