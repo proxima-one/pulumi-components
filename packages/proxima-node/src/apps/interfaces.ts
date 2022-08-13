@@ -7,7 +7,7 @@ export interface AppDefinition {
     version: string;
   };
   version: string;
-  input?: string | string[];
+  input?: string | string[] | Record<string, InputStreamDef | InputStreamDef[]>;
   output?: string | Record<string, string>;
   args?: any;
   hostHints?: AppHostHints;
@@ -26,6 +26,14 @@ export interface AppHostingOptions {
 
 export interface AppEnvironment {
   defaultArgs?: any;
-  sourceDb: string;
+  sourceDb?: string;
   targetDb: string;
 }
+
+export type InputStreamDef =
+  | string
+  | {
+      id: string;
+      db?: string;
+      start?: string;
+    };

@@ -9,7 +9,7 @@ import {
   Password,
   ResourceRequirements,
 } from "../types";
-import {MongoExpress} from "@proxima-one/pulumi-proxima-node";
+import { MongoExpress } from "@proxima-one/pulumi-proxima-node";
 
 /**
  * Installs strimzi-kafka-operator helm chart
@@ -111,21 +111,25 @@ export class MongoDB extends pulumi.ComponentResource {
       });
 
     if (args.mongoExpress) {
-      const mongoExpressArgs = pulumi.output(args.mongoExpress)
-      this.mongoExpress = new MongoExpress(name + "-mongo-express", {
-        namespace: args.namespace,
-        nodeSelector: args.nodeSelector,
-        mongodbServer: this.dbAddress,
-        mongoAdminAuth: {
-          username: "root",
-          password: this.adminPassword
+      const mongoExpressArgs = pulumi.output(args.mongoExpress);
+      this.mongoExpress = new MongoExpress(
+        name + "-mongo-express",
+        {
+          namespace: args.namespace,
+          nodeSelector: args.nodeSelector,
+          mongodbServer: this.dbAddress,
+          mongoAdminAuth: {
+            username: "root",
+            password: this.adminPassword,
+          },
+          auth: {
+            username: "mongo-express",
+            password: { type: "random", name: name + "-mongo-express" },
+          },
+          publicHost: mongoExpressArgs.endpoint,
         },
-        auth: {
-          username: "mongo-express",
-          password: {type: "random", name: name + "-mongo-express"}
-        },
-        publicHost: mongoExpressArgs.endpoint
-      }, {...opts, dependsOn: this.chart})
+        { ...opts, dependsOn: this.chart }
+      );
     }
 
     this.registerOutputs({

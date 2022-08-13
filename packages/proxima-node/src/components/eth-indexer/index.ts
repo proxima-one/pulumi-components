@@ -155,7 +155,12 @@ export class EthIndexer extends pulumi.ComponentResource {
                     indexerApiImageTag
                   ),
                   name: "api",
-                  args: ["--config", "/app/config.yaml", "--indexer", "--server"],
+                  args: [
+                    "--config",
+                    "/app/config.yaml",
+                    "--indexer",
+                    "--server",
+                  ],
                   ports: [
                     {
                       name: "api",
