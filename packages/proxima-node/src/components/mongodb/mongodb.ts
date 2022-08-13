@@ -57,6 +57,7 @@ export class MongoDB extends pulumi.ComponentResource {
       persistence.existingClaim = args.storage.name;
     }
 
+    const replicaSet = pulumi.Output.create(args.replicaSet);
     this.chart = new k8s.helm.v3.Chart(
       name,
       {
@@ -78,7 +79,8 @@ export class MongoDB extends pulumi.ComponentResource {
           }),
           persistence: persistence,
           nodeSelector: args.nodeSelector,
-          replicaCount: 1,
+          replicaCount: replicaSet.apply(x => x ?? 1),
+          architecture: replicaSet.apply(x => x == undefined ? "standalone" : "replicaset"),
           resources: args.resources ?? {
             requests: {
               cpu: "100m",
@@ -94,7 +96,8 @@ export class MongoDB extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    const svcName = `${name}-mongodb`;
+    const svcName = args.replicaSet ? `${name}-mongodb-headless` : `${name}-mongodb`;
+
     this.resolvedPasswords = passwords.getResolvedPasswords();
     this.adminPassword = passwords.resolve(auth.password);
     this.dbAddress = pulumi
@@ -149,6 +152,7 @@ export interface MongoDBArgs {
 
   auth?: MongoDBAuth;
   storage: Storage;
+  replicaSet?: pulumi.Input<number>;
 
   mongoExpress?: pulumi.Input<{
     endpoint: pulumi.Input<string>;
