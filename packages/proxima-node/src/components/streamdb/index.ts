@@ -27,7 +27,7 @@ export interface StreamDBConnectionDetails {
   endpoints: string[];
 }
 
-const defaultImageTag = "stream-db-0.1.2-6f0e9a0";
+const defaultImageTag = "streamdb:0.1.1";
 const appPort = 50051;
 const metricsPort = 2112;
 /**
@@ -69,11 +69,11 @@ export class StreamDB extends pulumi.ComponentResource {
           namespace: args.namespace,
         },
         data: {
-          "config.yml": pulumi.all([args]).apply(([arg]) =>
+          "config.yml": pulumi.all([args.storage, args.relayer]).apply(([storage, relayer]) =>
             yaml.dump(
               {
-                storage: arg.storage,
-                relayer: arg.relayer || {},
+                storage: storage,
+                relayer: relayer || {},
               },
               { indent: 2 }
             )
@@ -123,7 +123,7 @@ export class StreamDB extends pulumi.ComponentResource {
               containers: [
                 {
                   image: pulumi.concat(
-                    "quay.io/proxima.one/services:",
+                    "quay.io/proxima.one/",
                     imageTag
                   ),
                   name: "app",
