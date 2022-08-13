@@ -48,7 +48,7 @@ export class MongoDB extends pulumi.ComponentResource {
     };
 
     //    const metricsPassword = passwords.resolve({type: "random", name: `${name}-metrics-pass`});
-    const svcName = `${name}-mongodb`;
+
     const persistence: PersistenceConfiguration = { enabled: true };
     if (args.storage.type == "new") {
       persistence.size = args.storage.size;
@@ -77,9 +77,6 @@ export class MongoDB extends pulumi.ComponentResource {
               passwords: [pass],
             };
           }),
-          service: {
-            nameOverride: svcName,
-          },
           persistence: persistence,
           nodeSelector: args.nodeSelector,
           replicaCount: replicaSet.apply(x => x ?? 1),
@@ -98,6 +95,9 @@ export class MongoDB extends pulumi.ComponentResource {
       },
       { parent: this }
     );
+
+    const svcName = args.replicaSet ? `${name}-mongodb-headless` : `${name}-mongodb`;
+
     this.resolvedPasswords = passwords.getResolvedPasswords();
     this.adminPassword = passwords.resolve(auth.password);
     this.dbAddress = pulumi
