@@ -462,7 +462,7 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
 
 type MongoDbArgs = ProvisionNewMongoDbArgs | ImportMongoDbArgs;
 
-type ProvisionNewMongoDbArgs = Omit<mongodb.MongoDBArgs, "namespaces"> & {
+type ProvisionNewMongoDbArgs = Omit<mongodb.MongoDBArgs, "namespace"> & {
   type: "Provision";
 };
 
