@@ -302,6 +302,7 @@ export class ProximaServices<
               };
             }),
             relayer: newStreamDBArgs.relayer,
+            imageTag: newStreamDBArgs.imageTag,
             nodeSelector: args.nodeSelector,
           },
           { parent: this }
@@ -484,6 +485,7 @@ type ProvisionStreamDBArgs = {
   type: "Provision";
   resources?: ResourceRequirements;
   publicHost?: pulumi.Input<string | string[]>;
+  imageTag?: pulumi.Input<string>;
   storage: {
     mongodb: string;
   };
