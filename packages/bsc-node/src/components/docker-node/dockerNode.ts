@@ -91,7 +91,7 @@ export class DockerBscNode extends pulumi.ComponentResource {
 const configs: Record<BscNodeNetwork, BscNetworkConfig> = {
   mainnet: {
     seeds: [],
-    image: "quay.io/proxima.one/bsc-geth:1.1.9",
+    image: "quay.io/proxima.one/bsc-geth:1.1.12",
     config: FileHelpers.resolve(
       path.resolve(__dirname, "networks", "mainnet", "config.toml")
     ).toString("utf8"),
