@@ -43,13 +43,16 @@
       "path": "packages/helpers"
     },
     {
-      "path": "packages/indexer"
-    },
-    {
       "path": "packages/polygon-node"
     },
     {
       "path": "packages/proxima-node"
+    },
+    {
+      "path": "packages/service-apps"
+    },
+    {
+      "path": "packages/test-deploy"
     }
   ]
 }

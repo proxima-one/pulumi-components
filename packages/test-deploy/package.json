@@ -1,7 +1,8 @@
 {
-  "name": "@proxima-one/pulumi-indexer",
+  "name": "@proxima-one/pulumi-test-deploy",
   "version": "0.1.21",
-  "description": "pulumi components to run geth",
+  "private": true,
+  "description": "pulumi components to run proxima service apps",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,12 +12,12 @@
   ],
   "scripts": {
     "clean": "rimraf -rf dist && rimraf tsconfig.tsbuildinfo",
-    "format": "prettier --write \"{src,__tests__}/**/*.ts\"",
+    "format": "prettier --write \"*.ts\"",
     "lint": "eslint . --ext .ts",
     "prepublishOnly": "yarn build",
     "prebuild": "yarn clean && yarn format && yarn lint && echo Using TypeScript && tsc --version",
-    "build": "tsc --build && yarn copy-content-files",
-    "test": "jest --passWithNoTests",
+    "build": "echo 'no build'",
+    "test": "echo 'no tests'",
     "copy-content-files": "yarn copyfiles -u 1 \"src/**/*\" dist/",
     "coverage": "jest --coverage",
     "start": "ts-node -r tsconfig-paths/register src/index.ts",
@@ -25,9 +26,10 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-proxima-node": "^0.13.23",
-    "@pulumi/kubernetes": "^3.17.0",
-    "@pulumi/pulumi": "^3.0.0"
+    "@proxima-one/pulumi-service-apps": "^0.1.21",
+    "@pulumi/kubernetes": "^3.20.3",
+    "@pulumi/kubernetesx": "^0.1.6",
+    "@pulumi/pulumi": "^3.37.2"
   },
   "engines": {
     "node": ">=16.0.0"

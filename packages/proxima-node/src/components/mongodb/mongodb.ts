@@ -48,14 +48,16 @@ export class MongoDB extends pulumi.ComponentResource {
     };
 
     //    const metricsPassword = passwords.resolve({type: "random", name: `${name}-metrics-pass`});
-
-    const persistence: PersistenceConfiguration = { enabled: true };
-    if (args.storage.type == "new") {
-      persistence.size = args.storage.size;
-      persistence.storageClass = args.storage.class;
-    } else {
-      persistence.existingClaim = args.storage.name;
-    }
+    const persistence = pulumi.output(args.storage).apply((storage) => {
+      const res: PersistenceConfiguration = { enabled: true };
+      if (storage.type == "new") {
+        res.size = storage.size;
+        res.storageClass = storage.class;
+      } else {
+        res.existingClaim = storage.name;
+      }
+      return res;
+    });
 
     const replicaSet = pulumi.Output.create(args.replicaSet);
     this.chart = new k8s.helm.v3.Chart(
@@ -79,8 +81,10 @@ export class MongoDB extends pulumi.ComponentResource {
           }),
           persistence: persistence,
           nodeSelector: args.nodeSelector,
-          replicaCount: replicaSet.apply(x => x ?? 1),
-          architecture: replicaSet.apply(x => x == undefined ? "standalone" : "replicaset"),
+          replicaCount: replicaSet.apply((x) => x ?? 1),
+          architecture: replicaSet.apply((x) =>
+            x == undefined ? "standalone" : "replicaset"
+          ),
           resources: args.resources ?? {
             requests: {
               cpu: "100m",
@@ -96,7 +100,9 @@ export class MongoDB extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    const svcName = args.replicaSet ? `${name}-mongodb-headless` : `${name}-mongodb`;
+    const svcName = args.replicaSet
+      ? `${name}-mongodb-headless`
+      : `${name}-mongodb`;
 
     this.resolvedPasswords = passwords.getResolvedPasswords();
     this.adminPassword = passwords.resolve(auth.password);
@@ -148,10 +154,10 @@ export class MongoDB extends pulumi.ComponentResource {
 export interface MongoDBArgs {
   namespace: pulumi.Input<string>;
   nodeSelector?: pulumi.Input<Record<string, string>>;
-  resources?: ResourceRequirements;
+  resources?: pulumi.Input<ResourceRequirements>;
 
   auth?: MongoDBAuth;
-  storage: Storage;
+  storage: pulumi.Input<MongoDbStorage>;
   replicaSet?: pulumi.Input<number>;
 
   mongoExpress?: pulumi.Input<{
@@ -165,7 +171,7 @@ export interface MongoDBAuth {
   password: Password;
 }
 
-type Storage =
+export type MongoDbStorage =
   | (NewStorageClaim & { type: "new" })
   | (ExistingStorageClaim & { type: "existing" });
 
