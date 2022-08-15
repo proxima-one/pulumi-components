@@ -169,9 +169,9 @@ export class WebServiceDeployer extends AppDeployerBase {
             if (rules.length == 0) return undefined;
 
             return rules.map(
-              (rule) =>
+              (rule, idx) =>
                 new k8s.networking.v1.Ingress(
-                  partFullName,
+                  idx == 0 ? partFullName : `${partFullName}-${idx + 1}`,
                   {
                     metadata: {
                       namespace: this.deployOptions.services.namespace,

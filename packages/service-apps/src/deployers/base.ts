@@ -23,15 +23,13 @@ export abstract class AppDeployerBase {
     this.env = envDraft ?? "prod";
     this.node = node;
 
-    const infraStack = new pulumi.StackReference(
-      `proxima-one/proxima-gke/${node}`,
-      {}
+    // note, infra-k8s for backwards compatibility
+    this.k8s = getKubernetesProvider(
+      node,
+      node == "amur" ? "infra-k8s" : `${node}-k8s`
     );
-    const kubeconfig = infraStack.getOutput("kubeconfig");
-    this.k8s = new k8s.Provider("infra-k8s", {
-      kubeconfig: kubeconfig,
-    });
-    const servicesStack = new pulumi.StackReference(
+
+    const servicesStack = getStackReference(
       `proxima-one/${this.stack}-services/default`
     );
     this.deployOptions = servicesStack.requireOutput(
@@ -68,6 +66,30 @@ export abstract class AppDeployerBase {
     };
   }
 }
+
+function getKubernetesProvider(
+  node: string,
+  providerName: string
+): k8s.Provider {
+  if (k8sProviders[node]) return k8sProviders[node];
+
+  const infraStack = getStackReference(`proxima-one/proxima-gke/${node}`);
+  const kubeconfig = infraStack.getOutput("kubeconfig");
+
+  return (k8sProviders[node] = new k8s.Provider(providerName, {
+    kubeconfig: kubeconfig,
+  }));
+}
+
+const k8sProviders: Record<string, k8s.Provider> = {};
+
+function getStackReference(name: string): pulumi.StackReference {
+  return stacksPool[name]
+    ? stacksPool[name]
+    : (stacksPool[name] = new pulumi.StackReference(name));
+}
+
+const stacksPool: Record<string, pulumi.StackReference> = {};
 
 interface DeploymentOptions {
   services: {

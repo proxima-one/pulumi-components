@@ -38,9 +38,7 @@ export class MongoDeployer extends AppDeployerBase {
         storage: app.storage,
         mongoExpress: app.webUI
           ? {
-              endpoint: this.publicHost.apply(
-                (host) => `${name}-mongo-express.${host}`
-              ),
+              endpoint: this.publicHost.apply((host) => `${name}.${host}`),
             }
           : undefined,
       },

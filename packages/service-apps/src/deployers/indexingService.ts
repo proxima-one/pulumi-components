@@ -53,7 +53,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       METRICS_SHARD_ID: pulumi
         .output(app.network)
         .apply((x) => x.toUpperCase().replace(/—/g, "_") + "_EVENTS"),
-      METRICS_PORT: 2112,
+      METRICS_PORT: "2112",
     });
 
     const consumerEnv = {

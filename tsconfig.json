@@ -50,6 +50,9 @@
     },
     {
       "path": "packages/service-apps"
+    },
+    {
+      "path": "packages/test-deploy"
     }
   ]
 }
