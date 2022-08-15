@@ -69,15 +69,17 @@ export class StreamDB extends pulumi.ComponentResource {
           namespace: args.namespace,
         },
         data: {
-          "config.yml": pulumi.all([args.storage, args.relayer]).apply(([storage, relayer]) =>
-            yaml.dump(
-              {
-                storage: storage,
-                relayer: relayer || {},
-              },
-              { indent: 2 }
-            )
-          ),
+          "config.yml": pulumi
+            .all([args.storage, args.relayer])
+            .apply(([storage, relayer]) =>
+              yaml.dump(
+                {
+                  storage: storage,
+                  relayer: relayer || {},
+                },
+                { indent: 2 }
+              )
+            ),
         },
       },
       { parent: this }
@@ -122,10 +124,7 @@ export class StreamDB extends pulumi.ComponentResource {
               nodeSelector: args.nodeSelector,
               containers: [
                 {
-                  image: pulumi.concat(
-                    "quay.io/proxima.one/",
-                    imageTag
-                  ),
+                  image: pulumi.concat("quay.io/proxima.one/", imageTag),
                   name: "app",
                   env: [
                     {
