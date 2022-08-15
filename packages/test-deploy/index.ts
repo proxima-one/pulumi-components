@@ -13,7 +13,8 @@ const shard0 = indexDeployer.deploy({
   imageName: "quay.io/proxima.one/services:fungible-token-apis-0.0.29-29769d6",
   name: "ft-raw-0",
   network: "eth-goerli",
-  stream: "v1.eth-goerli.fungible-token.streams.proxima.one;" +
+  stream:
+    "v1.eth-goerli.fungible-token.streams.proxima.one;" +
     "v1.new-tokens.eth-goerli.fungible-token.streams.proxima.one",
   db: {
     endpoint: {
@@ -23,12 +24,12 @@ const shard0 = indexDeployer.deploy({
         type: "new",
         size: "100Gi",
         class: "premium-rwo-xfs",
-      }
+      },
     },
   },
   resources: {
     consumer: "50m/1000m,100Mi/400Mi",
-    server: "50m/500m,100Mi/300Mi"
+    server: "50m/500m,100Mi/300Mi",
   },
 });
 
@@ -38,7 +39,8 @@ const cloudShard = indexDeployer.deploy({
 
   imageName: "quay.io/proxima.one/services:fungible-token-apis-0.0.29-29769d6",
   network: "eth-goerli",
-  stream: "v1.eth-goerli.fungible-token.streams.proxima.one;" +
+  stream:
+    "v1.eth-goerli.fungible-token.streams.proxima.one;" +
     "v1.new-tokens.eth-goerli.fungible-token.streams.proxima.one",
-  db: { endpoint: { type: "cloud" }, name: "dev-test-db-delete-me" }
+  db: { endpoint: { type: "cloud" }, name: "dev-test-db-delete-me" },
 });
