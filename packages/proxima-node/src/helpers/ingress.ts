@@ -72,6 +72,8 @@ export function ingressAnnotations(
       "grpc_read_timeout 999999s;";
   }
 
+  if (args.hsts != undefined) res["nginx.org/hsts"] = args.hsts.toString();
+
   if (args.sslRedirect)
     res["nginx.ingress.kubernetes.io/ssl-redirect"] = "true";
 
@@ -91,4 +93,5 @@ export interface SimpleIngressAnnotations {
   certIssuer?: string;
   sslRedirect?: boolean;
   backendGrpc?: boolean;
+  hsts?: boolean;
 }
