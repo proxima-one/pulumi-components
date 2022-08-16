@@ -79,7 +79,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       parts: {
         consumer: {
           env: env.apply((x) => ({ ...x, ...consumerEnv })),
-          args: ["consumer"],
+          args: ["./consumer"],
           resources: resoures.apply((x) => x?.consumer),
           metrics: {
             labels: metricsLabels,
@@ -93,7 +93,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         },
         server: {
           env: env.apply((x) => ({ ...x, ...serverEnv })),
-          args: ["server"],
+          args: ["./server"],
           resources: resoures.apply((x) => x?.server),
           metrics: {
             labels: metricsLabels,
