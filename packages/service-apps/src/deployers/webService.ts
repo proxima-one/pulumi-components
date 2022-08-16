@@ -41,7 +41,7 @@ export class WebServiceDeployer extends AppDeployerBase {
       const metricsLabels = pulumi.output(part.metrics).apply((x) =>
         x
           ? {
-              monitoring: "",
+              monitoring: "true",
               ...x.labels,
             }
           : {}
