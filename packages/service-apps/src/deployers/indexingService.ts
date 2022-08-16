@@ -21,6 +21,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
   public deploy(app: IndexingServiceApp): DeployedIndexingService {
     const name = app.name ?? this.project;
+    const indexName = app.indexName ?? this.project;
     const dbName = app.db.name ?? "proxima";
 
     const db = app.db.endpoint;
@@ -69,7 +70,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
     const metricsLabels = {
       env: this.env,
-      index: name,
+      index: indexName,
       shard: app.network,
     };
     const resoures = pulumi.output(app.resources);
@@ -144,6 +145,7 @@ export interface IndexingServiceAppV1 {
   apiKind: "indexing-service/v1";
 
   imageName?: pulumi.Input<string>;
+  indexName?: string;
   resources?: pulumi.Input<{
     consumer?: pulumi.Input<ComputeResources>;
     server?: pulumi.Input<ComputeResources>;
