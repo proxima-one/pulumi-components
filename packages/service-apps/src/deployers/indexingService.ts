@@ -63,6 +63,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
     const serverEnv = {
       PORT: "27000",
+      GRPC_PORT: "27000",
       HTTP_PORT: "8080",
     };
 
