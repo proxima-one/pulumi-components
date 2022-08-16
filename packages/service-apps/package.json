@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-service-apps",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "description": "pulumi components to run proxima service apps",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
