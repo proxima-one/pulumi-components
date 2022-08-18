@@ -1,5 +1,10 @@
 import * as _ from "lodash";
-import { AppDefinition, AppEnvironment, AppHostingOptions } from "./interfaces";
+import {
+  AppDefinition,
+  AppEnvironment,
+  AppHostingOptions,
+  InputStreamDef,
+} from "./interfaces";
 import {
   AppExecutable,
   ProximaAppHostingOptions,
@@ -10,6 +15,53 @@ import {
 export class ProximaAppFactory {
   public constructor(private readonly options: AppHostingOptions) {}
 
+  public createNewRuntime(
+    env: AppEnvironment,
+    namespace: string,
+    appDefs: Record<string, AppDefinition>
+  ): (ProximaAppMetadata & ProximaAppHostingOptions)[] {
+    const apps: (ProximaAppMetadata & ProximaAppHostingOptions)[] = [];
+
+    for (const [appKey, appDef] of _.entries(appDefs)) {
+      const id = `${namespace}.${appKey}${appDef.version}`;
+
+      let inputStreams: Record<string, InputStreamDef | InputStreamDef[]> = {};
+
+      if (typeof appDef.input == "string")
+        inputStreams["default"] = { id: appDef.input };
+      else if (Array.isArray(appDef.input))
+        inputStreams["default"] = appDef.input.map((x) => ({ id: x }));
+      else if (appDef.input) inputStreams = appDef.input;
+
+      let outputStreams: Record<string, string> = {};
+      if (typeof appDef.output == "string")
+        outputStreams["default"] = appDef.output;
+      else if (appDef.output) outputStreams = appDef.output;
+
+      apps.push({
+        id: id,
+        env: {},
+        executable: proximaStreamingApp(
+          this.options.dockerRepo,
+          appDef.executable
+        ),
+        args: _.merge(
+          {},
+          env.defaultArgs ?? {},
+          {
+            db: env.targetDb,
+            output: outputStreams,
+            input: inputStreams,
+          },
+          appDef.args
+        ),
+        hostHints: appDef.hostHints,
+      });
+    }
+
+    return apps;
+  }
+
   public create(
     env: AppEnvironment,
     namespace: string,
@@ -19,6 +71,11 @@ export class ProximaAppFactory {
 
     for (const [appKey, appDef] of _.entries(appDefs)) {
       const id = `${namespace}.${appKey}${appDef.version}`;
+
+      if (typeof appDef.input == "object")
+        throw new Error(
+          "Input object is not supported. Try createNewRuntime() instead"
+        );
 
       apps.push({
         id: id,
@@ -85,7 +142,7 @@ function proximaStreamingApp(
 }
 
 function proximaEnv(
-  sourceDb: string,
+  sourceDb: string | undefined,
   targetDb: string,
   sourceStream: string | string[] | undefined
 ): ProximaAppEnvironment {

@@ -302,6 +302,7 @@ export class ProximaServices<
               };
             }),
             relayer: newStreamDBArgs.relayer,
+            imageTag: newStreamDBArgs.imageTag,
             nodeSelector: args.nodeSelector,
           },
           { parent: this }
@@ -462,7 +463,7 @@ export interface ProximaNodeArgs<TNamespaces extends string> {
 
 type MongoDbArgs = ProvisionNewMongoDbArgs | ImportMongoDbArgs;
 
-type ProvisionNewMongoDbArgs = Omit<mongodb.MongoDBArgs, "namespaces"> & {
+type ProvisionNewMongoDbArgs = Omit<mongodb.MongoDBArgs, "namespace"> & {
   type: "Provision";
 };
 
@@ -484,6 +485,7 @@ type ProvisionStreamDBArgs = {
   type: "Provision";
   resources?: ResourceRequirements;
   publicHost?: pulumi.Input<string | string[]>;
+  imageTag?: pulumi.Input<string>;
   storage: {
     mongodb: string;
   };
