@@ -176,7 +176,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                     metadata: {
                       namespace: this.deployOptions.services.namespace,
                       annotations: ingressAnnotations({
-                        certIssuer: "letsencrypt",
+                        certIssuer: "zerossl",
                         sslRedirect: true,
                         bodySize: "100m",
                         hsts: rule.backend.protocol.toLowerCase() == "grpc",
