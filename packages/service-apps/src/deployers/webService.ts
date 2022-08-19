@@ -179,7 +179,6 @@ export class WebServiceDeployer extends AppDeployerBase {
                         certIssuer: "zerossl",
                         sslRedirect: true,
                         bodySize: "100m",
-                        hsts: rule.backend.protocol.toLowerCase() == "grpc",
                         backendGrpc:
                           rule.backend.protocol.toLowerCase() == "grpc",
                         backendHttps:
@@ -190,7 +189,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                     spec: ingressSpec({
                       host: rule.hosts,
                       tls: {
-                        secretName: `${partFullName}-http-tls`,
+                        secretName: `${partFullName}-${idx + 1}-tls`,
                       },
                       path: rule.path,
                       backend: {
