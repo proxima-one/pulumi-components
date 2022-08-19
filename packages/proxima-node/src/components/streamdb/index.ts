@@ -27,7 +27,7 @@ export interface StreamDBConnectionDetails {
   endpoints: string[];
 }
 
-const defaultImageTag = "stream-db-0.1.2-303277c";
+const defaultImageTag = "streamdb:0.1.1";
 const appPort = 50051;
 const metricsPort = 2112;
 /**
