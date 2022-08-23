@@ -73,15 +73,16 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       index: indexName,
       shard: app.network,
     };
-    const resoures = pulumi.output(app.resources);
+    const resources = pulumi.output(app.resources);
     const deployedWebService = this.webService.deploy({
       name: app.name,
       imageName: app.imageName,
       parts: {
         consumer: {
+          disabled: app.onlyService,
           env: env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
-          resources: resoures.apply((x) => x?.consumer),
+          resources: resources.apply((x) => x?.consumer),
           metrics: {
             labels: metricsLabels,
           },
@@ -95,7 +96,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         server: {
           env: env.apply((x) => ({ ...x, ...serverEnv })),
           args: ["./server"],
-          resources: resoures.apply((x) => x?.server),
+          resources: resources.apply((x) => x?.server),
           metrics: {
             labels: metricsLabels,
           },
@@ -144,12 +145,6 @@ export type IndexingServiceApp = IndexingServiceAppV1 & { name?: string };
 export interface IndexingServiceAppV1 {
   apiKind: "indexing-service/v1";
 
-  imageName?: pulumi.Input<string>;
-  indexName?: string;
-  resources?: pulumi.Input<{
-    consumer?: pulumi.Input<ComputeResources>;
-    server?: pulumi.Input<ComputeResources>;
-  }>;
   network: pulumi.Input<string>;
   stream: pulumi.Input<string>;
   db: {
@@ -157,10 +152,18 @@ export interface IndexingServiceAppV1 {
     endpoint:
       | { type: "cloud" }
       | ({ type: "provision" } & {
-          storage: pulumi.Input<MongoDbStorage>;
-          resources?: pulumi.Input<ComputeResources>;
-        });
+      storage: pulumi.Input<MongoDbStorage>;
+      resources?: pulumi.Input<ComputeResources>;
+    });
   };
+
+  imageName?: pulumi.Input<string>;
+  indexName?: string;
+  resources?: pulumi.Input<{
+    consumer?: pulumi.Input<ComputeResources>;
+    server?: pulumi.Input<ComputeResources>;
+  }>;
+  onlyService?: boolean;
 }
 
 export interface DeployedIndexingService {
