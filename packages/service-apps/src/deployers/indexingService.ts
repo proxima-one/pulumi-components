@@ -23,6 +23,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
     const name = app.name ?? this.project;
     const indexName = app.indexName ?? this.project;
     const dbName = app.db.name ?? "proxima";
+    const mode = app.mode ?? "live";
 
     const db = app.db.endpoint;
     let mongoUri = this.deployOptions.cloudMongoDb.uri;
@@ -57,10 +58,13 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       METRICS_PORT: "2112",
     });
 
-    const consumerEnv = {
+    const consumerEnv: Record<string, string> = {
       CONSUME_HOST: "streams.proxima.one",
       CONSUME_PORT: "443",
     };
+
+    if (mode == "fast-sync")
+      consumerEnv["FAST_SYNC_MODE"] = "true";
 
     const serverEnv = {
       PORT: "27000",
@@ -79,7 +83,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       imageName: app.imageName,
       parts: {
         consumer: {
-          disabled: app.onlyService,
+          disabled: mode == "server-only",
           env: env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),
@@ -94,6 +98,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           ],
         },
         server: {
+          disabled: mode == "consumer-only" || mode == "fast-sync",
           env: env.apply((x) => ({ ...x, ...serverEnv })),
           args: ["./server"],
           resources: resources.apply((x) => x?.server),
@@ -163,8 +168,13 @@ export interface IndexingServiceAppV1 {
     consumer?: pulumi.Input<ComputeResources>;
     server?: pulumi.Input<ComputeResources>;
   }>;
-  onlyService?: boolean;
+  /*
+  Default "live"
+   */
+  mode?: IndexingServiceMode;
 }
+
+export type IndexingServiceMode = "live" | "server-only" | "consumer-only" | "fast-sync";
 
 export interface DeployedIndexingService {
   name: pulumi.Output<string>;
