@@ -3,6 +3,7 @@
  */
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
+import * as _ from "lodash";
 import {
   ingressAnnotations,
   ingressSpec,
@@ -26,7 +27,10 @@ export class WebServiceDeployer extends AppDeployerBase {
     const name = app.name ?? this.project;
     const deployedParts: Record<string, DeployedPart> = {};
 
-    for (const [partName, part] of Object.entries(app.parts)) {
+    for (const [partName, part] of _.entries(app.parts)) {
+      if (part.disabled)
+        continue;
+
       const imageName = pulumi
         .all([pulumi.output(app.imageName), pulumi.output(part.imageName)])
         .apply(([appImage, partImage]) => {
@@ -238,6 +242,7 @@ export interface ServiceAppPart {
   resources?: pulumi.Input<ComputeResources | undefined>;
   args?: pulumi.Input<pulumi.Input<string>[]>;
   metrics?: pulumi.Input<Metrics>;
+  disabled?: boolean;
 }
 
 export interface Metrics {
