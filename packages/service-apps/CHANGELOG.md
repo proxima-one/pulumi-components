@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.1.31...@proxima-one/pulumi-service-apps@0.2.0) (2022-08-23)
+
+
+### Features
+
+* add indexing service mode: live,server-only,consumer-only,fast-sync ([66fe47c](https://github.com/proxima-one/pulumi-components/commit/66fe47c91318e66e385f34a7541215ee7fd13bb8))
+
+
+
+
+
 ## [0.1.31](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.1.30...@proxima-one/pulumi-service-apps@0.1.31) (2022-08-23)
 
 **Note:** Version bump only for package @proxima-one/pulumi-service-apps
