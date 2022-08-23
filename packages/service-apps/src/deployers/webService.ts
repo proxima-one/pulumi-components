@@ -28,8 +28,7 @@ export class WebServiceDeployer extends AppDeployerBase {
     const deployedParts: Record<string, DeployedPart> = {};
 
     for (const [partName, part] of _.entries(app.parts)) {
-      if (part.disabled)
-        continue;
+      if (part.disabled) continue;
 
       const imageName = pulumi
         .all([pulumi.output(app.imageName), pulumi.output(part.imageName)])

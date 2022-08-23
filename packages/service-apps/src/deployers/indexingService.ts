@@ -23,6 +23,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
     const name = app.name ?? this.project;
     const indexName = app.indexName ?? this.project;
     const dbName = app.db.name ?? "proxima";
+    const mode = app.mode ?? "live";
 
     const db = app.db.endpoint;
     let mongoUri = this.deployOptions.cloudMongoDb.uri;
@@ -57,10 +58,12 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       METRICS_PORT: "2112",
     });
 
-    const consumerEnv = {
+    const consumerEnv: Record<string, string> = {
       CONSUME_HOST: "streams.proxima.one",
       CONSUME_PORT: "443",
     };
+
+    if (mode == "fast-sync") consumerEnv["FAST_SYNC_MODE"] = "true";
 
     const serverEnv = {
       PORT: "27000",
@@ -79,7 +82,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       imageName: app.imageName,
       parts: {
         consumer: {
-          disabled: app.onlyService,
+          disabled: mode == "server-only",
           env: env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),
@@ -94,6 +97,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           ],
         },
         server: {
+          disabled: mode == "consumer-only" || mode == "fast-sync",
           env: env.apply((x) => ({ ...x, ...serverEnv })),
           args: ["./server"],
           resources: resources.apply((x) => x?.server),
@@ -126,16 +130,19 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       },
     });
 
-    const serviceMetadata = deployedWebService.parts["server"].service.apply(
-      (x) => x!.metadata
-    );
+    const deployedServer = deployedWebService.parts["server"];
+    const serviceMetadata = deployedServer
+      ? deployedServer.service.apply((x) => x!.metadata)
+      : undefined;
     return {
       name: pulumi.output(name),
       networks: pulumi.output(app.network).apply((x) => [x]),
       endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
-      internalEndpoint: serviceMetadata.apply(
-        (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
-      ),
+      internalEndpoint: serviceMetadata
+        ? serviceMetadata.apply(
+            (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
+          )
+        : undefined,
     };
   }
 }
@@ -152,9 +159,9 @@ export interface IndexingServiceAppV1 {
     endpoint:
       | { type: "cloud" }
       | ({ type: "provision" } & {
-      storage: pulumi.Input<MongoDbStorage>;
-      resources?: pulumi.Input<ComputeResources>;
-    });
+          storage: pulumi.Input<MongoDbStorage>;
+          resources?: pulumi.Input<ComputeResources>;
+        });
   };
 
   imageName?: pulumi.Input<string>;
@@ -163,12 +170,21 @@ export interface IndexingServiceAppV1 {
     consumer?: pulumi.Input<ComputeResources>;
     server?: pulumi.Input<ComputeResources>;
   }>;
-  onlyService?: boolean;
+  /*
+  Default "live"
+   */
+  mode?: IndexingServiceMode;
 }
+
+export type IndexingServiceMode =
+  | "live"
+  | "server-only"
+  | "consumer-only"
+  | "fast-sync";
 
 export interface DeployedIndexingService {
   name: pulumi.Output<string>;
   networks: pulumi.Output<string[]>;
-  internalEndpoint: pulumi.Output<string>;
+  internalEndpoint: pulumi.Output<string> | undefined;
   endpoint: pulumi.Output<string>;
 }
