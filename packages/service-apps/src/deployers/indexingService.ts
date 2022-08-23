@@ -63,8 +63,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       CONSUME_PORT: "443",
     };
 
-    if (mode == "fast-sync")
-      consumerEnv["FAST_SYNC_MODE"] = "true";
+    if (mode == "fast-sync") consumerEnv["FAST_SYNC_MODE"] = "true";
 
     const serverEnv = {
       PORT: "27000",
@@ -132,16 +131,18 @@ export class IndexingServiceDeployer extends AppDeployerBase {
     });
 
     const deployedServer = deployedWebService.parts["server"];
-    const serviceMetadata = deployedServer ? deployedServer.service.apply(
-      (x) => x!.metadata
-    ) : undefined;
+    const serviceMetadata = deployedServer
+      ? deployedServer.service.apply((x) => x!.metadata)
+      : undefined;
     return {
       name: pulumi.output(name),
       networks: pulumi.output(app.network).apply((x) => [x]),
       endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
-      internalEndpoint: serviceMetadata ? serviceMetadata.apply(
-        (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
-      ) : undefined,
+      internalEndpoint: serviceMetadata
+        ? serviceMetadata.apply(
+            (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
+          )
+        : undefined,
     };
   }
 }
@@ -158,9 +159,9 @@ export interface IndexingServiceAppV1 {
     endpoint:
       | { type: "cloud" }
       | ({ type: "provision" } & {
-      storage: pulumi.Input<MongoDbStorage>;
-      resources?: pulumi.Input<ComputeResources>;
-    });
+          storage: pulumi.Input<MongoDbStorage>;
+          resources?: pulumi.Input<ComputeResources>;
+        });
   };
 
   imageName?: pulumi.Input<string>;
@@ -175,7 +176,11 @@ export interface IndexingServiceAppV1 {
   mode?: IndexingServiceMode;
 }
 
-export type IndexingServiceMode = "live" | "server-only" | "consumer-only" | "fast-sync";
+export type IndexingServiceMode =
+  | "live"
+  | "server-only"
+  | "consumer-only"
+  | "fast-sync";
 
 export interface DeployedIndexingService {
   name: pulumi.Output<string>;
