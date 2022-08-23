@@ -131,16 +131,17 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       },
     });
 
-    const serviceMetadata = deployedWebService.parts["server"].service.apply(
+    const deployedServer = deployedWebService.parts["server"];
+    const serviceMetadata = deployedServer ? deployedServer.service.apply(
       (x) => x!.metadata
-    );
+    ) : undefined;
     return {
       name: pulumi.output(name),
       networks: pulumi.output(app.network).apply((x) => [x]),
       endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
-      internalEndpoint: serviceMetadata.apply(
+      internalEndpoint: serviceMetadata ? serviceMetadata.apply(
         (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
-      ),
+      ) : undefined,
     };
   }
 }
@@ -179,6 +180,6 @@ export type IndexingServiceMode = "live" | "server-only" | "consumer-only" | "fa
 export interface DeployedIndexingService {
   name: pulumi.Output<string>;
   networks: pulumi.Output<string[]>;
-  internalEndpoint: pulumi.Output<string>;
+  internalEndpoint: pulumi.Output<string> | undefined;
   endpoint: pulumi.Output<string>;
 }
