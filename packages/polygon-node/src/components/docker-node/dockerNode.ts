@@ -128,8 +128,8 @@ const configs: Record<PolygonNodeNetwork, PolygonNetworkConfig> = {
       "enode://88116f4295f5a31538ae409e4d44ad40d22e44ee9342869e7d68bdec55b0f83c1530355ce8b41fbec0928a7d75a5745d528450d30aec92066ab6ba1ee351d710@159.203.9.164:30303",
     ],
     borNetwork: "bor-mainnet",
-    borImage: "0xpolygon/bor:0.2.14-tmp-span-hotfix",
-    heimdallImage: "0xpolygon/heimdall:0.2.9",
+    borImage: "0xpolygon/bor:0.2.16",
+    heimdallImage: "0xpolygon/heimdall:0.2.11",
   },
   mumbai: {
     heimdallSeeds: [
@@ -142,7 +142,7 @@ const configs: Record<PolygonNodeNetwork, PolygonNetworkConfig> = {
       "enode://f0f48a8781629f95ff02606081e6e43e4aebd503f3d07fc931fad7dd5ca1ba52bd849a6f6c3be0e375cf13c9ae04d859c4a9ae3546dc8ed4f10aa5dbb47d4998@34.226.134.117:30303",
     ],
     borNetwork: "bor-mumbai",
-    borImage: "0xpolygon/bor:0.2.15-beta2",
-    heimdallImage: "0xpolygon/heimdall:0.2.8-mumbai",
+    borImage: "0xpolygon/bor:0.2.16",
+    heimdallImage: "0xpolygon/heimdall:0.2.11",
   },
 };
