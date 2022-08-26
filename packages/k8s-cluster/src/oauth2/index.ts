@@ -3,7 +3,6 @@ import * as k8s from '@pulumi/kubernetes';
 import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
 import {FileAsset} from '@pulumi/pulumi/asset';
 
-
 export interface OauthInputs {
   namespace?: pulumi.Input<string>;
   ingress?: abstractions.Ingress;
@@ -44,23 +43,28 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
     }, {parent: this});
 
     const oauth = new k8s.helm.v3.Release(name, {
-      valueYamlFiles: [new FileAsset("./components/oauth2/custom.yml")],
       values: {
-        "config": {
-          "existingSecret": creds.metadata.name
+        config: {
+          existingSecret: creds.metadata.name
         },
-        "extraArgs": {
+        extraArgs: {
+          provider: "github",
+          "github-org": "proxima-one",
           "whitelist-domain": `.${args.domain}`,
           "cookie-domain": `.${args.domain}`
         },
-        "ingress": {
-          "hosts": [args.oauthUrl],
-          "tls": [
+        ingress: {
+          enabled: true,
+          path: "/",
+          annotations: {
+            "kubernetes.io/ingress.class": "nginx",
+            "cert-manager.io/cluster-issuer": "letsencrypt"
+          },
+          hosts: [args.oauthUrl],
+          tls: [
             {
-              "secretName": "tls-lets",
-              "hosts": [
-                args.oauthUrl
-              ]
+              secretName: `${name}-tls`,
+              hosts: [args.oauthUrl]
             }
           ]
         }
@@ -70,7 +74,6 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
       repositoryOpts: {
         repo: this.meta.repo
       }
-    }, {parent: this})
+    }, {parent: this});
   }
-
 }

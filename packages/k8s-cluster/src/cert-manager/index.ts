@@ -37,7 +37,7 @@ export interface CertManagerOutputs {
 export class CertManager extends pulumi.ComponentResource implements CertManagerOutputs {
   readonly meta: pulumi.Output<abstractions.HelmMeta>;
 
-  constructor(name: string, props: CertManagerInputs, opts?: pulumi.CustomResourceOptions) {
+  constructor(name: string, props: CertManagerInputs, opts?: pulumi.ComponentResourceOptions) {
     super('proxima:CertManager', name, props, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
@@ -69,7 +69,8 @@ export class CertManager extends pulumi.ComponentResource implements CertManager
       }
     );
 
-    const certMgrReady = chart.resources.apply((m: Record<string, unknown>) => pulumi.all(m).apply(m => Object.values(m).map(r => pulumi.output(r))));
+    const certMgrReady = chart.resources.apply(
+      (m: Record<string, unknown>) => pulumi.all(m).apply(m => Object.values(m).map(r => pulumi.output(r))));
     const webhookSvc = pulumi.all([certMgrReady, props.namespace]).apply(([c, ns]) => {
       return chart.getResource("v1/Service", ns, `${name}-cert-manager-webhook`)
     });

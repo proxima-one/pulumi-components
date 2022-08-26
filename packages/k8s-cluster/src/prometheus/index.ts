@@ -145,8 +145,8 @@ export class UPrometheus extends pulumi.ComponentResource implements UPrometheus
 
     const prom = new k8s.helm.v3.Release(name, {
       namespace: args?.namespace,
-      chart: this.meta.chart,
-      repositoryOpts: {repo: this.meta.repo},
+      chart: this.meta.apply(meta => meta.chart),
+      repositoryOpts: {repo: this.meta.apply(meta => meta.repo)},
       values: {
         prometheusOperator: {
           createCustomResource: false,

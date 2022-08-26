@@ -1730,6 +1730,13 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
+"@pulumi/kubernetes-cert-manager@latest":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@pulumi/kubernetes-cert-manager/-/kubernetes-cert-manager-0.0.3.tgz#fec326cc5db09442afdb36aa821f26c7812ad815"
+  integrity sha512-wwEndZ8VthJo3NDjuZNd4fnxe0GWKFiFA8p4xxVuev+wSnBz/kQ4/bH8dT7Q7mIwGFNsu8bgZTFHF9Mxbd9jiA==
+  dependencies:
+    "@pulumi/kubernetes" "^3.7.1"
+
 "@pulumi/kubernetes@^3.0.0":
   version "3.20.1"
   resolved "https://registry.yarnpkg.com/@pulumi/kubernetes/-/kubernetes-3.20.1.tgz#25ff63e20dcd78c68ee3e57f1a3a06e78294f77e"
@@ -1748,6 +1755,20 @@
   version "3.20.3"
   resolved "https://registry.yarnpkg.com/@pulumi/kubernetes/-/kubernetes-3.20.3.tgz#b404d984e4c471cd07eafddfb5cc640942a3865e"
   integrity sha512-do2XiXc8E7NqX4pc9YJJFwfXgeoaFVXYGzs94N98LT7lwihiJyX5dnAg9ww407XExkcj11A6gxHDMwtuY8zMYQ==
+  dependencies:
+    "@pulumi/pulumi" "^3.25.0"
+    "@types/glob" "^5.0.35"
+    "@types/node-fetch" "^2.1.4"
+    "@types/tmp" "^0.0.33"
+    glob "^7.1.2"
+    node-fetch "^2.3.0"
+    shell-quote "^1.6.1"
+    tmp "^0.0.33"
+
+"@pulumi/kubernetes@^3.7.1":
+  version "3.21.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/kubernetes/-/kubernetes-3.21.0.tgz#15681fcd6f2bd728ddf7bf1c9afa44ac5c2ad19b"
+  integrity sha512-tAm8Ul234qNpHJiX4VvuRgS57Ah7sR/MhLu5cr1WJMBDlFjQyqEXVu5mdPUm1+jR5FmYsdf3NWOOcfxhD2xsBg==
   dependencies:
     "@pulumi/pulumi" "^3.25.0"
     "@types/glob" "^5.0.35"

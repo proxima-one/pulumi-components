@@ -1,10 +1,9 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
-import { removeHelmTests } from 'k8s-cluster/src/utils/helm';
+import {removeHelmTests} from 'k8s-cluster/src/utils/helm';
 
 export interface LokiInputs {
-  provider?: k8s.Provider;
   namespace?: pulumi.Input<string>;
   /**
    * the helm chart version
@@ -44,23 +43,23 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
   readonly clusterUrl: pulumi.Output<string>;
   readonly persistence: pulumi.Output<abstractions.Persistence | undefined>;
 
-  constructor(name: string, props?: LokiInputs, opts?: pulumi.CustomResourceOptions) {
-    super('proxima:Loki', name, props, opts);
+  constructor(name: string, args: LokiInputs, opts?: pulumi.ComponentResourceOptions) {
+    super('proxima:Loki', name, args, opts);
 
-    this.persistence = pulumi.output(props?.persistence);
+    this.persistence = pulumi.output(args?.persistence);
 
     this.clusterUrl = pulumi.output('http://loki:3100');
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'loki-stack',
-      version: props?.version ?? '2.1.0',
+      version: args.version ?? '2.1.0',
       repo: 'https://grafana.github.io/loki/charts',
     });
 
     const loki = new k8s.helm.v3.Chart(
       name,
       {
-        namespace: props?.namespace,
+        namespace: args.namespace,
         chart: this.meta.chart,
         version: this.meta.version,
         fetchOpts: {
@@ -69,21 +68,19 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
         transformations: [removeHelmTests()],
         values: {
           loki: {
-            persistence: !props?.persistence
-              ? { enabled: false }
-              : {
-                  enabled: props?.persistence.enabled,
-                  size: pulumi.interpolate`${props?.persistence.sizeGB}Gi`,
-                  storageClassName: props?.persistence.storageClass,
-                },
+            persistence: args.persistence ? {
+              enabled: args.persistence.enabled,
+              size: pulumi.interpolate`${args.persistence.sizeGB}Gi`,
+              storageClassName: args.persistence.storageClass,
+            } : {enabled: false},
             readinessProbe: {
               initialDelaySeconds: 10,
             },
-            resources: props?.resources,
+            resources: args.resources,
             config: {
               table_manager: {
                 retention_deletes_enabled: true,
-                retention_period: pulumi.interpolate`${props?.retentionHours || 168}h`,
+                retention_period: pulumi.interpolate`${args.retentionHours || 168}h`,
               },
               schema_config: {
                 configs: [
@@ -109,7 +106,7 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
               },
             },
           },
-          promtail: props?.scrapeSystemdJournal && {
+          promtail: args.scrapeSystemdJournal && {
             extraScrapeConfigs: [
               {
                 job_name: 'journal',
@@ -149,11 +146,6 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
             ],
           },
         },
-      },
-      {
-        parent: this,
-        provider: props?.provider,
-      }
-    );
+      }, {parent: this,});
   }
 }

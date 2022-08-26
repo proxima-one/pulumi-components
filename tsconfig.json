@@ -43,6 +43,9 @@
       "path": "packages/helpers"
     },
     {
+      "path": "packages/k8s-cluster"
+    },
+    {
       "path": "packages/polygon-node"
     },
     {

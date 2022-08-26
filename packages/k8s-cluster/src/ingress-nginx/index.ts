@@ -23,7 +23,7 @@ export class IngressNginxController extends pulumi.ComponentResource implements 
   readonly meta: pulumi.Output<abstractions.HelmMeta>;
   readonly publicIP: pulumi.Output<string>;
 
-  constructor(name: string, props: IngressNginxControllerInputs, opts?: pulumi.CustomResourceOptions) {
+  constructor(name: string, props: IngressNginxControllerInputs, opts?: pulumi.ComponentResourceOptions) {
     super('proxima:IngressNginxController', name, props, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
@@ -59,7 +59,13 @@ export class IngressNginxController extends pulumi.ComponentResource implements 
       }
     );
 
-    const frontend = Output.create(props.namespace).apply(ns => chart.getResourceProperty("v1/Service", ns ?? "default", `${name}-ingress-nginx-controller`, "status"));
+    const frontend = Output.create(props.namespace).apply(
+      ns => chart.getResourceProperty(
+        "v1/Service",
+        ns ?? "default",
+        `${name}-ingress-nginx-controller`,
+        "status"
+      ));
     const ingress = frontend.apply(x => x.loadBalancer.ingress[0]);
 
     this.publicIP = ingress.apply(x => x.ip ?? x.hostname);
