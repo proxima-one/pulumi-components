@@ -1,0 +1,11 @@
+extraArgs:
+  provider: github
+  #github-user: ibadullaev-inc4
+  github-org: proxima-one
+
+ingress:
+  enabled: true
+  path: /
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt

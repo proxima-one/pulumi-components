@@ -1,0 +1,67 @@
+import * as pulumi from '@pulumi/pulumi';
+import * as k8s from '@pulumi/kubernetes';
+import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
+import { Output } from "@pulumi/pulumi";
+
+export interface IngressNginxControllerInputs {
+  namespace?: pulumi.Input<string>;
+  /**
+   * the helm chart version
+   */
+  version?: string;
+}
+
+export interface IngressNginxControllerOutputs {
+  meta: pulumi.Output<abstractions.HelmMeta>;
+  publicIP: pulumi.Output<string>;
+}
+
+/**
+ * @noInheritDoc
+ */
+export class IngressNginxController extends pulumi.ComponentResource implements IngressNginxControllerOutputs {
+  readonly meta: pulumi.Output<abstractions.HelmMeta>;
+  readonly publicIP: pulumi.Output<string>;
+
+  constructor(name: string, props: IngressNginxControllerInputs, opts?: pulumi.CustomResourceOptions) {
+    super('proxima:IngressNginxController', name, props, opts);
+
+    this.meta = pulumi.output<abstractions.HelmMeta>({
+      chart: 'ingress-nginx',
+      version: props?.version ?? '4.0.17',
+      repo: 'https://kubernetes.github.io/ingress-nginx',
+    });
+
+    const chart = new k8s.helm.v3.Chart(
+      name,
+      {
+        namespace: props.namespace,
+        chart: this.meta.chart,
+        version: this.meta.version,
+        fetchOpts: {
+          repo: this.meta.repo,
+        },
+        //transformations: [removeHelmTests()],
+        values: {
+          controller: {
+            publishService: {
+              enabled: true,
+            },
+            admissionWebhooks: {
+              enabled: false,
+              //timeoutSeconds: 30
+            }
+          },
+        },
+      },
+      {
+        parent: this,
+      }
+    );
+
+    const frontend = Output.create(props.namespace).apply(ns => chart.getResourceProperty("v1/Service", ns ?? "default", `${name}-ingress-nginx-controller`, "status"));
+    const ingress = frontend.apply(x => x.loadBalancer.ingress[0]);
+
+    this.publicIP = ingress.apply(x => x.ip ?? x.hostname);
+  }
+}
