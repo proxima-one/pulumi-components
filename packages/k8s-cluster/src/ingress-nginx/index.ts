@@ -1,7 +1,7 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
-import { Output } from "@pulumi/pulumi";
+import {Output} from "@pulumi/pulumi";
 
 export interface IngressNginxControllerInputs {
   namespace?: pulumi.Input<string>;
@@ -23,19 +23,17 @@ export class IngressNginxController extends pulumi.ComponentResource implements 
   readonly meta: pulumi.Output<abstractions.HelmMeta>;
   readonly publicIP: pulumi.Output<string>;
 
-  constructor(name: string, props: IngressNginxControllerInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:IngressNginxController', name, props, opts);
+  constructor(name: string, args: IngressNginxControllerInputs, opts?: pulumi.ComponentResourceOptions) {
+    super('proxima:IngressNginxController', name, args, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'ingress-nginx',
-      version: props?.version ?? '4.0.17',
+      version: args?.version ?? '4.0.17',
       repo: 'https://kubernetes.github.io/ingress-nginx',
     });
 
-    const chart = new k8s.helm.v3.Chart(
-      name,
-      {
-        namespace: props.namespace,
+    const chart = new k8s.helm.v3.Chart(name, {
+        namespace: args.namespace,
         chart: this.meta.chart,
         version: this.meta.version,
         fetchOpts: {
@@ -59,7 +57,7 @@ export class IngressNginxController extends pulumi.ComponentResource implements 
       }
     );
 
-    const frontend = Output.create(props.namespace).apply(
+    const frontend = Output.create(args.namespace).apply(
       ns => chart.getResourceProperty(
         "v1/Service",
         ns ?? "default",

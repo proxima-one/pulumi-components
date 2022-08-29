@@ -56,96 +56,94 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
       repo: 'https://grafana.github.io/loki/charts',
     });
 
-    const loki = new k8s.helm.v3.Chart(
-      name,
-      {
-        namespace: args.namespace,
-        chart: this.meta.chart,
-        version: this.meta.version,
-        fetchOpts: {
-          repo: this.meta.repo,
-        },
-        transformations: [removeHelmTests()],
-        values: {
-          loki: {
-            persistence: args.persistence ? {
-              enabled: args.persistence.enabled,
-              size: pulumi.interpolate`${args.persistence.sizeGB}Gi`,
-              storageClassName: args.persistence.storageClass,
-            } : {enabled: false},
-            readinessProbe: {
-              initialDelaySeconds: 10,
+    const loki = new k8s.helm.v3.Chart(name, {
+      namespace: args.namespace,
+      chart: this.meta.chart,
+      version: this.meta.version,
+      fetchOpts: {
+        repo: this.meta.repo,
+      },
+      transformations: [removeHelmTests()],
+      values: {
+        loki: {
+          persistence: args.persistence ? {
+            enabled: args.persistence.enabled,
+            size: pulumi.interpolate`${args.persistence.sizeGB}Gi`,
+            storageClassName: args.persistence.storageClass,
+          } : {enabled: false},
+          readinessProbe: {
+            initialDelaySeconds: 10,
+          },
+          resources: args.resources,
+          config: {
+            table_manager: {
+              retention_deletes_enabled: true,
+              retention_period: pulumi.interpolate`${args.retentionHours || 168}h`,
             },
-            resources: args.resources,
-            config: {
-              table_manager: {
-                retention_deletes_enabled: true,
-                retention_period: pulumi.interpolate`${args.retentionHours || 168}h`,
-              },
-              schema_config: {
-                configs: [
-                  {
-                    from: '2018-04-15',
-                    store: 'boltdb',
-                    object_store: 'filesystem',
-                    schema: 'v9',
-                    index: {
-                      prefix: 'index_',
-                      period: '168h',
-                    },
+            schema_config: {
+              configs: [
+                {
+                  from: '2018-04-15',
+                  store: 'boltdb',
+                  object_store: 'filesystem',
+                  schema: 'v9',
+                  index: {
+                    prefix: 'index_',
+                    period: '168h',
                   },
-                ],
+                },
+              ],
+            },
+            storage_config: {
+              boltdb: {
+                directory: '/data/loki/index',
               },
-              storage_config: {
-                boltdb: {
-                  directory: '/data/loki/index',
-                },
-                filesystem: {
-                  directory: '/data/loki/chunks',
-                },
+              filesystem: {
+                directory: '/data/loki/chunks',
               },
             },
           },
-          promtail: args.scrapeSystemdJournal && {
-            extraScrapeConfigs: [
-              {
-                job_name: 'journal',
-                journal: {
-                  path: '/var/log/journal',
-                  max_age: '12h',
-                  labels: {
-                    job: 'systemd-journal',
-                  },
-                },
-                relabel_configs: [
-                  {
-                    source_labels: ['__journal__systemd_unit'],
-                    target_label: 'unit',
-                  },
-                  {
-                    source_labels: ['__journal__hostname'],
-                    target_label: 'hostname',
-                  },
-                ],
-              },
-            ],
-            extraVolumes: [
-              {
-                name: 'journal',
-                hostPath: {
-                  path: '/var/log/journal',
-                },
-              },
-            ],
-            extraVolumeMounts: [
-              {
-                name: 'journal',
-                mountPath: '/var/log/journal',
-                readOnly: true,
-              },
-            ],
-          },
         },
-      }, {parent: this,});
+        promtail: args.scrapeSystemdJournal && {
+          extraScrapeConfigs: [
+            {
+              job_name: 'journal',
+              journal: {
+                path: '/var/log/journal',
+                max_age: '12h',
+                labels: {
+                  job: 'systemd-journal',
+                },
+              },
+              relabel_configs: [
+                {
+                  source_labels: ['__journal__systemd_unit'],
+                  target_label: 'unit',
+                },
+                {
+                  source_labels: ['__journal__hostname'],
+                  target_label: 'hostname',
+                },
+              ],
+            },
+          ],
+          extraVolumes: [
+            {
+              name: 'journal',
+              hostPath: {
+                path: '/var/log/journal',
+              },
+            },
+          ],
+          extraVolumeMounts: [
+            {
+              name: 'journal',
+              mountPath: '/var/log/journal',
+              readOnly: true,
+            },
+          ],
+        },
+      },
+    }, {parent: this,});
   }
 }
