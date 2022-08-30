@@ -1,5 +1,10 @@
 import * as pulumi from '@pulumi/pulumi';
 
+export interface HelmOverride {
+  version?: string;
+  values?: any;
+}
+
 export interface HelmMeta {
   chart: string;
   version: string;

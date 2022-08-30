@@ -6,26 +6,25 @@ import * as loki from '@proxima-one/pulumi-k8s-cluster/src/loki';
 export interface MonitoringStackInputs {
   grafana?: grafana.GrafanaInputs;
   loki?: loki.LokiInputs;
-  uprometheus?: prometheus.PrometheusInputs;
+  prometheus?: prometheus.PrometheusInputs;
 }
 
 export interface MonitoringStackOutputs {
   grafana?: grafana.GrafanaOutputs;
   loki?: loki.LokiOutputs;
-  uprometheus?: prometheus.UPrometheusOutputs;
+  prometheus?: prometheus.PrometheusOutputs;
 }
 
 export class MonitoringStack extends pulumi.ComponentResource implements MonitoringStackOutputs {
   readonly grafana?: grafana.GrafanaOutputs;
-  readonly prometheus?: prometheus.UPrometheusOutputs;
   readonly loki?: loki.LokiOutputs;
-  readonly uprometheus?: prometheus.UPrometheusOutputs;
+  readonly prometheus?: prometheus.PrometheusOutputs;
 
   constructor(name: string, args: MonitoringStackInputs, opts?: pulumi.ComponentResourceOptions) {
     super('proxima:MonitoringStack', name, args, opts);
 
-    if (args.uprometheus) {
-      this.uprometheus = new prometheus.UPrometheus(`${name}-prometheus`, args.uprometheus, {parent: this});
+    if (args.prometheus) {
+      this.prometheus = new prometheus.Prometheus(`${name}-prometheus`, args.prometheus, {parent: this});
     }
 
     if (args.grafana) {

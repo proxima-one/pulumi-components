@@ -6,10 +6,7 @@ import {merge} from 'lodash';
 
 export interface GrafanaInputs {
   namespace?: pulumi.Input<string>;
-  /**
-   * the helm chart version
-   */
-  version?: string;
+  helmOverride?: abstractions.HelmOverride;
   /**
    * import dasboards into grafana.
    * defaults to undefined.
@@ -114,88 +111,86 @@ export class Grafana extends pulumi.ComponentResource implements GrafanaOutputs 
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'grafana',
-      version: args.version ?? '6.21.5',
+      version: args.helmOverride?.version ?? '6.21.5',
       repo: 'https://grafana.github.io/helm-charts',
     });
 
-    const grafana = new k8s.helm.v3.Chart(
-      name,
-      {
-        namespace: args.namespace,
-        chart: this.meta.chart,
-        version: this.meta.version,
-        fetchOpts: {
-          repo: this.meta.repo,
-        },
-        values: {
-          adminUser: this.adminUsername,
-          adminPassword: this.adminPassword,
-          ingress: args.ingress ? {
-            enabled: args.ingress.enabled ?? true,
-            annotations: {
-              'kubernetes.io/ingress.class': args.ingress.class ?? 'nginx',
-              'kubernetes.io/tls-acme': args.ingress.tls === false ? 'false' : 'true', // "tls" defaults to true, so we'll activate tls for undefined or null values
-              ...args.ingress.annotations,
+    const grafana = new k8s.helm.v3.Chart(name, {
+      namespace: args.namespace,
+      chart: this.meta.chart,
+      version: this.meta.version,
+      fetchOpts: {
+        repo: this.meta.repo,
+      },
+      values: merge({}, {
+        adminUser: this.adminUsername,
+        adminPassword: this.adminPassword,
+        ingress: args.ingress ? {
+          enabled: args.ingress.enabled ?? true,
+          annotations: {
+            'kubernetes.io/ingress.class': args.ingress.class ?? 'nginx',
+            'kubernetes.io/tls-acme': args.ingress.tls === false ? 'false' : 'true', // "tls" defaults to true, so we'll activate tls for undefined or null values
+            ...args.ingress.annotations,
+          },
+          hosts: args.ingress.hosts,
+          tls: [
+            {
+              hosts: args.ingress.hosts,
+              secretName: `tls-grafana-${name}`,
             },
-            hosts: args.ingress.hosts,
-            tls: [
+          ],
+        } : {enabled: false},
+        deploymentStrategy: {
+          type: 'Recreate',
+        },
+        persistence: args.persistence ? {
+          enabled: args.persistence.enabled,
+          size: pulumi.interpolate`${args.persistence.sizeGB}Gi`,
+          storageClass: args.persistence.storageClass,
+        } : {enabled: false},
+        testFramework: {
+          enabled: false,
+        },
+        'grafana.ini': grafanaIni,
+        datasources: {
+          'datasources.yaml': {
+            apiVersion: 1,
+            datasources: args.datasources ? args.datasources.map((datasource) => ({
+              name: datasource.name,
+              type: datasource.type,
+              url: datasource.url,
+              access: 'proxy',
+              basicAuth: false,
+              editable: false,
+            })) : [],
+          },
+        },
+        dashboards: args.dashboards ? {
+          default: args.dashboards.reduce((prev, curr) => {
+            const {name, ...rest} = curr;
+            return {...prev, [name]: rest};
+          }, {})
+        } : undefined,
+        dashboardProviders: args.dashboards ? {
+          'dashboardproviders.yaml': {
+            apiVersion: 1,
+            providers: [
               {
-                hosts: args.ingress.hosts,
-                secretName: `tls-grafana-${name}`,
+                name: 'default',
+                orgId: 1,
+                folder: '',
+                type: 'file',
+                disableDeletion: false,
+                editable: true,
+                options: {
+                  path: '/var/lib/grafana/dashboards/default',
+                },
               },
             ],
-          } : {enabled: false},
-          deploymentStrategy: {
-            type: 'Recreate',
           },
-          persistence: args.persistence ? {
-            enabled: args.persistence.enabled,
-            size: pulumi.interpolate`${args.persistence.sizeGB}Gi`,
-            storageClass: args.persistence.storageClass,
-          } : {enabled: false},
-          testFramework: {
-            enabled: false,
-          },
-          'grafana.ini': grafanaIni,
-          datasources: {
-            'datasources.yaml': {
-              apiVersion: 1,
-              datasources: args.datasources ? args.datasources.map((datasource) => ({
-                name: datasource.name,
-                type: datasource.type,
-                url: datasource.url,
-                access: 'proxy',
-                basicAuth: false,
-                editable: false,
-              })) : [],
-            },
-          },
-          dashboards: args.dashboards ? {
-            default: args.dashboards.reduce((prev, curr) => {
-              const {name, ...rest} = curr;
-              return {...prev, [name]: rest};
-            }, {})
-          } : undefined,
-          dashboardProviders: args.dashboards ? {
-            'dashboardproviders.yaml': {
-              apiVersion: 1,
-              providers: [
-                {
-                  name: 'default',
-                  orgId: 1,
-                  folder: '',
-                  type: 'file',
-                  disableDeletion: false,
-                  editable: true,
-                  options: {
-                    path: '/var/lib/grafana/dashboards/default',
-                  },
-                },
-              ],
-            },
-          } : undefined,
-          plugins: args.plugins,
-        },
-      }, {parent: this});
+        } : undefined,
+        plugins: args.plugins,
+      }, args.helmOverride),
+    }, {parent: this});
   }
 }

@@ -2,13 +2,11 @@ import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
 import {removeHelmTests} from 'k8s-cluster/src/utils/helm';
+import {merge} from 'lodash';
 
 export interface LokiInputs {
   namespace?: pulumi.Input<string>;
-  /**
-   * the helm chart version
-   */
-  version?: string;
+  helmOverride?: abstractions.HelmOverride;
   /**
    * the retention time for recorded logs in hours
    * defaults to 7 days
@@ -52,7 +50,7 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'loki-stack',
-      version: args.version ?? '2.1.0',
+      version: args.helmOverride?.version ?? '2.1.0',
       repo: 'https://grafana.github.io/loki/charts',
     });
 
@@ -64,7 +62,7 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
         repo: this.meta.repo,
       },
       transformations: [removeHelmTests()],
-      values: {
+      values: merge({}, {
         loki: {
           persistence: args.persistence ? {
             enabled: args.persistence.enabled,
@@ -143,7 +141,7 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
             },
           ],
         },
-      },
+      }, args.helmOverride?.values),
     }, {parent: this,});
   }
 }

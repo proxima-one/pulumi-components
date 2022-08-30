@@ -2,108 +2,18 @@ import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
 import * as random from '@pulumi/random';
-import * as fs from 'fs';
+import {merge} from 'lodash';
 
-// TODO: remove id unused. Rename UPrometheus
-/*
-export interface PrometheusOutputs {
-  meta: pulumi.Output<abstractions.HelmMeta>;
-  persistence: pulumi.Output<abstractions.Persistence | undefined>;
+export interface Dashboard {
+  name: string;
+  data: Record<string, string>;
 }
-
-export class Prometheus extends pulumi.ComponentResource implements PrometheusOutputs {
-  readonly meta: pulumi.Output<abstractions.HelmMeta>;
-  readonly persistence: pulumi.Output<abstractions.Persistence | undefined>;
-
-  constructor(name: string, props?: PrometheusInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:Prometheus', name, props, opts);
-
-    this.persistence = pulumi.output(props?.persistence);
-
-    this.meta = pulumi.output<abstractions.HelmMeta>({
-      chart: 'prometheus',
-      version: props?.version ?? '15.3.0',
-      repo: 'https://prometheus-community.github.io/helm-charts',
-    });
-
-    new k8s.helm.v3.Chart(
-      name,
-      {
-        namespace: props?.namespace,
-        chart: this.meta.chart,
-        version: this.meta.version,
-        fetchOpts: {
-          repo: this.meta.repo,
-        },
-        values: {
-          server: {
-            retention: pulumi.interpolate`${props?.retentionHours || 168}h`,
-            global: {
-              scrape_interval: `${props?.scrapeIntervalSeconds ?? 60}s`,
-              external_labels: props?.externalLabels,
-            },
-            strategy: {
-              type: 'Recreate',
-            },
-            extraArgs: props?.extraArgs,
-            extraFlags: ['storage.tsdb.wal-compression', ...(props?.extraFlags || [])],
-            sidecarContainers: props?.sidecarContainers,
-            persistentVolume: !props?.persistence
-              ? {enabled: false}
-              : {
-                enabled: props?.persistence.enabled,
-                size: pulumi.interpolate`${props?.persistence.sizeGB}Gi`,
-                storageClass: props?.persistence.storageClass,
-              },
-            resources: props?.resources
-              ? props?.resources
-              : {
-                requests: {
-                  cpu: '300m',
-                  memory: '1000M',
-                },
-                limits: {
-                  cpu: '2',
-                  memory: '1500M',
-                },
-              },
-          },
-          alertmanager: {
-            enabled: props?.alertmanager?.enabled ?? true,
-            persistentVolume: {
-              enabled: false,
-            },
-          },
-          nodeExporter: {
-            enabled: props?.nodeExporter?.enabled ?? true,
-            tolerations: [
-              {
-                key: 'node-role.kubernetes.io/master',
-                operator: 'Exists',
-                effect: 'NoSchedule',
-              },
-            ],
-          },
-          kubeStateMetrics: {
-            enabled: props?.kubeStateMetrics?.enabled ?? true,
-          },
-          pushgateway: {
-            enabled: props?.pushgateway?.enabled ?? false,
-          },
-        },
-      },
-      {
-        parent: this,
-      }
-    );
-  }
-}
- */
 
 export interface PrometheusInputs {
   namespace?: pulumi.Input<string>;
-  version?: string;
+  helmOverride?: abstractions.HelmOverride;
   persistence?: abstractions.Persistence;
+  dashboards?: Dashboard[];
   alertUrl: string;
   oauthUrl: string;
   promUrl: string;
@@ -112,7 +22,7 @@ export interface PrometheusInputs {
   grafanaUrl: string;
 }
 
-export interface UPrometheusOutputs {
+export interface PrometheusOutputs {
   meta: pulumi.Output<abstractions.HelmMeta>;
   persistence: pulumi.Output<abstractions.Persistence | undefined>;
   status: pulumi.Output<k8s.types.output.helm.v3.ReleaseStatus>;
@@ -120,7 +30,7 @@ export interface UPrometheusOutputs {
   adminPassword: pulumi.Output<string>;
 }
 
-export class UPrometheus extends pulumi.ComponentResource implements UPrometheusOutputs {
+export class Prometheus extends pulumi.ComponentResource implements PrometheusOutputs {
   readonly adminUsername: pulumi.Output<string>;
   readonly adminPassword: pulumi.Output<string>;
   readonly meta: pulumi.Output<abstractions.HelmMeta>;
@@ -132,7 +42,7 @@ export class UPrometheus extends pulumi.ComponentResource implements UPrometheus
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'kube-prometheus-stack',
-      version: args?.version ?? '34.5.1',
+      version: args.helmOverride?.version ?? '34.5.1',
       repo: 'https://prometheus-community.github.io/helm-charts',
     });
 
@@ -147,7 +57,7 @@ export class UPrometheus extends pulumi.ComponentResource implements UPrometheus
       namespace: args?.namespace,
       chart: this.meta.apply(meta => meta.chart),
       repositoryOpts: {repo: this.meta.apply(meta => meta.repo)},
-      values: {
+      values: merge({}, {
         prometheusOperator: {
           createCustomResource: false,
           tls: {enabled: false},
@@ -282,21 +192,21 @@ export class UPrometheus extends pulumi.ComponentResource implements UPrometheus
             }]
           }
         }
-      },
+      }, args.helmOverride?.values),
     }, {parent: this})
 
-    new k8s.core.v1.ConfigMap("proxima-dashboard", { // TODO: remove or move to other dir. What to do with this 300-line JSON?
-      metadata: {
-        name: "proxima-dashboard",
-        labels: {
-          grafana_dashboard: "1",
+    args.dashboards?.forEach(dashboard =>
+      new k8s.core.v1.ConfigMap(dashboard.name, {
+        metadata: {
+          name: dashboard.name,
+          labels: {
+            grafana_dashboard: "1",
+          },
+          namespace: args?.namespace
         },
-        namespace: args?.namespace
-      },
-      data: {
-        "proxima.json": fs.readFileSync("components/prometheus/proxima.json", "utf-8")
-      }
-    }, {parent: this})
+        data: dashboard.data,
+      }, {parent: this})
+    )
 
     this.status = prom.status
     this.adminUsername = pulumi.output('admin');

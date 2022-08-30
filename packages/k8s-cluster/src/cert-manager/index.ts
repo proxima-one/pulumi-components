@@ -59,11 +59,7 @@ export class CertManager extends pulumi.ComponentResource implements CertManager
             timeoutSeconds: 30,
           },
         },
-      },
-      {
-        parent: this,
-      }
-    );
+      }, {parent: this});
 
     const certMgrReady = chart.resources.apply(
       (m: Record<string, unknown>) => pulumi.all(m).apply(m => Object.values(m).map(r => pulumi.output(r))));
@@ -73,42 +69,37 @@ export class CertManager extends pulumi.ComponentResource implements CertManager
 
     if (args.zerossl?.enabled) {
       const zeroSslIssuer = new k8s.apiextensions.CustomResource(`${name}-zerossl`, {
-          apiVersion: "cert-manager.io/v1",
-          kind: "ClusterIssuer",
-          metadata: {
-            name: "zerossl",
-            annotations: {
-              webhook: webhookSvc.id,
-            }
-          },
-          spec: {
-            acme: {
-              server: "https://acme.zerossl.com/v2/DV90",
-              externalAccountBinding: {
-                keyID: args.zerossl.eabKid,
-                keySecretRef: {
-                  name: `${name}-zerossl-hmac-key`,
-                  key: "secret",
-                },
-              },
-              privateKeySecretRef: {
-                name: `${name}-zerossl-private-key`
-              },
-              solvers: [{
-                http01: {
-                  ingress: {
-                    class: "nginx"
-                  }
-                }
-              }],
-            }
+        apiVersion: "cert-manager.io/v1",
+        kind: "ClusterIssuer",
+        metadata: {
+          name: "zerossl",
+          annotations: {
+            webhook: webhookSvc.id,
           }
         },
-        {
-          parent: this,
-          dependsOn: [chart]
+        spec: {
+          acme: {
+            server: "https://acme.zerossl.com/v2/DV90",
+            externalAccountBinding: {
+              keyID: args.zerossl.eabKid,
+              keySecretRef: {
+                name: `${name}-zerossl-hmac-key`,
+                key: "secret",
+              },
+            },
+            privateKeySecretRef: {
+              name: `${name}-zerossl-private-key`
+            },
+            solvers: [{
+              http01: {
+                ingress: {
+                  class: "nginx"
+                }
+              }
+            }],
+          }
         }
-      );
+      }, {parent: this, dependsOn: [chart]});
     }
 
     if (args.letsencrypt) {
@@ -139,12 +130,7 @@ export class CertManager extends pulumi.ComponentResource implements CertManager
               }],
             }
           }
-        },
-        {
-          parent: this,
-          dependsOn: [chart]
-        }
-      );
+        }, {parent: this, dependsOn: [chart]});
 
       if (args.letsencrypt.staging) {
         const letsencryptIssuerStage = new k8s.apiextensions.CustomResource(
@@ -174,12 +160,7 @@ export class CertManager extends pulumi.ComponentResource implements CertManager
                 }],
               }
             }
-          },
-          {
-            parent: this,
-            dependsOn: [chart]
-          }
-        );
+          }, {parent: this, dependsOn: [chart]});
       }
     }
   }

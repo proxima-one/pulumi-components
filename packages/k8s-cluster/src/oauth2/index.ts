@@ -1,12 +1,12 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
-import {FileAsset} from '@pulumi/pulumi/asset';
+import {merge} from 'lodash';
 
 export interface OauthInputs {
   namespace?: pulumi.Input<string>;
   ingress?: abstractions.Ingress;
-  version?: string
+  helmOverride?: abstractions.HelmOverride;
 
   clientId: string;
   clientSecret: string;
@@ -27,7 +27,7 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'oauth2-proxy',
-      version: args.version ?? '6.2.0',
+      version: args.helmOverride?.version ?? '6.2.0',
       repo: 'https://oauth2-proxy.github.io/manifests',
     })
 
@@ -43,7 +43,12 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
     }, {parent: this});
 
     const oauth = new k8s.helm.v3.Release(name, {
-      values: {
+      namespace: args.namespace,
+      chart: this.meta.chart,
+      repositoryOpts: {
+        repo: this.meta.repo
+      },
+      values: merge({}, {
         config: {
           existingSecret: creds.metadata.name
         },
@@ -68,12 +73,7 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
             }
           ]
         }
-      },
-      namespace: args.namespace,
-      chart: this.meta.chart,
-      repositoryOpts: {
-        repo: this.meta.repo
-      }
+      }, args.helmOverride?.values),
     }, {parent: this});
   }
 }
