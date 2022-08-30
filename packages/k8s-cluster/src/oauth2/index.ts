@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
-import * as abstractions from '@proxima-one/pulumi-k8s-cluster/src/abstractions';
+import {abstractions} from '@proxima-one/pulumi-k8s-cluster';
 import {merge} from 'lodash';
 
 export interface OauthInputs {
