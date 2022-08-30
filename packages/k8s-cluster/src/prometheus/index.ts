@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
-import {abstractions} from '@proxima-one/pulumi-k8s-cluster';
+import * as abstractions from '../abstractions';
 import * as random from '@pulumi/random';
 import {merge} from 'lodash';
 

@@ -1,7 +1,7 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as random from '@pulumi/random';
-import {abstractions} from '@proxima-one/pulumi-k8s-cluster';
+import * as abstractions from '../abstractions';
 import {merge} from 'lodash';
 
 export interface GrafanaInputs {

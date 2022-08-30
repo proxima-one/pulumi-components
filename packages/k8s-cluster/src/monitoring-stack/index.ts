@@ -1,5 +1,7 @@
 import * as pulumi from '@pulumi/pulumi';
-import {grafana, prometheus, loki} from '@proxima-one/pulumi-k8s-cluster';
+import * as grafana from '../grafana';
+import * as prometheus from '../prometheus';
+import * as loki from '../loki';
 
 export interface MonitoringStackInputs {
   grafana?: grafana.GrafanaInputs;
