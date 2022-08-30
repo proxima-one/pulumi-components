@@ -100,6 +100,8 @@ export class MongoDB extends pulumi.ComponentResource {
       { parent: this }
     );
 
+    this.chart.getResource()
+
     const svcName = args.replicaSet
       ? `${name}-mongodb-headless`
       : `${name}-mongodb`;

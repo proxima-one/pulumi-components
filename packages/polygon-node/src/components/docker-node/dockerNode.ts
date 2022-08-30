@@ -17,6 +17,7 @@ export interface DockerPolygonNodeArgs {
     bor?: BorPorts;
     heimdall?: HeimdallPorts;
   }>;
+  syncMode?: pulumi.Input<string>;
   verbose?: boolean;
 }
 
@@ -75,10 +76,14 @@ export class DockerPolygonNode extends pulumi.ComponentResource {
         existingNetwork: networkName,
         imageName: resolvedArgs.apply((args) => configs[args.network].borImage),
         borOptions: pulumi
-          .all([resolvedArgs, this.heimdall.restServerContainer.domainname])
-          .apply<BorOptions>(([args, restServ]) => {
+          .all([
+            resolvedArgs,
+            this.heimdall.restServerContainer.domainname,
+            pulumi.output(args.syncMode),
+          ])
+          .apply<BorOptions>(([args, restServ, syncMode]) => {
             return {
-              syncMode: "full",
+              syncMode: syncMode ?? "full",
               misc: {
                 heimdallUrl: `http://${restServ}:1317`,
                 borLogs: true,
