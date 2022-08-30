@@ -1,7 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
-import {abstractions} from '@proxima-one/pulumi-k8s-cluster';
-import {removeHelmTests} from 'k8s-cluster/src/utils/helm';
+import {abstractions, utils} from '@proxima-one/pulumi-k8s-cluster';
 import {merge} from 'lodash';
 
 export interface LokiInputs {
@@ -61,7 +60,7 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
       fetchOpts: {
         repo: this.meta.repo,
       },
-      transformations: [removeHelmTests()],
+      transformations: [utils.removeHelmTests()],
       values: merge({}, {
         loki: {
           persistence: args.persistence ? {
