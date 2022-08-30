@@ -1,1 +1,1 @@
-export * as ingressNginx from "./ingress-nginx";
+export {IngressNginxController} from "./ingress-nginx";
