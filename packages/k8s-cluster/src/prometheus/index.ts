@@ -17,9 +17,9 @@ export interface PrometheusInputs {
   alertUrl: string;
   oauthUrl: string;
   promUrl: string;
-  pagerDutySecret: string;
-  pagerDutyUrl: string;
   grafanaUrl: string;
+  pagerDutySecret?: string;
+  pagerDutyUrl?: string;
 }
 
 export interface PrometheusOutputs {
@@ -148,7 +148,8 @@ export class Prometheus extends pulumi.ComponentResource implements PrometheusOu
             ]
           }
         },
-        alertmanager: {
+        alertmanager: args.pagerDutyUrl && args.pagerDutySecret ? {
+          enabled: true,
           alertmanagerSpec: {
             logLevel: "debug"
           },
@@ -191,6 +192,8 @@ export class Prometheus extends pulumi.ComponentResource implements PrometheusOu
               hosts: [args.alertUrl]
             }]
           }
+        } : {
+          enabled: false,
         }
       }, args.helmOverride?.values),
     }, {parent: this})
