@@ -1,7 +1,7 @@
 export * as abstractions from "./abstractions";
 export * as certManager from "./cert-manager";
 export * as grafana from "./grafana";
-export {IngressNginxController} from "./ingress-nginx";
+export * as ingressNginx2 from "./ingress-nginx";
 export * as loki from "./loki";
 export * as monitoringStack from "./monitoring-stack";
 export * as oauth2 from "./oauth2";
