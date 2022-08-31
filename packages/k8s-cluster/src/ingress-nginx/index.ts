@@ -22,7 +22,7 @@ export class IngressNginxController extends pulumi.ComponentResource implements 
   readonly publicIP: pulumi.Output<string>;
 
   constructor(name: string, args: IngressNginxControllerInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:IngressNginxController', name, args, opts);
+    super('proxima-k8s:IngressNginxController', name, args, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'ingress-nginx',

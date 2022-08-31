@@ -71,7 +71,7 @@ export class Grafana extends pulumi.ComponentResource implements GrafanaOutputs 
   readonly persistence: pulumi.Output<abstractions.Persistence | undefined>;
 
   constructor(name: string, args: GrafanaInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:Grafana', name, args, opts);
+    super('proxima-k8s:Grafana', name, args, opts);
 
     this.ingress = pulumi.output(args.ingress);
     this.persistence = pulumi.output(args.persistence);

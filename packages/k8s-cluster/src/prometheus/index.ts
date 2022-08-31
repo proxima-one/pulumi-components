@@ -38,7 +38,7 @@ export class Prometheus extends pulumi.ComponentResource implements PrometheusOu
   readonly status: pulumi.Output<k8s.types.output.helm.v3.ReleaseStatus>
 
   constructor(name: string, args: PrometheusInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxyma:UPrometheus', name, args, opts);
+    super('proxima-k8s:Prometheus', name, args, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'kube-prometheus-stack',

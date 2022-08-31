@@ -21,7 +21,7 @@ export class MonitoringStack extends pulumi.ComponentResource implements Monitor
   readonly prometheus?: prometheus.PrometheusOutputs;
 
   constructor(name: string, args: MonitoringStackInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:MonitoringStack', name, args, opts);
+    super('proxima-k8s:MonitoringStack', name, args, opts);
 
     if (args.prometheus) {
       this.prometheus = new prometheus.Prometheus(`${name}-prometheus`, args.prometheus, {parent: this});

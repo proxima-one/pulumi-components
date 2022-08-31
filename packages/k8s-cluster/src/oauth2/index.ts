@@ -23,7 +23,7 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
   readonly meta: pulumi.Output<abstractions.HelmMeta>
 
   constructor(name: string, args: OauthInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxyma:Oauth', name, args, opts);
+    super('proxima:Oauth', name, args, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'oauth2-proxy',

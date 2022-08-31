@@ -34,7 +34,7 @@ export class CertManager extends pulumi.ComponentResource implements CertManager
   readonly meta: pulumi.Output<abstractions.HelmMeta>;
 
   constructor(name: string, args: CertManagerInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:CertManager', name, args, opts);
+    super('proxima-k8s:CertManager', name, args, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'cert-manager',

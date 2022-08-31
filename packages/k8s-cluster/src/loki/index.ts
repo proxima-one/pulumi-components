@@ -42,7 +42,7 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
   readonly persistence: pulumi.Output<abstractions.Persistence | undefined>;
 
   constructor(name: string, args: LokiInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:Loki', name, args, opts);
+    super('proxima-k8s:Loki', name, args, opts);
 
     this.persistence = pulumi.output(args?.persistence);
 
