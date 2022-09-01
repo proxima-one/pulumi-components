@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-service-apps",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "pulumi components to run proxima service apps",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
@@ -25,7 +25,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-proxima-node": "^0.13.26",
+    "@proxima-one/pulumi-proxima-node": "^0.13.27",
     "@pulumi/kubernetes": "^3.20.3",
     "@pulumi/kubernetesx": "^0.1.6",
     "@pulumi/pulumi": "^3.37.2"
