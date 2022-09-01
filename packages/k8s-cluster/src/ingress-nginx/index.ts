@@ -11,7 +11,6 @@ export interface IngressNginxControllerInputs {
 
 export interface IngressNginxControllerOutputs {
   meta: pulumi.Output<abstractions.HelmMeta>;
-  publicIP: pulumi.Output<string>;
 }
 
 /**
@@ -19,7 +18,6 @@ export interface IngressNginxControllerOutputs {
  */
 export class IngressNginxController extends pulumi.ComponentResource implements IngressNginxControllerOutputs {
   readonly meta: pulumi.Output<abstractions.HelmMeta>;
-  readonly publicIP: pulumi.Output<string>;
 
   constructor(name: string, args: IngressNginxControllerInputs, opts?: pulumi.ComponentResourceOptions) {
     super('proxima-k8s:IngressNginxController', name, args, opts);
@@ -50,16 +48,5 @@ export class IngressNginxController extends pulumi.ComponentResource implements 
         },
       }, args.helmOverride?.values),
     }, {parent: this,});
-
-    const frontend = Output.create(args.namespace).apply(
-      ns => chart.getResourceProperty(
-        "v1/Service",
-        ns ?? "default",
-        `${name}-ingress-nginx-controller`,
-        "status"
-      ));
-    const ingress = frontend.apply(x => x.loadBalancer.ingress[0]);
-
-    this.publicIP = ingress.apply(x => x.ip ?? x.hostname);
   }
 }

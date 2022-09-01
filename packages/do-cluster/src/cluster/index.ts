@@ -28,7 +28,7 @@ export class DoCluster extends pulumi.ComponentResource implements DoClusterOutp
 	kubeconfig: pulumi.Output<string>
 
 	constructor(name: string, args: DoClusterInputs, opts?: pulumi.ComponentResourceOptions) {
-		super('proxima:Cluster', name, args, opts);  // todo: rename to 'proxima-k8s:DoCluster'
+		super('proxima-k8s:DoCluster', name, args, opts);
 		const cluster = new digitalocean.KubernetesCluster(name, {
 			region: args.region,
 			version: args.version ?? "latest",
