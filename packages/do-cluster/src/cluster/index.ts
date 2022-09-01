@@ -13,7 +13,7 @@ export interface NodePool {
 }
 
 export interface DoClusterInputs {
-	region: pulumi.Input<string>,
+	region: pulumi.Input<string>
 	version?: pulumi.Input<string>
 	autoUpgrade?: pulumi.Input<boolean>
 	ha?: pulumi.Input<boolean>
@@ -24,11 +24,11 @@ export interface DoClusterOutputs {
 	kubeconfig: pulumi.Output<string>
 }
 
-export class DoCluster extends pulumi.ComponentResource implements DoClusterOutputs{
+export class DoCluster extends pulumi.ComponentResource implements DoClusterOutputs {
 	kubeconfig: pulumi.Output<string>
 
 	constructor(name: string, args: DoClusterInputs, opts?: pulumi.ComponentResourceOptions) {
-		super('proxima-k8s:DoCluster', name, args, opts);
+		super('proxima:Cluster', name, args, opts);  // todo: rename to 'proxima-k8s:DoCluster'
 		const cluster = new digitalocean.KubernetesCluster(name, {
 			region: args.region,
 			version: args.version ?? "latest",
