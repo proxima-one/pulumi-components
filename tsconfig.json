@@ -46,6 +46,9 @@
       "path": "packages/k8s-cluster"
     },
     {
+      "path": "packages/do-cluster"
+    },
+    {
       "path": "packages/polygon-node"
     },
     {
