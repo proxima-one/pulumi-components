@@ -56,7 +56,7 @@ export class WebServiceDeployer extends AppDeployerBase {
 
       const configFiles: k8s.core.v1.ConfigMap[] | undefined = part.files?.map(file => {
         return new k8s.core.v1.ConfigMap(
-          partFullName + file.path.split("/").at(-1), // partFullName + filename
+          partFullName + file.path.split("/")[file.path.split("/").length - 1], // partFullName + filename
           {data: {"config": file.content}},
           {provider: this.k8s}
         )
