@@ -113,12 +113,12 @@ export class WebServiceDeployer extends AppDeployerBase {
                       ),
                     volumeMounts: part.files?.map((file, i) => { return {
                       mountPath: file.path,
-                      name: "config_" + i.toString()
+                      name: "config-" + i.toString()
                     }})
                   },
                 ],
                 volumes: configFiles?.map((file, i) => { return {
-                  name: "config_" + i.toString(),
+                  name: "config-" + i.toString(),
                   configMap: {
                     name: file.id
                   }
