@@ -268,7 +268,7 @@ export interface ServiceAppPart {
   configs?: ConfigFolder[];
 }
 
-interface ConfigFolder {
+export interface ConfigFolder {
   mountPath: string;
   files: Record<string, string>;  // {fileName: content}
 }

@@ -4,7 +4,7 @@ import {
   ComputeResources,
   DeploymentParameters,
 } from "./base";
-import { WebServiceDeployer } from "./webService";
+import { WebServiceDeployer, ConfigFolder } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { MongoDbStorage } from "@proxima-one/pulumi-proxima-node";
 
@@ -83,14 +83,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       parts: {
         consumer: {
           disabled: mode == "server-only",
-          configs: app.apiKind == "indexing-service/v2" ? [
-            {
-              mountPath: "./app/config.yaml",
-              files: {
-                "consumer_config": app.configFile
-              }
-            }
-          ] : undefined,
+          configs: app.apiKind == "indexing-service/v2" ? app.configs: undefined,
           env: env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),
@@ -184,6 +177,7 @@ export interface IndexingServiceAppV1 {
   mode?: IndexingServiceMode;
 }
 
+// for testing purposes only
 export interface IndexingServiceAppV2 {
   apiKind: "indexing-service/v2";
 
@@ -198,7 +192,7 @@ export interface IndexingServiceAppV2 {
       resources?: pulumi.Input<ComputeResources>;
     });
   };
-  configFile: string;
+  configs?: ConfigFolder[];
 
   imageName?: pulumi.Input<string>;
   indexName?: string;
