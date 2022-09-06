@@ -54,16 +54,14 @@ export class WebServiceDeployer extends AppDeployerBase {
         app: partFullName,
       };
 
-      const configFiles: k8s.core.v1.ConfigMap[] | undefined = part.files?.map(file => {
+      const configMaps: k8s.core.v1.ConfigMap[] | undefined = part.configs?.map(config => {
         return new k8s.core.v1.ConfigMap(
-          partFullName + file.path.split("/")[file.path.split("/").length - 1], // partFullName + filename
+          partFullName + config.mountPath.split("/")[config.mountPath.split("/").length - 1], // partFullName + filename
           {
             metadata: {
               namespace: this.namespace,
             },
-            data: {
-              "config": file.content
-            },
+            data: config.files,
           },
           {provider: this.k8s}
         )
@@ -118,16 +116,16 @@ export class WebServiceDeployer extends AppDeployerBase {
                       .apply((x) =>
                         this.parseResourceRequirements(x ?? defaultResources)
                       ),
-                    volumeMounts: part.files?.map((file, i) => { return {
-                      mountPath: file.path,
+                    volumeMounts: part.configs?.map((configFolder, i) => { return {
+                      mountPath: configFolder.mountPath,
                       name: "config-" + i.toString()
                     }})
                   },
                 ],
-                volumes: configFiles?.map((file, i) => { return {
+                volumes: configMaps?.map((configMap, i) => { return {
                   name: "config-" + i.toString(),
                   configMap: {
-                    name: file.id
+                    name: configMap.id.apply(s => s.split("/")[s.split("/").length - 1])
                   }
                 }})
               },
@@ -267,12 +265,12 @@ export interface ServiceAppPart {
   args?: pulumi.Input<pulumi.Input<string>[]>;
   metrics?: pulumi.Input<Metrics>;
   disabled?: boolean;
-  files?: File[];
+  configs?: ConfigFolder[];
 }
 
-interface File {
-  path: string;
-  content: string;
+interface ConfigFolder {
+  mountPath: string;
+  files: Record<string, string>;  // fileName: content
 }
 
 export interface Metrics {
