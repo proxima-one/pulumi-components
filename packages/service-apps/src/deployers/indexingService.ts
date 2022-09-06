@@ -83,6 +83,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       parts: {
         consumer: {
           disabled: mode == "server-only",
+          files: app.apiKind == "indexing-service/v2" ? [{path: "./app/config.yaml", content: app.configFile}] : undefined,
           env: env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),
@@ -147,7 +148,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
   }
 }
 
-export type IndexingServiceApp = IndexingServiceAppV1 & { name?: string };
+export type IndexingServiceApp = (IndexingServiceAppV1 | IndexingServiceAppV2) & { name?: string };
 
 export interface IndexingServiceAppV1 {
   apiKind: "indexing-service/v1";
@@ -159,10 +160,38 @@ export interface IndexingServiceAppV1 {
     endpoint:
       | { type: "cloud" }
       | ({ type: "provision" } & {
-          storage: pulumi.Input<MongoDbStorage>;
-          resources?: pulumi.Input<ComputeResources>;
-        });
+      storage: pulumi.Input<MongoDbStorage>;
+      resources?: pulumi.Input<ComputeResources>;
+    });
   };
+
+  imageName?: pulumi.Input<string>;
+  indexName?: string;
+  resources?: pulumi.Input<{
+    consumer?: pulumi.Input<ComputeResources>;
+    server?: pulumi.Input<ComputeResources>;
+  }>;
+  /*
+  Default "live"
+   */
+  mode?: IndexingServiceMode;
+}
+
+export interface IndexingServiceAppV2 {
+  apiKind: "indexing-service/v2";
+
+  network: pulumi.Input<string>;
+  stream: pulumi.Input<string>;
+  db: {
+    name?: string;
+    endpoint:
+      | { type: "cloud" }
+      | ({ type: "provision" } & {
+      storage: pulumi.Input<MongoDbStorage>;
+      resources?: pulumi.Input<ComputeResources>;
+    });
+  };
+  configFile: string;
 
   imageName?: pulumi.Input<string>;
   indexName?: string;

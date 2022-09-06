@@ -54,6 +54,14 @@ export class WebServiceDeployer extends AppDeployerBase {
         app: partFullName,
       };
 
+      const configFiles: k8s.core.v1.ConfigMap[] | undefined = part.files?.map(file => {
+        return new k8s.core.v1.ConfigMap(
+          partFullName + file.path.split("/").at(-1), // partFullName + filename
+          {data: {"config": file.content}},
+          {provider: this.k8s}
+        )
+      })
+
       const deployment = new k8s.apps.v1.Deployment(
         partFullName,
         {
@@ -105,6 +113,9 @@ export class WebServiceDeployer extends AppDeployerBase {
                       ),
                   },
                 ],
+                volumes: configFiles?.map(file => { return {
+                  name: file.urn
+                }})
               },
             },
           },
@@ -242,6 +253,12 @@ export interface ServiceAppPart {
   args?: pulumi.Input<pulumi.Input<string>[]>;
   metrics?: pulumi.Input<Metrics>;
   disabled?: boolean;
+  files?: File[];
+}
+
+interface File {
+  path: string;
+  content: string;
 }
 
 export interface Metrics {
