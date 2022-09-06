@@ -85,7 +85,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           disabled: mode == "server-only",
           configs: app.apiKind == "indexing-service/v2" ? [
             {
-              mountPath: "./app/config",
+              mountPath: "./app/config.yaml",
               files: {
                 "consumer_config": app.configFile
               }
