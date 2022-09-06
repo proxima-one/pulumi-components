@@ -111,10 +111,17 @@ export class WebServiceDeployer extends AppDeployerBase {
                       .apply((x) =>
                         this.parseResourceRequirements(x ?? defaultResources)
                       ),
+                    volumeMounts: part.files?.map((file, i) => { return {
+                      mountPath: file.path,
+                      name: "config_" + i.toString()
+                    }})
                   },
                 ],
-                volumes: configFiles?.map(file => { return {
-                  name: file.urn
+                volumes: configFiles?.map((file, i) => { return {
+                  name: "config_" + i.toString(),
+                  configMap: {
+                    name: file.id
+                  }
                 }})
               },
             },
