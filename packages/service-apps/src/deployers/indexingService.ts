@@ -83,7 +83,14 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       parts: {
         consumer: {
           disabled: mode == "server-only",
-          files: app.apiKind == "indexing-service/v2" ? [{path: "./app/config.yaml", content: app.configFile}] : undefined,
+          configs: app.apiKind == "indexing-service/v2" ? [
+            {
+              mountPath: "./app/config",
+              files: {
+                "consumer_config": app.configFile
+              }
+            }
+          ] : undefined,
           env: env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),

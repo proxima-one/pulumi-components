@@ -56,7 +56,7 @@ export class WebServiceDeployer extends AppDeployerBase {
 
       const configMaps: k8s.core.v1.ConfigMap[] | undefined = part.configs?.map(config => {
         return new k8s.core.v1.ConfigMap(
-          partFullName + config.mountPath.split("/")[config.mountPath.split("/").length - 1], // partFullName + filename
+          partFullName + "-" + config.mountPath.split("/")[config.mountPath.split("/").length - 1], // partFullName-filename
           {
             metadata: {
               namespace: this.namespace,
@@ -270,7 +270,7 @@ export interface ServiceAppPart {
 
 interface ConfigFolder {
   mountPath: string;
-  files: Record<string, string>;  // fileName: content
+  files: Record<string, string>;  // {fileName: content}
 }
 
 export interface Metrics {
