@@ -186,7 +186,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           },
         };
         const configs: ConfigFolder[] = [{
-          mountPath: "",
+          mountPath: "/config",
           files: {
             config: configObj.toString(),
           }
