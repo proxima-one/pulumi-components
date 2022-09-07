@@ -174,21 +174,19 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configObj = new yaml.Document();
-        configObj.add({
-          streams: app.streams,
-          timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
-          target: {
-            db: mongoUri
-          },
-          shard: {
-            name: app.shardName
-          },
-        });
         const configs: ConfigFolder[] = [{
           mountPath: "/config",
           files: {
-            config: configObj.toString(),
+            config: yaml.stringify({
+              streams: app.streams,
+              timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
+              target: {
+                db: mongoUri
+              },
+              shard: {
+                name: app.shardName
+              },
+            }),
           }
         }]
         if (app.configs) {
