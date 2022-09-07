@@ -155,6 +155,9 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const env = pulumi.all({
           MODE: app.mode ?? "live",
           METRICS_PORT: "2112",
+          MONGO_DB_NAMES: dbName,
+          MONGO_DB_NAME: dbName,
+          MONGO_URI: mongoUri,
         });
 
         const consumerEnv: Record<string, string> = {
@@ -181,7 +184,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
               streams: app.streams,
               timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
               target: {
-                db: mongoUri
+                db: "mongo"
               },
               shard: {
                 name: app.shardName
@@ -256,11 +259,11 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         return {
           name: pulumi.output(name),
           networks: pulumi.output([...new Set<string>(  // unique networks from all streams
-            Object.entries(app.streams).reduce<string[]>(
-              (acc, cur) => {
-                acc.push(...cur[1].metadata.networks)
-                return acc;
-              }, [])
+            Object.entries(app.streams).reduce<string[]>((acc, cur) => {
+              return acc.concat(cur[1].reduce<string[]>((acc, cur) => {
+                return acc.concat(cur.metadata.networks)
+              }, []))
+            }, [])
           )]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
           internalEndpoint: serviceMetadata
@@ -342,7 +345,7 @@ export interface IndexingServiceAppV2 {
     metadata: {
       networks: string[];
     }
-  }>
+  }[]>
   // String examples: "1662495440-1562495440", "1662495440-", "-1562495440"
   timeRange?: TimeRange | string;
 
