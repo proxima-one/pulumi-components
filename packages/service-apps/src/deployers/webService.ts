@@ -55,8 +55,7 @@ export class WebServiceDeployer extends AppDeployerBase {
       };
 
       const configMaps: k8s.core.v1.ConfigMap[] | undefined = part.configs?.map((config, i) => {
-        return new k8s.core.v1.ConfigMap(
-          `${partFullName}-${i}-${config.mountPath.split("/")[config.mountPath.split("/").length - 1]}`, // partFullName-filename
+        return new k8s.core.v1.ConfigMap(`${partFullName}-${i}`, // partFullName-filename
           {
             metadata: {
               namespace: this.namespace,
