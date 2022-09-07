@@ -175,7 +175,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         };
 
         const configObj = new yaml.Document();
-        configObj.contents = {
+        configObj.add({
           streams: app.streams,
           timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
           target: {
@@ -184,7 +184,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: {
             name: app.shardName
           },
-        };
+        });
         const configs: ConfigFolder[] = [{
           mountPath: "/config",
           files: {
