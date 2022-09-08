@@ -4,7 +4,7 @@ import {
   ComputeResources,
   DeploymentParameters,
 } from "./base";
-import { WebServiceDeployer, ConfigFolder } from "./webService";
+import { WebServiceDeployer, ConfigFile } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { MongoDbStorage } from "@proxima-one/pulumi-proxima-node";
 import {parseInt} from "lodash";
@@ -174,25 +174,23 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configs: pulumi.Input<ConfigFolder>[] = [mongoUri.apply(uri => {
+        const configs: pulumi.Input<ConfigFile>[] = [mongoUri.apply(uri => {
           return {
-            mountPath: "/config",
-            files: {
-              config: yaml.dump({
-                streams: app.streams,
-                timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
-                target: {
-                  db: uri
-                },
-                shard: {
-                  name: app.shardName
-                },
-              }),
-            }
+            path: "/config",
+            content: yaml.dump({
+              streams: app.streams,
+              timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
+              target: {
+                db: uri
+              },
+              shard: {
+                name: app.shardName
+              },
+            }),
           }
         })]
-        if (app.configs) {
-          configs.push(...app.configs)
+        if (app.configFiles) {
+          configs.push(...app.configFiles)
         }
 
         const resources = pulumi.output(app.resources);
@@ -202,7 +200,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           parts: {
             consumer: {
               disabled: mode == "server-only",
-              configs: configs,
+              configFiles: configs,
               env: env.apply((x) => ({...x, ...consumerEnv})),
               args: ["./consumer"],
               resources: resources.apply((x) => x?.consumer),
@@ -218,7 +216,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             },
             server: {
               disabled: mode == "consumer-only" || mode == "fast-sync",
-              configs: configs,
+              configFiles: configs,
               env: env.apply((x) => ({...x, ...serverEnv})),
               args: ["./server"],
               resources: resources.apply((x) => x?.server),
@@ -260,7 +258,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           networks: pulumi.output([...new Set<string>(  // unique networks from all streams
             Object.entries(app.streams).reduce<string[]>((acc, cur) => {
               return acc.concat(cur[1].reduce<string[]>((acc, cur) => {
-                return acc.concat(cur.metadata.networks)
+                return cur.metadata?.networks ? acc.concat(cur.metadata?.networks) : acc
               }, []))
             }, [])
           )]),
@@ -330,8 +328,8 @@ export interface IndexingServiceAppV2 {
 
   streams: Record<string, {
     id: string;
-    metadata: {
-      networks: string[];
+    metadata?: {
+      networks?: string[];
     }
   }[]>
   // String examples: "1662495440-1562495440", "1662495440-", "-1562495440"
@@ -352,7 +350,8 @@ export interface IndexingServiceAppV2 {
   }>;
   // Default "live"
   mode?: IndexingServiceMode;
-  configs?: ConfigFolder[];
+  // {filePath: content};
+  configFiles?: pulumi.Input<ConfigFile>[];
 }
 
 export type IndexingServiceMode =

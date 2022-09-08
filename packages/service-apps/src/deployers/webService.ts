@@ -9,6 +9,7 @@ import {
   ingressSpec,
 } from "@proxima-one/pulumi-proxima-node";
 import { AppDeployerBase, ComputeResources } from "./base";
+import * as path from "path";
 
 export class WebServiceDeployer extends AppDeployerBase {
   protected get namespace(): pulumi.Output<string> {
@@ -54,17 +55,18 @@ export class WebServiceDeployer extends AppDeployerBase {
         app: partFullName,
       };
 
-      const configMaps: k8s.core.v1.ConfigMap[] | undefined = part.configs?.map((config, i) => {
-        return new k8s.core.v1.ConfigMap(`${partFullName}-config-${i}`, // partFullName-filename
-          {
-            metadata: {
-              namespace: this.namespace,
-            },
-            data: pulumi.output(config).apply(cfg => {return cfg.files}),
+      const configMap = part.configFiles ? new k8s.core.v1.ConfigMap(`${partFullName}-config`, {
+          metadata: {
+            namespace: this.namespace,
           },
-          {provider: this.k8s}
-        )
-      })
+          data: part.configFiles.reduce((acc: any, cur) => {
+            return pulumi.output(cur).apply(file => {
+              acc[file.path] = file.content
+              return acc
+            })
+          }, {}),
+        }, {provider: this.k8s}
+      ) : undefined
 
       const deployment = new k8s.apps.v1.Deployment(
         partFullName,
@@ -115,18 +117,30 @@ export class WebServiceDeployer extends AppDeployerBase {
                       .apply((x) =>
                         this.parseResourceRequirements(x ?? defaultResources)
                       ),
-                    volumeMounts: part.configs?.map((configFolder, i) => { return {
-                      mountPath: pulumi.output(configFolder).apply(folder => {return folder.mountPath}),
-                      name: "config-" + i.toString()
-                    }})
+                    volumeMounts: part.configFiles?.map(file => {
+                      const parsedPath = pulumi.output(file).apply(f => {
+                        return path.parse(f.path)
+                      })
+                      return {
+                        mountPath: pulumi.output(parsedPath).apply(p => {
+                          return p.dir
+                        }),
+                        subPath: pulumi.output(parsedPath).apply(p => {
+                          return p.name
+                        }),
+                        name: "config"
+                      }
+                    })
                   },
                 ],
-                volumes: configMaps?.map((configMap, i) => { return {
-                  name: "config-" + i.toString(),
-                  configMap: {
-                    name: configMap.id.apply(s => s.split("/")[s.split("/").length - 1])
+                volumes: configMap ? [
+                  {
+                    name: "config",
+                    configMap: {
+                      name: configMap.id.apply(s => s.split("/")[s.split("/").length - 1])
+                    }
                   }
-                }})
+                ] : undefined
               },
             },
           },
@@ -264,12 +278,12 @@ export interface ServiceAppPart {
   args?: pulumi.Input<pulumi.Input<string>[]>;
   metrics?: pulumi.Input<Metrics>;
   disabled?: boolean;
-  configs?: pulumi.Input<ConfigFolder>[];
+  configFiles?: pulumi.Input<ConfigFile>[];
 }
 
-export interface ConfigFolder {
-  mountPath: string;
-  files: Record<string, string>;  // {fileName: content}
+export interface ConfigFile {
+  path: string;
+  content: string;
 }
 
 export interface Metrics {
