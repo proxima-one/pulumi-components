@@ -61,7 +61,7 @@ export class WebServiceDeployer extends AppDeployerBase {
           },
           data: part.configFiles.reduce((acc: any, cur) => {
             return pulumi.output(cur).apply(file => {
-              acc[file.path] = file.content
+              acc[file.path.replace("/", "_")] = file.content
               return acc
             })
           }, {}),
