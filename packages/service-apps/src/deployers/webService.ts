@@ -60,7 +60,7 @@ export class WebServiceDeployer extends AppDeployerBase {
             metadata: {
               namespace: this.namespace,
             },
-            data: config.files,
+            data: pulumi.output(config).apply(cfg => {return cfg.files}),
           },
           {provider: this.k8s}
         )
@@ -116,7 +116,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                         this.parseResourceRequirements(x ?? defaultResources)
                       ),
                     volumeMounts: part.configs?.map((configFolder, i) => { return {
-                      mountPath: configFolder.mountPath,
+                      mountPath: pulumi.output(configFolder).apply(folder => {return folder.mountPath}),
                       name: "config-" + i.toString()
                     }})
                   },
@@ -264,7 +264,7 @@ export interface ServiceAppPart {
   args?: pulumi.Input<pulumi.Input<string>[]>;
   metrics?: pulumi.Input<Metrics>;
   disabled?: boolean;
-  configs?: ConfigFolder[];
+  configs?: pulumi.Input<ConfigFolder>[];
 }
 
 export interface ConfigFolder {

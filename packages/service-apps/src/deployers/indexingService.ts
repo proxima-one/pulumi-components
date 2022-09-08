@@ -8,7 +8,7 @@ import { WebServiceDeployer, ConfigFolder } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { MongoDbStorage } from "@proxima-one/pulumi-proxima-node";
 import {parseInt} from "lodash";
-import * as yaml from "yaml";
+import * as yaml from "js-yaml";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
   private webService: WebServiceDeployer;
@@ -155,9 +155,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const env = pulumi.all({
           MODE: app.mode ?? "live",
           METRICS_PORT: "2112",
-          MONGO_DB_NAMES: dbName,
-          MONGO_DB_NAME: dbName,
-          MONGO_URI: mongoUri,
         });
 
         const consumerEnv: Record<string, string> = {
@@ -177,21 +174,23 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configs: ConfigFolder[] = [{
-          mountPath: "/config",
-          files: {
-            config: yaml.stringify({
-              streams: app.streams,
-              timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
-              target: {
-                db: "mongo"
-              },
-              shard: {
-                name: app.shardName
-              },
-            }),
+        const configs: pulumi.Input<ConfigFolder>[] = [mongoUri.apply(uri => {
+          return {
+            mountPath: "/config",
+            files: {
+              config: yaml.dump({
+                streams: app.streams,
+                timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
+                target: {
+                  db: uri
+                },
+                shard: {
+                  name: app.shardName
+                },
+              }),
+            }
           }
-        }]
+        })]
         if (app.configs) {
           configs.push(...app.configs)
         }
