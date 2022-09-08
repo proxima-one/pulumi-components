@@ -32,11 +32,12 @@ export class WebServiceDeployer extends AppDeployerBase {
         metadata: {
           namespace: this.namespace,
         },
-        data: app.configFiles.reduce((acc: any, cur) => {
-          return pulumi.output(cur).apply(file => {
-            return _.set(acc, file.path.replace(/\//g, "_"), file.content)   // replace all "/" to "_"
-          })
-        }, {}),
+        data: Object.fromEntries([app.configFiles.map(file => {
+            return pulumi.output(file).apply(f => {
+              return [f.path.replace(/\//g, "_"), f.content]
+            })
+          })]
+        ),
       }, {provider: this.k8s}
     ) : undefined
 
@@ -124,8 +125,8 @@ export class WebServiceDeployer extends AppDeployerBase {
                         mountPath: pulumi.output(parsedPath).apply(p => {
                           return p.dir
                         }),
-                        subPath: pulumi.output(parsedPath).apply(p => {
-                          return p.name
+                        subPath: pulumi.output(file).apply(f => {
+                          return f.path.replace(/\//g, "_")
                         }),
                         name: "config"
                       }
