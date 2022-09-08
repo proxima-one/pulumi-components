@@ -9,7 +9,6 @@ import {
   ingressSpec,
 } from "@proxima-one/pulumi-proxima-node";
 import { AppDeployerBase, ComputeResources } from "./base";
-import * as path from "path";
 
 export class WebServiceDeployer extends AppDeployerBase {
   protected get namespace(): pulumi.Output<string> {
@@ -114,9 +113,8 @@ export class WebServiceDeployer extends AppDeployerBase {
                       .apply((x) => this.parseResourceRequirements(x ?? defaultResources)
                       ),
                     volumeMounts: app.configFiles?.map(file => {
-                      const parsedPath = pulumi.output(file).apply(f => path.parse(f.path))
                       return {
-                        mountPath: pulumi.output(parsedPath).apply(p => p.dir),
+                        mountPath: pulumi.output(file).apply(f => f.path),
                         subPath: pulumi.output(file).apply(f => f.path.replace(/\//g, "_")),
                         name: "config"
                       }
