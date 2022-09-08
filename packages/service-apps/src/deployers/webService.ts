@@ -28,6 +28,7 @@ export class WebServiceDeployer extends AppDeployerBase {
     const name = app.name ?? this.project;
     const deployedParts: Record<string, DeployedPart> = {};
 
+    console.log(app.configFiles?.length)
     const configMap = app.configFiles ? new k8s.core.v1.ConfigMap(`${name}-config`, {
         metadata: {
           namespace: this.namespace,
@@ -35,6 +36,7 @@ export class WebServiceDeployer extends AppDeployerBase {
         data: app.configFiles.reduce((acc: any, cur) => {
           return pulumi.output(cur).apply(file => {
             acc[file.path.replace(/\//g, "_")] = file.content  // replace all "/" to "_"
+            console.log(acc)
             return acc
           })
         }, {}),
@@ -126,7 +128,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                           return p.dir
                         }),
                         subPath: pulumi.output(parsedPath).apply(p => {
-                          return p.name
+                          return "/" + p.name
                         }),
                         name: "config"
                       }
