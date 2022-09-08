@@ -174,21 +174,19 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configs: pulumi.Input<ConfigFile>[] = [mongoUri.apply(uri => {
-          return {
-            path: "/app/config/config.yaml",
-            content: yaml.dump({
-              streams: app.streams,
-              timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
-              target: {
-                db: uri
-              },
-              shard: {
-                name: app.shardName
-              },
-            }),
-          }
-        })]
+        const configs: ConfigFile[] = [{
+          path: "/app/config/config.yaml",
+          content: mongoUri.apply(uri => yaml.dump({
+            streams: app.streams,
+            timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
+            target: {
+              db: uri
+            },
+            shard: {
+              name: app.shardName
+            },
+          }))
+        }]
         if (app.configFiles) {
           configs.push(...app.configFiles)
         }
@@ -350,7 +348,7 @@ export interface IndexingServiceAppV2 {
   // Default "live"
   mode?: IndexingServiceMode;
   // {filePath: content};
-  configFiles?: pulumi.Input<ConfigFile>[];
+  configFiles?: ConfigFile[];
 }
 
 export type IndexingServiceMode =

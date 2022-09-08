@@ -32,12 +32,9 @@ export class WebServiceDeployer extends AppDeployerBase {
         metadata: {
           namespace: this.namespace,
         },
-        data: Object.fromEntries([app.configFiles.map(file => {
-            return pulumi.output(file).apply(f => {
-              return [f.path.replace(/\//g, "_"), f.content]
-            })
-          })]
-        ),
+        data: app.configFiles
+          .map<[string, any]>(file => ([file.path, file.content]))
+          .reduce((acc, [k, v]: [string, any]) => ({...acc, [k]: v}), {}),
       }, {provider: this.k8s}
     ) : undefined
 
@@ -114,20 +111,13 @@ export class WebServiceDeployer extends AppDeployerBase {
                     ),
                     resources: pulumi
                       .output(part.resources)
-                      .apply((x) =>
-                        this.parseResourceRequirements(x ?? defaultResources)
+                      .apply((x) => this.parseResourceRequirements(x ?? defaultResources)
                       ),
                     volumeMounts: app.configFiles?.map(file => {
-                      const parsedPath = pulumi.output(file).apply(f => {
-                        return path.parse(f.path)
-                      })
+                      const parsedPath = pulumi.output(file).apply(f => path.parse(f.path))
                       return {
-                        mountPath: pulumi.output(parsedPath).apply(p => {
-                          return p.dir
-                        }),
-                        subPath: pulumi.output(file).apply(f => {
-                          return f.path.replace(/\//g, "_")
-                        }),
+                        mountPath: pulumi.output(parsedPath).apply(p => p.dir),
+                        subPath: pulumi.output(file).apply(f => f.path.replace(/\//g, "_")),
                         name: "config"
                       }
                     })
@@ -268,7 +258,7 @@ export interface WebService {
   name?: string;
   parts: Record<string, ServiceAppPart>;
   imageName?: pulumi.Input<string>;
-  configFiles?: pulumi.Input<ConfigFile>[];
+  configFiles?: ConfigFile[];
 }
 
 export interface ServiceAppPart {
@@ -283,7 +273,7 @@ export interface ServiceAppPart {
 
 export interface ConfigFile {
   path: string;
-  content: string;
+  content: pulumi.Input<string>;
 }
 
 export interface Metrics {
