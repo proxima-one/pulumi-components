@@ -314,22 +314,11 @@ function parseTimeRange(s: TimeRange | string): TimeRange {
   if (typeof s != "string") {
     return s
   }
-
-  const arr = s.split("-")
-  if (arr.length == 2) {
-    return {
-      from: parseInt(arr[0]),
-      to: parseInt(arr[1]),
-    }
+  const [from, to] = s.split("-")
+  return {
+    from: from.length > 0 ? parseInt(from) : undefined,
+    to: to.length > 0 ? parseInt(to) : undefined,
   }
-  const fromOrTo = parseInt(s.replace("-", ""))
-  if (s.startsWith("-")) {
-    return {to: fromOrTo}
-  }
-  if (s.endsWith("-")) {
-    return {from: fromOrTo}
-  }
-  return {}
 }
 
 export interface IndexingServiceAppV2 {
