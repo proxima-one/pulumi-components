@@ -176,7 +176,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
         const configs: pulumi.Input<ConfigFile>[] = [mongoUri.apply(uri => {
           return {
-            path: "/config",
+            path: "/app/config/config.yaml",
             content: yaml.dump({
               streams: app.streams,
               timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
@@ -197,10 +197,10 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const deployedWebService = this.webService.deploy({
           name: app.name,
           imageName: app.imageName,
+          configFiles: configs,
           parts: {
             consumer: {
               disabled: mode == "server-only",
-              configFiles: configs,
               env: env.apply((x) => ({...x, ...consumerEnv})),
               args: ["./consumer"],
               resources: resources.apply((x) => x?.consumer),
@@ -216,7 +216,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             },
             server: {
               disabled: mode == "consumer-only" || mode == "fast-sync",
-              configFiles: configs,
               env: env.apply((x) => ({...x, ...serverEnv})),
               args: ["./server"],
               resources: resources.apply((x) => x?.server),
