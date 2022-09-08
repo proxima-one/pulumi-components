@@ -34,7 +34,7 @@ export class WebServiceDeployer extends AppDeployerBase {
         },
         data: app.configFiles
           .map<[string, any]>(file => ([file.path, file.content]))
-          .reduce((acc, [k, v]: [string, any]) => ({...acc, [k]: v}), {}),
+          .reduce((acc, [k, v]: [string, any]) => ({...acc, [k.replace(/\//g, "_")]: v}), {}),
       }, {provider: this.k8s}
     ) : undefined
 
