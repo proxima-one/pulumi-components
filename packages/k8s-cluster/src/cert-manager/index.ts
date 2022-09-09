@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
-import {abstractions} from '@proxima-one/pulumi-k8s-cluster';
+import * as abstractions from '../abstractions';
 
 export interface CertManagerInputs {
   namespace?: pulumi.Input<string>;
@@ -34,7 +34,7 @@ export class CertManager extends pulumi.ComponentResource implements CertManager
   readonly meta: pulumi.Output<abstractions.HelmMeta>;
 
   constructor(name: string, args: CertManagerInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxima:CertManager', name, args, opts);
+    super('proxima-k8s:CertManager', name, args, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'cert-manager',

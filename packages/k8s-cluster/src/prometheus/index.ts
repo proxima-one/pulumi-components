@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
-import {abstractions} from '@proxima-one/pulumi-k8s-cluster';
+import * as abstractions from '../abstractions';
 import * as random from '@pulumi/random';
 import {merge} from 'lodash';
 
@@ -17,9 +17,9 @@ export interface PrometheusInputs {
   alertUrl: string;
   oauthUrl: string;
   promUrl: string;
-  pagerDutySecret: string;
-  pagerDutyUrl: string;
   grafanaUrl: string;
+  pagerDutySecret?: string;
+  pagerDutyUrl?: string;
 }
 
 export interface PrometheusOutputs {
@@ -38,7 +38,7 @@ export class Prometheus extends pulumi.ComponentResource implements PrometheusOu
   readonly status: pulumi.Output<k8s.types.output.helm.v3.ReleaseStatus>
 
   constructor(name: string, args: PrometheusInputs, opts?: pulumi.ComponentResourceOptions) {
-    super('proxyma:UPrometheus', name, args, opts);
+    super('proxima-k8s:Prometheus', name, args, opts);
 
     this.meta = pulumi.output<abstractions.HelmMeta>({
       chart: 'kube-prometheus-stack',
@@ -148,7 +148,8 @@ export class Prometheus extends pulumi.ComponentResource implements PrometheusOu
             ]
           }
         },
-        alertmanager: {
+        alertmanager: args.pagerDutyUrl && args.pagerDutySecret ? {
+          enabled: true,
           alertmanagerSpec: {
             logLevel: "debug"
           },
@@ -191,6 +192,8 @@ export class Prometheus extends pulumi.ComponentResource implements PrometheusOu
               hosts: [args.alertUrl]
             }]
           }
+        } : {
+          enabled: false,
         }
       }, args.helmOverride?.values),
     }, {parent: this})
