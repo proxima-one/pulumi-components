@@ -28,7 +28,8 @@
     "@proxima-one/pulumi-proxima-node": "^0.13.27",
     "@pulumi/kubernetes": "^3.20.3",
     "@pulumi/kubernetesx": "^0.1.6",
-    "@pulumi/pulumi": "^3.37.2"
+    "@pulumi/pulumi": "^3.37.2",
+    "js-yaml": "^4.1.0"
   },
   "engines": {
     "node": ">=16.0.0"
