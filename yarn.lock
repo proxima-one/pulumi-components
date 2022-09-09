@@ -1702,10 +1702,10 @@
   resolved "https://registry.npmjs.org/@protobufjs/utf8/-/utf8-1.1.0.tgz"
   integrity sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
 
-"@proxima-one/proxima-config@^0.3.0":
-  version "0.3.0"
-  resolved "https://npm.pkg.github.com/download/@proxima-one/proxima-config/0.3.0/04b4199f47b8a10356c76c02c86ea3d6f091a226c4dc047dc0c674c3cc641061"
-  integrity sha512-bnUV0cAL88gvur67yZl+Z3syK/m9lo5GBLRBnRyQv3XPxJRjDt8pyYg6B+sw4Xf+mgMOyDhy9SebFQ4GYBEjCg==
+"@proxima-one/proxima-config@0.3.1-preview.eb64fb9.0+eb64fb9":
+  version "0.3.1-preview.eb64fb9.0"
+  resolved "https://npm.pkg.github.com/download/@proxima-one/proxima-config/0.3.1-preview.eb64fb9.0/59a31cb0d1f20411b2760f7e006e1af2f267d20e#59a31cb0d1f20411b2760f7e006e1af2f267d20e"
+  integrity sha512-508k30+C1baIUVphlrljGfp97BSW9ykuJgPFSKrmqtsMCVgIRtuT6STbuxOsbUAf8wRytoPe7/OPj7+rts8fPw==
 
 "@proxima-one/proxima-utils@^0.1.5":
   version "0.1.5"

@@ -27,6 +27,16 @@ export class WebServiceDeployer extends AppDeployerBase {
     const name = app.name ?? this.project;
     const deployedParts: Record<string, DeployedPart> = {};
 
+    const configMap = app.configFiles ? new k8s.core.v1.ConfigMap(`${name}-config`, {
+        metadata: {
+          namespace: this.namespace,
+        },
+        data: app.configFiles
+          .map<[string, any]>(file => ([file.path, file.content]))
+          .reduce((acc, [k, v]: [string, any]) => ({...acc, [k.replace(/\//g, "_")]: v}), {}),
+      }, {provider: this.k8s}
+    ) : undefined
+
     for (const [partName, part] of _.entries(app.parts)) {
       if (part.disabled) continue;
 
@@ -100,11 +110,25 @@ export class WebServiceDeployer extends AppDeployerBase {
                     ),
                     resources: pulumi
                       .output(part.resources)
-                      .apply((x) =>
-                        this.parseResourceRequirements(x ?? defaultResources)
+                      .apply((x) => this.parseResourceRequirements(x ?? defaultResources)
                       ),
+                    volumeMounts: app.configFiles?.map(file => {
+                      return {
+                        mountPath: pulumi.output(file).apply(f => f.path),
+                        subPath: pulumi.output(file).apply(f => f.path.replace(/\//g, "_")),
+                        name: "config"
+                      }
+                    })
                   },
                 ],
+                volumes: configMap ? [
+                  {
+                    name: "config",
+                    configMap: {
+                      name: configMap.id.apply(s => s.split("/")[s.split("/").length - 1])
+                    }
+                  }
+                ] : undefined
               },
             },
           },
@@ -232,6 +256,7 @@ export interface WebService {
   name?: string;
   parts: Record<string, ServiceAppPart>;
   imageName?: pulumi.Input<string>;
+  configFiles?: ConfigFile[];
 }
 
 export interface ServiceAppPart {
@@ -242,6 +267,11 @@ export interface ServiceAppPart {
   args?: pulumi.Input<pulumi.Input<string>[]>;
   metrics?: pulumi.Input<Metrics>;
   disabled?: boolean;
+}
+
+export interface ConfigFile {
+  path: string;
+  content: pulumi.Input<string>;
 }
 
 export interface Metrics {

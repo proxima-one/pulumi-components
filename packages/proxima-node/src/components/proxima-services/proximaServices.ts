@@ -401,6 +401,10 @@ export class ProximaServices<
       mapLookup(this.kafkaClusters, (x) => x.connectionDetails)
     );
 
+    const streamDbConnections = pulumi.all(
+      mapLookup(this.streamDBs, (x) => x.connectionDetails)
+    );
+
     const provisionedMinioConnections = pulumi.all(
       mapLookup(this.minioClusters, (x) => x.connectionDetails)
     );
@@ -420,13 +424,14 @@ export class ProximaServices<
     return pulumi
       .all([
         provisionedKafkaConnections,
+        streamDbConnections,
         provisionedMinioConnections,
         provisionedMongoDbs,
         blockIndexers,
         stateManagerConnections,
       ])
-      .apply(([kafka, minio, mongos, blockIndexers, stateManagers]) =>
-        generateConfig(args, kafka, minio, mongos, blockIndexers, stateManagers)
+      .apply(([kafka, streamdb, minio, mongos, blockIndexers, stateManagers]) =>
+        generateConfig(args, kafka, streamdb, minio, mongos, blockIndexers, stateManagers)
       );
   }
 }
@@ -620,6 +625,7 @@ function merge<T>(lookups: Record<string, T>[]): Record<string, T> {
 function generateConfig<TNamespaces extends string>(
   args: ProximaNodeArgs<TNamespaces>,
   kafkas: ReadonlyLookup<kafka.KafkaConnectionDetails>,
+  streamdbs: ReadonlyLookup<streamdb.StreamDBConnectionDetails>,
   minios: ReadonlyLookup<minio.MinioConnectionDetails>,
   mongos: ReadonlyLookup<mongodb.MongoDbConnectionDetails>,
   blockIndexers: ReadonlyLookup<blockindexer.BlockIndexerConnectionDetails>,
@@ -629,6 +635,7 @@ function generateConfig<TNamespaces extends string>(
     blockIndexers: mapLookup(args.blockIndexers ?? {}, toBlockIndexerConfig),
     databases: {
       ...mapLookup(args.kafkaClusters ?? {}, toKafkaConfig),
+      ...mapLookup(args.streamDBs ?? {}, toStreamDbConfig),
       ...mapLookup(args.mongoDbs ?? {}, toMongoDbConfig),
       ..._.mapKeys(
         mapLookup(args.stateManagers ?? {}, toStateManagerConfig),
@@ -724,6 +731,20 @@ function generateConfig<TNamespaces extends string>(
           brokers: connectionDetails.brokers,
           ssl: connectionDetails.ssl,
           replicationFactor: connectionDetails.replicationFactor,
+        };
+    }
+  }
+
+  function toStreamDbConfig(
+    args: StreamDBArgs,
+    key: string
+  ): proximaConfig.DatabaseConfig {
+    switch (args.type) {
+      case "Provision":
+        const connectionDetails = streamdbs[key];
+        return {
+          type: "stream-db",
+          address: connectionDetails.endpoints[0],
         };
     }
   }

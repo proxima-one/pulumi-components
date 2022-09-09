@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-proxima-node",
-  "version": "0.13.26",
+  "version": "0.13.27",
   "description": "pulumi components for proxima",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.16.1",
-    "@proxima-one/proxima-config": "^0.3.0",
+    "@proxima-one/proxima-config": "0.3.1-preview.eb64fb9.0+eb64fb9",
     "@proxima-one/proxima-utils": "^0.1.5",
     "@pulumi/kubernetes": "^3.0.0",
     "@pulumi/kubernetesx": "^0.1.5",
