@@ -180,7 +180,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             streams: app.streams,
             timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
             target: {
-              db: uri,
+              dbUri: uri,
               dbName: dbName,
             },
             shard: {
