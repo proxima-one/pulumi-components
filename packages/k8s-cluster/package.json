@@ -18,7 +18,7 @@
     "build": "tsc --build",
     "test": "jest --passWithNoTests",
     "coverage": "jest --coverage",
-    "start": "ts-node -r tsconfig-paths/register src/index.ts",
+    "start": "ts-node -r tsconfig-paths/register src/components/index.ts",
     "start:app": "yarn start app start --",
     "watch": "yarn build -- --watch",
     "watch:test": "jest --watch"

@@ -6,7 +6,12 @@
     "composite": true,
     "lib": [
       "dom"
-    ]
+    ],
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
   },
   "include": [
     "src/**/*"

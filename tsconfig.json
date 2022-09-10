@@ -37,6 +37,9 @@
       "path": "packages/bsc-node"
     },
     {
+      "path": "packages/do-cluster"
+    },
+    {
       "path": "packages/ethereum-node"
     },
     {
@@ -44,9 +47,6 @@
     },
     {
       "path": "packages/k8s-cluster"
-    },
-    {
-      "path": "packages/do-cluster"
     },
     {
       "path": "packages/polygon-node"

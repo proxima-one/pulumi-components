@@ -1,4 +1,4 @@
-import * as pulumi from '@pulumi/pulumi';
+import * as pulumi from "@pulumi/pulumi";
 
 export interface HelmOverride {
   version?: string;
@@ -76,6 +76,13 @@ export interface ComputeResources {
     memory?: string;
   };
 }
+
+export type ComputeResourcesInput =
+  | {
+      cpu: string;
+      memory: string;
+    }
+  | string;
 
 export interface SimpleHealthProbe {
   /**
