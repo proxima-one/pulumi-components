@@ -24,7 +24,10 @@ export interface DoClusterOutput {
   kubeconfig: pulumi.Output<string>;
 }
 
-export class DoCluster extends pulumi.ComponentResource implements DoClusterOutput {
+export class DoCluster
+  extends pulumi.ComponentResource
+  implements DoClusterOutput
+{
   public readonly kubeconfig: pulumi.Output<string>;
 
   constructor(
@@ -53,10 +56,10 @@ export class DoCluster extends pulumi.ComponentResource implements DoClusterOutp
             ? args.nodePools[0].autoScale.minNodes
             : undefined,
           tags: [args.nodePools[0].label],
-          labels: {pool: args.nodePools[0].label, priority: "high"},
+          labels: { pool: args.nodePools[0].label, priority: "high" },
         },
       },
-      {parent: this}
+      { parent: this }
     );
 
     for (let i = 1; i < args.nodePools.length; i++) {
@@ -75,9 +78,9 @@ export class DoCluster extends pulumi.ComponentResource implements DoClusterOutp
             ? args.nodePools[i].autoScale?.minNodes
             : undefined,
           tags: [args.nodePools[i].label],
-          labels: {pool: args.nodePools[i].label, priority: "high"},
+          labels: { pool: args.nodePools[i].label, priority: "high" },
         },
-        {parent: this}
+        { parent: this }
       );
     }
 

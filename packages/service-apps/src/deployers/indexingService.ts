@@ -155,6 +155,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const env = pulumi.all({
           MODE: app.mode ?? "live",
           METRICS_PORT: "2112",
+          STATUS_GRPC_PORT: "26000",
+          STATUS_HTTP_PORT: "9090",
         });
 
         const consumerEnv: Record<string, string> = {
@@ -184,7 +186,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
                   ? parseTimeRange(app.timeRange)
                   : undefined,
                 target: {
-                  db: uri,
+                  dbUri: uri,
+                  dbName: dbName,
                 },
                 shard: {
                   name: app.shardName,
@@ -216,6 +219,14 @@ export class IndexingServiceDeployer extends AppDeployerBase {
                   name: "http-metrics",
                   containerPort: 2112,
                 },
+                {
+                  name: "http-status",
+                  containerPort: 9090,
+                },
+                {
+                  name: "grpc-status",
+                  containerPort: 26000,
+                },
               ],
             },
             server: {
@@ -230,6 +241,14 @@ export class IndexingServiceDeployer extends AppDeployerBase {
                 {
                   name: "http-metrics",
                   containerPort: 2112,
+                },
+                {
+                  name: "http-status",
+                  containerPort: 9090,
+                },
+                {
+                  name: "grpc-status",
+                  containerPort: 26000,
                 },
                 {
                   name: "http",
