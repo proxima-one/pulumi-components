@@ -1,5 +1,5 @@
 {
-  "name": "@proxima-one/pulumi-k8s-cluster",
+  "name": "@proxima-one/pulumi-digitalocean",
   "version": "0.0.1",
   "description": "pulumi k8s cluster common package",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
@@ -18,16 +18,14 @@
     "build": "tsc --build",
     "test": "jest --passWithNoTests",
     "coverage": "jest --coverage",
-    "start": "ts-node -r tsconfig-paths/register src/components/index.ts",
+    "start": "ts-node -r tsconfig-paths/register src/index.ts",
     "start:app": "yarn start app start --",
     "watch": "yarn build -- --watch",
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@pulumi/kubernetes-cert-manager": "latest",
-    "@pulumi/docker": "^3.1.0",
-    "@pulumi/pulumi": "^3.0.0",
-    "@pulumi/random": "^4.3.1",
+    "@pulumi/digitalocean": "^4.15.2",
+    "@pulumi/pulumi": "^3.39.3",
     "handlebars": "^4.7.7",
     "js-yaml": "^4.0.0",
     "lodash": "^4.17.21"

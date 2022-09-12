@@ -3,23 +3,9 @@ import * as k8s from "@pulumi/kubernetes";
 import * as random from "@pulumi/random";
 import * as components from "../components";
 import { Persistence } from "../interfaces";
+import { KubernetesDeployer } from "./base";
 
-export interface ClusterDeployParameters {
-  name: string;
-  kubeconfig: pulumi.Input<string>;
-}
-
-export class ClusterDeployer {
-  private readonly provider!: k8s.Provider;
-
-  public constructor(private readonly params: ClusterDeployParameters) {
-    this.provider = new k8s.Provider(
-      this.params.name,
-      { kubeconfig: this.params.kubeconfig },
-      {}
-    );
-  }
-
+export class ClusterOperatorsDeployer extends KubernetesDeployer {
   public deploy(args: ClusterArgs): DeployedCluster {
     const storageClasses: Record<string, k8s.storage.v1.StorageClass> = {};
     const getPersistenceDependencies = (
@@ -168,10 +154,10 @@ export class ClusterDeployer {
             grafanaUrl: `grafana.${args.publicHost}`,
             promUrl: `prom.${args.publicHost}`,
           },
-          pagerDuty: args.monitoring.pagerDuty
+          pagerDuty: args.monitoring.alertManager.pagerDuty
             ? {
-                secret: args.monitoring.pagerDuty.secret,
-                url: args.monitoring.pagerDuty.url,
+                secret: args.monitoring.alertManager.pagerDuty.secret,
+                url: args.monitoring.alertManager.pagerDuty.url,
               }
             : undefined,
         },
@@ -273,6 +259,10 @@ export interface ClusterArgs {
         };
         alertManager: {
           persistence: Persistence;
+          pagerDuty?: {
+            url: pulumi.Input<string>;
+            secret: pulumi.Input<string>;
+          };
         };
         loki: {
           retentionHours: number;
@@ -280,10 +270,6 @@ export interface ClusterArgs {
         };
         grafana: {
           persistence: Persistence;
-        };
-        pagerDuty?: {
-          url: pulumi.Input<string>;
-          secret: pulumi.Input<string>;
         };
       } & SubsystemBase)
     | Disabled;

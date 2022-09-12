@@ -236,8 +236,8 @@ export class PrometheusStack
                   ? {
                       enabled: true,
                       annotations: {
-                        "nginx.ingress.kubernetes.io/auth-url": `https://${args.ingress.oauthUrl}/oauth2/auth`,
-                        "nginx.ingress.kubernetes.io/auth-signin": `https://${args.ingress.oauthUrl}/oauth2/start`,
+                        "nginx.ingress.kubernetes.io/auth-url": pulumi.interpolate`https://${args.ingress.oauthUrl}/oauth2/auth`,
+                        "nginx.ingress.kubernetes.io/auth-signin": pulumi.interpolate`https://${args.ingress.oauthUrl}/oauth2/start`,
                         "kubernetes.io/ingress.class": "nginx",
                         "nginx.ingress.kubernetes.io/ssl-redirect": "true",
                         "cert-manager.io/cluster-issuer": "letsencrypt",
