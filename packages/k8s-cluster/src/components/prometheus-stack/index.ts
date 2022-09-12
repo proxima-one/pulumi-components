@@ -4,20 +4,24 @@ import { HelmMeta, HelmOverride, Persistence } from "../../interfaces";
 import * as random from "@pulumi/random";
 import { merge } from "lodash";
 
-export interface PrometheusInputs {
+export interface PrometheusArgs {
   namespace?: pulumi.Input<string>;
-  persistence: Persistence;
+  persistence: {
+    prometheus: Persistence;
+    grafana: Persistence;
+  };
   helmOverride?: HelmOverride;
   ingress?: {
     alertUrl?: string;
     promUrl?: string;
     grafanaUrl?: string;
-    oauthUrl?: string;
+    oauthUrl?: pulumi.Input<string>;
     certificateIssuer?: string;
   };
+  lokiUrl?: pulumi.Input<string>;
   pagerDuty?: {
-    url: string;
-    secret: string;
+    url: pulumi.Input<string>;
+    secret: pulumi.Input<string>;
   };
 }
 
@@ -44,7 +48,7 @@ export class PrometheusStack
 
   constructor(
     name: string,
-    args: PrometheusInputs,
+    args: PrometheusArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima-k8s:PrometheusStack", name, args, opts);
@@ -101,15 +105,17 @@ export class PrometheusStack
                   }
                 : { enabled: false },
               persistence: {
-                enabled: true,
+                enabled: args.persistence.grafana.enabled,
+                storageClassName: args.persistence.grafana.storageClass,
+                size: `${args.persistence.grafana.sizeGB}Gi`,
               },
-              additionalDataSources: [
-                {
-                  name: "Loki",
-                  type: "Loki",
-                  url: "http://loki:3100",
-                },
-              ],
+              // additionalDataSources: [
+              //   {
+              //     name: "Loki",
+              //     type: "Loki",
+              //     url: "http://loki:3100",
+              //   },
+              // ],
               rbac: { pspEnabled: false },
             },
             prometheus: {
@@ -125,8 +131,8 @@ export class PrometheusStack
                         },
                       ],
                       annotations: {
-                        "nginx.ingress.kubernetes.io/auth-signin": `https://${args.ingress.oauthUrl}/oauth2/start`,
-                        "nginx.ingress.kubernetes.io/auth-url": `https://${args.ingress.oauthUrl}/oauth2/auth`,
+                        "nginx.ingress.kubernetes.io/auth-signin": pulumi.interpolate`https://${args.ingress.oauthUrl}/oauth2/start`,
+                        "nginx.ingress.kubernetes.io/auth-url": pulumi.interpolate`https://${args.ingress.oauthUrl}/oauth2/auth`,
                         "cert-manager.io/cluster-issuer": "letsencrypt",
                         "kubernetes.io/ingress.class": "nginx",
                         "nginx.ingress.kubernetes.io/ssl-redirect": "true",
@@ -136,11 +142,11 @@ export class PrometheusStack
               storageSpec: {
                 volumeClaimTemplate: {
                   spec: {
-                    storageClassName: args.persistence.storageClass,
+                    storageClassName: args.persistence.prometheus.storageClass,
                     accessModes: ["ReadWriteOnce"],
                     resources: {
                       requests: {
-                        storage: `${args.persistence.sizeGB}Gi`,
+                        storage: `${args.persistence.prometheus.sizeGB}Gi`,
                       },
                     },
                   },

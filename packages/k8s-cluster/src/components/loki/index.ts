@@ -78,6 +78,7 @@ export class Loki extends pulumi.ComponentResource implements LokiOutputs {
           {},
           {
             loki: {
+              isDefault: false,
               persistence: args.persistence
                 ? {
                     enabled: args.persistence.enabled,

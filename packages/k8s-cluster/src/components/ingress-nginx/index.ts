@@ -9,7 +9,7 @@ export interface IngressNginxControllerInputs {
 }
 
 export interface IngressNginxControllerOutputs {
-  meta: pulumi.Output<HelmMeta>;
+  publicIP: pulumi.Output<string>;
 }
 
 /**
@@ -19,7 +19,7 @@ export class IngressNginxController
   extends pulumi.ComponentResource
   implements IngressNginxControllerOutputs
 {
-  readonly meta: pulumi.Output<HelmMeta>;
+  readonly publicIP: pulumi.Output<string>;
 
   constructor(
     name: string,
@@ -28,7 +28,7 @@ export class IngressNginxController
   ) {
     super("proxima-k8s:IngressNginxController", name, args, opts);
 
-    this.meta = pulumi.output<HelmMeta>({
+    const meta = pulumi.output<HelmMeta>({
       chart: "ingress-nginx",
       version: args.helmOverride?.version ?? "4.0.17",
       repo: "https://kubernetes.github.io/ingress-nginx",
@@ -38,10 +38,10 @@ export class IngressNginxController
       name,
       {
         namespace: args.namespace,
-        chart: this.meta.chart,
-        version: this.meta.version,
+        chart: meta.chart,
+        version: meta.version,
         fetchOpts: {
-          repo: this.meta.repo,
+          repo: meta.repo,
         },
         //transformations: [removeHelmTests()],
         values: merge(
@@ -62,5 +62,19 @@ export class IngressNginxController
       },
       { parent: this }
     );
+
+    const frontend = pulumi
+      .output(args.namespace)
+      .apply((ns) =>
+        chart.getResourceProperty(
+          "v1/Service",
+          ns ?? "default",
+          `${name}-ingress-nginx-controller`,
+          "status"
+        )
+      );
+    const ingress = frontend.apply((x) => x.loadBalancer.ingress[0]);
+
+    this.publicIP = ingress.apply((x) => x.ip ?? x.hostname);
   }
 }

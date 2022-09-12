@@ -1,5 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
+import * as random from "@pulumi/random";
 import * as components from "../components";
 import { Persistence } from "../interfaces";
 
@@ -97,20 +98,34 @@ export class ClusterDeployer {
         { provider: this.provider }
       );
 
+      const pass = new random.RandomPassword("oauth-cookie-secret", {
+        length: 32,
+      });
+
+      // the same as (openssl rand -base64 32 | head -c 32 | base64) https://github.com/oauth2-proxy/manifests/blob/main/helm/oauth2-proxy/values.yaml#L15
+      const secretValue = pass.result.apply((x) =>
+        Buffer.from(
+          Buffer.from(x).toString("base64").substring(0, 32)
+        ).toString("base64")
+      );
+
       oauth = new components.oauth2.Oauth(
         "oauth",
         {
           namespace: oauthNS.metadata.name,
           clientId: args.oAuth.clientId,
           clientSecret: args.oAuth.clientSecret,
-          cookieSecret: args.oAuth.cookieSecret,
-          oauthUrl: args.oAuth.oauthUrl,
-          domain: args.oAuth.domain,
+          cookieSecret: secretValue,
+          oauthUrl: `oauth.${args.publicHost}`,
+          domain: args.publicHost,
+          emailDomains: args.oAuth.emailDomains,
         },
         { provider: this.provider }
       );
     }
 
+    let loki: components.loki.Loki | undefined;
+    let prometheus: components.prometheus.PrometheusStack | undefined;
     if (!args.monitoring.disabled) {
       const monitoringNS = new k8s.core.v1.Namespace(
         args.monitoring.namespace,
@@ -122,7 +137,7 @@ export class ClusterDeployer {
         { provider: this.provider }
       );
 
-      const loki = new components.loki.Loki(
+      loki = new components.loki.Loki(
         "loki",
         {
           namespace: monitoringNS.metadata.name,
@@ -136,20 +151,50 @@ export class ClusterDeployer {
           ),
         }
       );
-      //
-      // const prometheus = new components.prometheus.PrometheusStack(
-      //   "prometheus",
-      //   {},
-      //   {
-      //     provider: this.provider,
-      //     dependsOn: getPersistenceDependencies(
-      //       args.monitoring.prometheus.persistence
-      //     ),
-      //   }
-      // );
+
+      prometheus = new components.prometheus.PrometheusStack(
+        "prometheus",
+        {
+          namespace: monitoringNS.metadata.name,
+          persistence: {
+            prometheus: args.monitoring.prometheus.persistence,
+            grafana: args.monitoring.grafana.persistence,
+          },
+          ingress: {
+            alertUrl: `al.${args.publicHost}`,
+            oauthUrl: oauth?.oauthUrl,
+            certificateIssuer: "letsencrypt",
+            grafanaUrl: `grafana.${args.publicHost}`,
+            promUrl: `prom.${args.publicHost}`,
+          },
+          pagerDuty: args.monitoring.pagerDuty
+            ? {
+                secret: args.monitoring.pagerDuty.secret,
+                url: args.monitoring.pagerDuty.url,
+              }
+            : undefined,
+        },
+        {
+          provider: this.provider,
+          dependsOn: [
+            ...getPersistenceDependencies(
+              args.monitoring.prometheus.persistence
+            ),
+            ...getPersistenceDependencies(args.monitoring.grafana.persistence),
+          ],
+        }
+      );
     }
 
-    return {};
+    return {
+      ingressIP: ingressController?.publicIP,
+      grafana: prometheus
+        ? {
+            user: prometheus.grafanaAdmin.user,
+            password: prometheus.grafanaAdmin.password,
+          }
+        : undefined,
+    };
   }
 
   public deployDefault(
@@ -186,7 +231,13 @@ export class ClusterDeployer {
 //   data: Record<string, string | Buffer>;
 // }
 
-export interface DeployedCluster {}
+export interface DeployedCluster {
+  ingressIP?: pulumi.Output<string>;
+  grafana?: {
+    user: pulumi.Output<string>;
+    password: pulumi.Output<string>;
+  };
+}
 
 export interface SubsystemBase {
   disabled?: false;
@@ -209,7 +260,8 @@ export interface ClusterArgs {
         };
         zerossl?: {
           enabled: boolean;
-          eabKid: string;
+          keyId: string;
+          hmacKey: string;
         };
       } & SubsystemBase)
     | Disabled;
@@ -226,7 +278,7 @@ export interface ClusterArgs {
           persistence: Persistence;
         };
         pagerDuty?: {
-          endpoint: pulumi.Input<string>;
+          url: pulumi.Input<string>;
           secret: pulumi.Input<string>;
         };
       } & SubsystemBase)
@@ -235,9 +287,7 @@ export interface ClusterArgs {
     | ({
         clientId: string;
         clientSecret: string;
-        cookieSecret: string;
-        domain: string;
-        oauthUrl: string;
+        emailDomains: string[];
       } & SubsystemBase)
     | Disabled;
   storageClasses?: { name: string; args: k8s.storage.v1.StorageClassArgs }[];

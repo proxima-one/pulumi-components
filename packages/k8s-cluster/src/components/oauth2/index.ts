@@ -3,35 +3,36 @@ import * as k8s from "@pulumi/kubernetes";
 import { Ingress, HelmOverride, HelmMeta } from "../../interfaces";
 import { merge } from "lodash";
 
-export interface OauthInputs {
+export interface OAuthArgs {
   namespace?: pulumi.Input<string>;
   ingress?: Ingress;
   helmOverride?: HelmOverride;
 
-  clientId: string;
-  clientSecret: string;
-  cookieSecret: string;
-  domain: string;
-  oauthUrl: string;
+  clientId: pulumi.Input<string>;
+  clientSecret: pulumi.Input<string>;
+  cookieSecret: pulumi.Input<string>;
+  domain: pulumi.Input<string>;
+  oauthUrl: pulumi.Input<string>;
+  emailDomains: pulumi.Input<string[]>;
 }
 
 export interface OauthOutput {
-  meta: pulumi.Output<HelmMeta>;
+  oauthUrl: pulumi.Output<string>;
 }
 
 export class Oauth extends pulumi.ComponentResource implements OauthOutput {
-  readonly meta: pulumi.Output<HelmMeta>;
+  public readonly oauthUrl: pulumi.Output<string>;
 
   constructor(
     name: string,
-    args: OauthInputs,
+    args: OAuthArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima:Oauth", name, args, opts);
 
-    this.meta = pulumi.output<HelmMeta>({
+    const meta = pulumi.output<HelmMeta>({
       chart: "oauth2-proxy",
-      version: args.helmOverride?.version ?? "6.2.0",
+      version: args.helmOverride?.version ?? "6.2.7",
       repo: "https://oauth2-proxy.github.io/manifests",
     });
 
@@ -50,25 +51,37 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
       { parent: this }
     );
 
+    this.oauthUrl = pulumi.output(args.oauthUrl);
     const oauth = new k8s.helm.v3.Release(
       name,
       {
         namespace: args.namespace,
-        chart: this.meta.chart,
+        chart: meta.chart,
         repositoryOpts: {
-          repo: this.meta.repo,
+          repo: meta.repo,
         },
         values: merge(
           {},
           {
             config: {
               existingSecret: creds.metadata.name,
+              configFile: pulumi
+                .all([
+                  pulumi.interpolate`email_domains = ${toGolangConfigList(
+                    args.emailDomains
+                  )}`,
+                  pulumi.interpolate`upstreams = ${toGolangConfigList([
+                    "file:///dev/null",
+                  ])}`,
+                ])
+                .apply((x) => x.join("\n")),
             },
             extraArgs: {
               provider: "github",
               "github-org": "proxima-one",
               "whitelist-domain": `.${args.domain}`,
               "cookie-domain": `.${args.domain}`,
+              scope: "user:email",
             },
             ingress: {
               enabled: true,
@@ -92,4 +105,13 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
       { parent: this }
     );
   }
+}
+
+function toGolangConfigList(
+  list: pulumi.Input<string[]>
+): pulumi.Output<string> {
+  return pulumi
+    .output(list)
+    .apply((x) => x.map((x) => `"${x}"`).join(","))
+    .apply((x) => `[${x}]`);
 }

@@ -19,7 +19,8 @@ export interface CertManagerInputs {
 
   zerossl?: {
     enabled: boolean;
-    eabKid: string;
+    keyId: pulumi.Input<string>;
+    hmacKey: pulumi.Input<string>;
   };
 }
 
@@ -85,6 +86,21 @@ export class CertManager
     //   });
 
     if (args.zerossl?.enabled) {
+      const hmacSecret = new k8s.core.v1.Secret(
+        `${name}-zerossl-hmac-key`,
+        {
+          metadata: {
+            namespace: args.namespace,
+          },
+          data: {
+            secret: pulumi
+              .output(args.zerossl.hmacKey)
+              .apply((x) => Buffer.from(x).toString("base64")),
+          },
+        },
+        { parent: this }
+      );
+
       const zeroSslIssuer = new k8s.apiextensions.CustomResource(
         `${name}-zerossl`,
         {
@@ -100,9 +116,9 @@ export class CertManager
             acme: {
               server: "https://acme.zerossl.com/v2/DV90",
               externalAccountBinding: {
-                keyID: args.zerossl.eabKid,
+                keyID: args.zerossl.keyId,
                 keySecretRef: {
-                  name: `${name}-zerossl-hmac-key`,
+                  name: hmacSecret.metadata.name,
                   key: "secret",
                 },
               },
