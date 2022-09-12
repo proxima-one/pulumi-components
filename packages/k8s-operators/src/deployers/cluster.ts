@@ -5,8 +5,8 @@ import * as components from "../components";
 import { Persistence } from "../interfaces";
 import { KubernetesDeployer } from "./base";
 
-export class ClusterOperatorsDeployer extends KubernetesDeployer {
-  public deploy(args: ClusterArgs): DeployedCluster {
+export class KubernetesOperatorsDeployer extends KubernetesDeployer {
+  public deploy(args: KubernetesOperatorsArgs): DeployedCluster {
     const storageClasses: Record<string, k8s.storage.v1.StorageClass> = {};
     const getPersistenceDependencies = (
       persistence: Persistence
@@ -185,9 +185,9 @@ export class ClusterOperatorsDeployer extends KubernetesDeployer {
   }
 
   public deployDefault(
-    customization: (args: ClusterArgs) => void
+    customization: (args: KubernetesOperatorsArgs) => void
   ): DeployedCluster {
-    const args: ClusterArgs = {
+    const args: KubernetesOperatorsArgs = {
       monitoring: { disabled: true },
       certManager: { disabled: true },
       ingress: { disabled: true },
@@ -235,7 +235,7 @@ export interface Disabled {
   disabled: true;
 }
 
-export interface ClusterArgs {
+export interface KubernetesOperatorsArgs {
   publicHost: string;
   ingress: ({} & SubsystemBase) | Disabled;
   certManager:
