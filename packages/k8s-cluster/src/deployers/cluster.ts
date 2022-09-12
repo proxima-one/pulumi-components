@@ -159,6 +159,7 @@ export class ClusterDeployer {
           persistence: {
             prometheus: args.monitoring.prometheus.persistence,
             grafana: args.monitoring.grafana.persistence,
+            alertManager: args.monitoring.alertManager.persistence,
           },
           ingress: {
             alertUrl: `al.${args.publicHost}`,
@@ -268,6 +269,9 @@ export interface ClusterArgs {
   monitoring:
     | ({
         prometheus: {
+          persistence: Persistence;
+        };
+        alertManager: {
           persistence: Persistence;
         };
         loki: {

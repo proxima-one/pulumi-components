@@ -9,6 +9,7 @@ export interface PrometheusArgs {
   persistence: {
     prometheus: Persistence;
     grafana: Persistence;
+    alertManager: Persistence;
   };
   helmOverride?: HelmOverride;
   ingress?: {
@@ -182,44 +183,54 @@ export class PrometheusStack
             // },
             alertmanager: {
               enabled: true,
-              alertmanagerSpec: {
-                logLevel: "debug",
-              },
-              config: {
-                global: Object.assign(
-                  {},
-                  args.pagerDuty
-                    ? {
-                        pagerduty_url: args.pagerDuty.url,
-                      }
-                    : {}
-                ),
-                route: {
-                  receiver: "alertOperator",
-                  group_by: ["job"],
-                  routes: [
-                    {
-                      receiver: "null",
-                      matchers: ['alertname=~"InfoInhibitor|Watchdog"'],
+              storage: {
+                volumeClaimTemplate: {
+                  spec: {
+                    storageClassName:
+                      args.persistence.alertManager.storageClass,
+                    accessModes: ["ReadWriteOnce"],
+                    resources: {
+                      requests: {
+                        storage: `${args.persistence.alertManager.sizeGB}Gi`,
+                      },
                     },
-                  ],
-                },
-                receivers: (args.pagerDuty
-                  ? [
-                      {
-                        name: "alertOperator",
-                        pagerduty_configs: [
-                          { service_key: args.pagerDuty.secret },
-                        ],
-                      } as any,
-                    ]
-                  : []
-                ).concat([
-                  {
-                    name: "null",
                   },
-                ]),
+                  selector: {},
+                },
               },
+              // alertmanagerSpec: {
+              //   logLevel: "info",
+              // },
+              ...(args.pagerDuty
+                ? {
+                    config: {
+                      global: {
+                        pagerduty_url: args.pagerDuty.url,
+                      },
+                      route: {
+                        receiver: "alertOperator",
+                        group_by: ["job"],
+                        routes: [
+                          {
+                            receiver: "null",
+                            matchers: ['alertname=~"InfoInhibitor|Watchdog"'],
+                          },
+                        ],
+                      },
+                      receivers: [
+                        {
+                          name: "alertOperator",
+                          pagerduty_configs: [
+                            { service_key: args.pagerDuty.secret },
+                          ],
+                        } as any,
+                        {
+                          name: "null",
+                        },
+                      ],
+                    },
+                  }
+                : {}),
               ingress:
                 args.ingress?.alertUrl && args.ingress?.oauthUrl
                   ? {
