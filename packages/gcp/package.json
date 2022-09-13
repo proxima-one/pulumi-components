@@ -1,0 +1,56 @@
+{
+  "name": "@proxima-one/pulumi-gcp",
+  "version": "0.0.1",
+  "description": "pulumi k8s cluster common package",
+  "repository": "git@github.com:proxima-one/pulumi-components.git",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "lib"
+  ],
+  "scripts": {
+    "clean": "rimraf -rf dist && rimraf tsconfig.tsbuildinfo",
+    "format": "prettier --write \"{src,__tests__}/**/*.ts\"",
+    "lint": "eslint . --ext .ts",
+    "prepublishOnly": "yarn build",
+    "prebuild": "yarn clean && yarn format && yarn lint && echo Using TypeScript && tsc --version",
+    "build": "tsc --build",
+    "test": "jest --passWithNoTests",
+    "coverage": "jest --coverage",
+    "start": "ts-node -r tsconfig-paths/register src/index.ts",
+    "start:app": "yarn start app start --",
+    "watch": "yarn build -- --watch",
+    "watch:test": "jest --watch"
+  },
+  "dependencies": {
+    "@pulumi/gcp": "^6.36.0",
+    "@pulumi/pulumi": "^3.39.3",
+    "handlebars": "^4.7.7",
+    "js-yaml": "^4.0.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/handlebars": "^4.1.0",
+    "@types/jest": "^27.4.0",
+    "@types/js-yaml": "^4.0.0",
+    "@types/lodash": "^4.14.178",
+    "@types/node": "^14.18.4",
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/parser": "^5.8.1",
+    "jest": "^27.4.5",
+    "json-schema-to-typescript": "^10.1.5",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.4.0",
+    "tsconfig-paths": "^3.12.0",
+    "typescript": "^4.5.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "jest": {
+    "preset": "<rootDir>/"
+  },
+  "gitHead": "2412b8ad89fbf18ee838367b774b07b21a62900c"
+}

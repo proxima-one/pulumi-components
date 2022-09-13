@@ -431,7 +431,15 @@ export class ProximaServices<
         stateManagerConnections,
       ])
       .apply(([kafka, streamdb, minio, mongos, blockIndexers, stateManagers]) =>
-        generateConfig(args, kafka, streamdb, minio, mongos, blockIndexers, stateManagers)
+        generateConfig(
+          args,
+          kafka,
+          streamdb,
+          minio,
+          mongos,
+          blockIndexers,
+          stateManagers
+        )
       );
   }
 }

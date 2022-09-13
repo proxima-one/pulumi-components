@@ -7,7 +7,7 @@ import {
 import { WebServiceDeployer, ConfigFile } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { MongoDbStorage } from "@proxima-one/pulumi-proxima-node";
-import {parseInt} from "lodash";
+import { parseInt } from "lodash";
 import * as yaml from "js-yaml";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
@@ -88,7 +88,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           parts: {
             consumer: {
               disabled: mode == "server-only",
-              env: env.apply((x) => ({...x, ...consumerEnv})),
+              env: env.apply((x) => ({ ...x, ...consumerEnv })),
               args: ["./consumer"],
               resources: resources.apply((x) => x?.consumer),
               metrics: {
@@ -103,7 +103,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             },
             server: {
               disabled: mode == "consumer-only" || mode == "fast-sync",
-              env: env.apply((x) => ({...x, ...serverEnv})),
+              env: env.apply((x) => ({ ...x, ...serverEnv })),
               args: ["./server"],
               resources: resources.apply((x) => x?.server),
               metrics: {
@@ -145,8 +145,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
           internalEndpoint: serviceMetadata
             ? serviceMetadata.apply(
-              (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
-            )
+                (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
+              )
             : undefined,
         };
       }
@@ -176,22 +176,28 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configs: ConfigFile[] = [{
-          path: "/app/config/config.yaml",
-          content: mongoUri.apply(uri => yaml.dump({
-            streams: app.streams,
-            timeRange: app.timeRange ? parseTimeRange(app.timeRange) : undefined,
-            target: {
-              dbUri: uri,
-              dbName: dbName,
-            },
-            shard: {
-              name: app.shardName
-            },
-          }))
-        }]
+        const configs: ConfigFile[] = [
+          {
+            path: "/app/config/config.yaml",
+            content: mongoUri.apply((uri) =>
+              yaml.dump({
+                streams: app.streams,
+                timeRange: app.timeRange
+                  ? parseTimeRange(app.timeRange)
+                  : undefined,
+                target: {
+                  dbUri: uri,
+                  dbName: dbName,
+                },
+                shard: {
+                  name: app.shardName,
+                },
+              })
+            ),
+          },
+        ];
         if (app.configFiles) {
-          configs.push(...app.configFiles)
+          configs.push(...app.configFiles);
         }
 
         const resources = pulumi.output(app.resources);
@@ -202,7 +208,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           parts: {
             consumer: {
               disabled: mode == "server-only",
-              env: env.apply((x) => ({...x, ...consumerEnv})),
+              env: env.apply((x) => ({ ...x, ...consumerEnv })),
               args: ["./consumer"],
               resources: resources.apply((x) => x?.consumer),
               metrics: {
@@ -225,7 +231,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             },
             server: {
               disabled: mode == "consumer-only" || mode == "fast-sync",
-              env: env.apply((x) => ({...x, ...serverEnv})),
+              env: env.apply((x) => ({ ...x, ...serverEnv })),
               args: ["./server"],
               resources: resources.apply((x) => x?.server),
               metrics: {
@@ -271,18 +277,24 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           : undefined;
         return {
           name: pulumi.output(name),
-          networks: pulumi.output([...new Set<string>(  // unique networks from all streams
-            Object.entries(app.streams).reduce<string[]>((acc, cur) => {
-              return acc.concat(cur[1].reduce<string[]>((acc, cur) => {
-                return cur.metadata?.networks ? acc.concat(cur.metadata?.networks) : acc
-              }, []))
-            }, [])
-          )]),
+          networks: pulumi.output([
+            ...new Set<string>( // unique networks from all streams
+              Object.entries(app.streams).reduce<string[]>((acc, cur) => {
+                return acc.concat(
+                  cur[1].reduce<string[]>((acc, cur) => {
+                    return cur.metadata?.networks
+                      ? acc.concat(cur.metadata?.networks)
+                      : acc;
+                  }, [])
+                );
+              }, [])
+            ),
+          ]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
           internalEndpoint: serviceMetadata
             ? serviceMetadata.apply(
-              (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
-            )
+                (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
+              )
             : undefined,
         };
       }
@@ -290,7 +302,10 @@ export class IndexingServiceDeployer extends AppDeployerBase {
   }
 }
 
-export type IndexingServiceApp = (IndexingServiceAppV1 | IndexingServiceAppV2) & { name?: string };
+export type IndexingServiceApp = (
+  | IndexingServiceAppV1
+  | IndexingServiceAppV2
+) & { name?: string };
 
 export interface IndexingServiceAppV1 {
   apiKind: "indexing-service/v1";
@@ -302,9 +317,9 @@ export interface IndexingServiceAppV1 {
     endpoint:
       | { type: "cloud" }
       | ({ type: "provision" } & {
-      storage: pulumi.Input<MongoDbStorage>;
-      resources?: pulumi.Input<ComputeResources>;
-    });
+          storage: pulumi.Input<MongoDbStorage>;
+          resources?: pulumi.Input<ComputeResources>;
+        });
   };
 
   imageName?: pulumi.Input<string>;
@@ -326,13 +341,13 @@ export interface TimeRange {
 
 function parseTimeRange(s: TimeRange | string): TimeRange {
   if (typeof s != "string") {
-    return s
+    return s;
   }
-  const [from, to] = s.split("-")
+  const [from, to] = s.split("-");
   return {
     from: from.length > 0 ? parseInt(from) : undefined,
     to: to.length > 0 ? parseInt(to) : undefined,
-  }
+  };
 }
 
 export interface IndexingServiceAppV2 {
@@ -342,12 +357,15 @@ export interface IndexingServiceAppV2 {
   imageName?: pulumi.Input<string>;
   indexName?: string;
 
-  streams: Record<string, {
-    id: string;
-    metadata?: {
-      networks?: string[];
-    }
-  }[]>
+  streams: Record<
+    string,
+    {
+      id: string;
+      metadata?: {
+        networks?: string[];
+      };
+    }[]
+  >;
   // String examples: "1662495440-1562495440", "1662495440-", "-1562495440"
   timeRange?: TimeRange | string;
 
@@ -356,9 +374,9 @@ export interface IndexingServiceAppV2 {
     endpoint:
       | { type: "cloud" }
       | ({ type: "provision" } & {
-      storage: pulumi.Input<MongoDbStorage>;
-      resources?: pulumi.Input<ComputeResources>;
-    });
+          storage: pulumi.Input<MongoDbStorage>;
+          resources?: pulumi.Input<ComputeResources>;
+        });
   };
   resources?: pulumi.Input<{
     consumer?: pulumi.Input<ComputeResources>;

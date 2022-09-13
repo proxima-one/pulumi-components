@@ -55,7 +55,7 @@ config.references = [];
           )
         ) {
           workspaceConfig.references.push({
-            path: path.relative(location, dependecyLocation),
+            path: path.relative(location, dependecyLocation).replaceAll("\\", "/"),
           });
         }
       }

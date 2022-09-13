@@ -1722,6 +1722,16 @@
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
+"@pulumi/digitalocean@^4.15.2":
+  version "4.15.2"
+  resolved "https://registry.yarnpkg.com/@pulumi/digitalocean/-/digitalocean-4.15.2.tgz#5333703d8e991163f332506e1586ec9d6b9259c8"
+  integrity sha512-ZmLnPQu9QCZihEtTsbVeZgdSUM1+W1LWxXfLAC7cNsyDi7OapI+FAi03gwuLNFNMBBj1nJCyoLBeivrU3nDHgg==
+  dependencies:
+    "@pulumi/pulumi" "^3.0.0"
+    builtin-modules "3.0.0"
+    read-package-tree "^5.2.1"
+    resolve "^1.7.1"
+
 "@pulumi/docker@^3.1.0":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-3.2.0.tgz#bbfeccb6dbf4a522e844f4de889c822cf0743ee1"
@@ -1729,6 +1739,22 @@
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
+
+"@pulumi/gcp@^6.36.0":
+  version "6.36.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/gcp/-/gcp-6.36.0.tgz#cc4a48e12cbc5d29b149da0383e4b8edefc049bc"
+  integrity sha512-Vil8Y2Gx+2Q/ZNyiHmLsZrZOI1rE01GLe8Bl8A/WlsIaq/rUEuuas6eGAhSSMoAfzvNc2OjKLAgCmoH0blbyrA==
+  dependencies:
+    "@pulumi/pulumi" "^3.0.0"
+    "@types/express" "^4.16.0"
+    read-package-json "^2.0.13"
+
+"@pulumi/kubernetes-cert-manager@latest":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@pulumi/kubernetes-cert-manager/-/kubernetes-cert-manager-0.0.3.tgz#fec326cc5db09442afdb36aa821f26c7812ad815"
+  integrity sha512-wwEndZ8VthJo3NDjuZNd4fnxe0GWKFiFA8p4xxVuev+wSnBz/kQ4/bH8dT7Q7mIwGFNsu8bgZTFHF9Mxbd9jiA==
+  dependencies:
+    "@pulumi/kubernetes" "^3.7.1"
 
 "@pulumi/kubernetes@^3.0.0":
   version "3.20.1"
@@ -1748,6 +1774,20 @@
   version "3.20.3"
   resolved "https://registry.yarnpkg.com/@pulumi/kubernetes/-/kubernetes-3.20.3.tgz#b404d984e4c471cd07eafddfb5cc640942a3865e"
   integrity sha512-do2XiXc8E7NqX4pc9YJJFwfXgeoaFVXYGzs94N98LT7lwihiJyX5dnAg9ww407XExkcj11A6gxHDMwtuY8zMYQ==
+  dependencies:
+    "@pulumi/pulumi" "^3.25.0"
+    "@types/glob" "^5.0.35"
+    "@types/node-fetch" "^2.1.4"
+    "@types/tmp" "^0.0.33"
+    glob "^7.1.2"
+    node-fetch "^2.3.0"
+    shell-quote "^1.6.1"
+    tmp "^0.0.33"
+
+"@pulumi/kubernetes@^3.7.1":
+  version "3.21.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/kubernetes/-/kubernetes-3.21.0.tgz#15681fcd6f2bd728ddf7bf1c9afa44ac5c2ad19b"
+  integrity sha512-tAm8Ul234qNpHJiX4VvuRgS57Ah7sR/MhLu5cr1WJMBDlFjQyqEXVu5mdPUm1+jR5FmYsdf3NWOOcfxhD2xsBg==
   dependencies:
     "@pulumi/pulumi" "^3.25.0"
     "@types/glob" "^5.0.35"
@@ -1832,6 +1872,28 @@
     source-map-support "^0.5.6"
     ts-node "^7.0.1"
     typescript "~3.7.3"
+    upath "^1.1.0"
+
+"@pulumi/pulumi@^3.39.3":
+  version "3.39.3"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.39.3.tgz#beb51a9be88783ac74b39c3d103b0cd51d210f28"
+  integrity sha512-KmlSUOy96BqmYYKYuAyj2pCA6wfYDir47YmqUO+EXZCCFHjmNEeo3cRdzCDX9mbLufNgGHGHcd5WtSAbRAkgsg==
+  dependencies:
+    "@grpc/grpc-js" "~1.3.8"
+    "@logdna/tail-file" "^2.0.6"
+    "@pulumi/query" "^0.3.0"
+    execa "^5.1.0"
+    google-protobuf "^3.5.0"
+    ini "^2.0.0"
+    js-yaml "^3.14.0"
+    minimist "^1.2.6"
+    normalize-package-data "^2.4.0"
+    read-package-tree "^5.3.1"
+    require-from-string "^2.0.1"
+    semver "^6.1.0"
+    source-map-support "^0.5.6"
+    ts-node "^7.0.1"
+    typescript "~3.8.3"
     upath "^1.1.0"
 
 "@pulumi/query@^0.3.0":
@@ -1937,6 +1999,14 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/body-parser@*":
+  version "1.19.2"
+  resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.2.tgz#aea2059e28b7658639081347ac4fab3de166e6f0"
+  integrity sha512-ALYone6pm6QmwZoAgeyNksccT9Q4AWZQ6PvfwR37GT6r6FWUPguq6sUmNGSMV2Wr761oQoBxwGGa6DR5o1DC9g==
+  dependencies:
+    "@types/connect" "*"
+    "@types/node" "*"
+
 "@types/cacheable-request@^6.0.1":
   version "6.0.2"
   resolved "https://registry.npmjs.org/@types/cacheable-request/-/cacheable-request-6.0.2.tgz"
@@ -1952,12 +2022,38 @@
   resolved "https://registry.npmjs.org/@types/caseless/-/caseless-0.12.2.tgz"
   integrity sha512-6ckxMjBBD8URvjB6J3NcnuAn5Pkl7t3TizAg+xdlzzQGSPSmBcXf8KoIH0ua/i+tio+ZRUHEXp0HEmvaR4kt0w==
 
+"@types/connect@*":
+  version "3.4.35"
+  resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.35.tgz#5fcf6ae445e4021d1fc2219a4873cc73a3bb2ad1"
+  integrity sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==
+  dependencies:
+    "@types/node" "*"
+
 "@types/dotenv@^8.2.0":
   version "8.2.0"
   resolved "https://registry.npmjs.org/@types/dotenv/-/dotenv-8.2.0.tgz"
   integrity sha512-ylSC9GhfRH7m1EUXBXofhgx4lUWmFeQDINW5oLuS+gxWdfUeW4zJdeVTYVkexEW+e2VUvlZR2kGnGGipAWR7kw==
   dependencies:
     dotenv "*"
+
+"@types/express-serve-static-core@^4.17.18":
+  version "4.17.30"
+  resolved "https://registry.yarnpkg.com/@types/express-serve-static-core/-/express-serve-static-core-4.17.30.tgz#0f2f99617fa8f9696170c46152ccf7500b34ac04"
+  integrity sha512-gstzbTWro2/nFed1WXtf+TtrpwxH7Ggs4RLYTLbeVgIkUQOI3WG/JKjgeOU1zXDvezllupjrf8OPIdvTbIaVOQ==
+  dependencies:
+    "@types/node" "*"
+    "@types/qs" "*"
+    "@types/range-parser" "*"
+
+"@types/express@^4.16.0":
+  version "4.17.13"
+  resolved "https://registry.yarnpkg.com/@types/express/-/express-4.17.13.tgz#a76e2995728999bab51a33fabce1d705a3709034"
+  integrity sha512-6bSZTPaTIACxn48l50SR+axgrqm6qXFIxrdAKaG6PaJk3+zuUr35hBlgT7vOmJcum+OEaIBLtHV/qloEAFITeA==
+  dependencies:
+    "@types/body-parser" "*"
+    "@types/express-serve-static-core" "^4.17.18"
+    "@types/qs" "*"
+    "@types/serve-static" "*"
 
 "@types/glob@*":
   version "7.2.0"
@@ -2066,6 +2162,11 @@
   resolved "https://registry.npmjs.org/@types/long/-/long-4.0.1.tgz"
   integrity sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==
 
+"@types/mime@*":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@types/mime/-/mime-3.0.1.tgz#5f8f2bca0a5863cb69bc0b0acd88c96cb1d4ae10"
+  integrity sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==
+
 "@types/minimatch@*", "@types/minimatch@^3.0.3":
   version "3.0.5"
   resolved "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.5.tgz"
@@ -2121,6 +2222,16 @@
   resolved "https://registry.npmjs.org/@types/prettier/-/prettier-2.4.4.tgz"
   integrity sha512-ReVR2rLTV1kvtlWFyuot+d1pkpG2Fw/XKE3PDAdj57rbM97ttSp9JZ2UsP+2EHTylra9cUf6JA7tGwW1INzUrA==
 
+"@types/qs@*":
+  version "6.9.7"
+  resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.7.tgz#63bb7d067db107cc1e457c303bc25d511febf6cb"
+  integrity sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==
+
+"@types/range-parser@*":
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.4.tgz#cd667bcfdd025213aafb7ca5915a932590acdcdc"
+  integrity sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==
+
 "@types/request@^2.47.1":
   version "2.48.8"
   resolved "https://registry.npmjs.org/@types/request/-/request-2.48.8.tgz"
@@ -2136,6 +2247,14 @@
   resolved "https://registry.npmjs.org/@types/responselike/-/responselike-1.0.0.tgz"
   integrity sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==
   dependencies:
+    "@types/node" "*"
+
+"@types/serve-static@*":
+  version "1.15.0"
+  resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.15.0.tgz#c7930ff61afb334e121a9da780aac0d9b8f34155"
+  integrity sha512-z5xyF6uh8CbjAu9760KDKsH2FcDxZ2tFCsA4HIMWE6IkiYMXfVoa+4f9KX+FN0ZLsaMw1WNG2ETLA6N+/YA+cg==
+  dependencies:
+    "@types/mime" "*"
     "@types/node" "*"
 
 "@types/stack-utils@^2.0.0":
@@ -2741,6 +2860,11 @@ buffer-from@1.x, buffer-from@^1.0.0, buffer-from@^1.1.0:
   version "1.1.2"
   resolved "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
+
+builtin-modules@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.0.0.tgz#1e587d44b006620d90286cc7a9238bbc6129cab1"
+  integrity sha512-hMIeU4K2ilbXV6Uv93ZZ0Avg/M91RaKXucQ+4me2Do1txxBDyDZWCBa5bJSLqoNTRpXTLwEzIk1KmloenDDjhg==
 
 builtins@^1.0.3:
   version "1.0.3"
@@ -3882,7 +4006,7 @@ execa@^4.0.0:
     signal-exit "^3.0.2"
     strip-final-newline "^2.0.0"
 
-execa@^5.0.0:
+execa@^5.0.0, execa@^5.1.0:
   version "5.1.1"
   resolved "https://registry.npmjs.org/execa/-/execa-5.1.1.tgz"
   integrity sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==
@@ -4790,6 +4914,13 @@ is-core-module@^2.5.0, is-core-module@^2.8.1:
   version "2.8.1"
   resolved "https://registry.npmjs.org/is-core-module/-/is-core-module-2.8.1.tgz"
   integrity sha512-SdNCUs284hr40hFTFP6l0IfZ/RSrMXF3qgoRHd3/79unUTvrFO/JoXwkGm+5J/Oe3E/b5GsnG330uUNgRpu1PA==
+  dependencies:
+    has "^1.0.3"
+
+is-core-module@^2.9.0:
+  version "2.10.0"
+  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.10.0.tgz#9012ede0a91c69587e647514e1d5277019e728ed"
+  integrity sha512-Erxj2n/LDAZ7H8WNJXd9tw38GYM3dv8rk8Zcs+jJuxYTW7sozH+SS8NtrSjVL1/vpLvWi1hxy96IzjJ3EHTJJg==
   dependencies:
     has "^1.0.3"
 
@@ -7500,7 +7631,7 @@ read-package-json-fast@^2.0.1:
     json-parse-even-better-errors "^2.3.0"
     npm-normalize-package-bin "^1.0.1"
 
-read-package-json@^2.0.0:
+read-package-json@^2.0.0, read-package-json@^2.0.13:
   version "2.1.2"
   resolved "https://registry.npmjs.org/read-package-json/-/read-package-json-2.1.2.tgz"
   integrity sha512-D1KmuLQr6ZSJS0tW8hf3WGpRlwszJOXZ3E8Yd/DNRaM5d+1wVRZdHlpGBLAuovjr28LbWvjpWkBHMxpRGGjzNA==
@@ -7530,7 +7661,7 @@ read-package-json@^4.1.1:
     normalize-package-data "^3.0.0"
     npm-normalize-package-bin "^1.0.0"
 
-read-package-tree@^5.3.1:
+read-package-tree@^5.2.1, read-package-tree@^5.3.1:
   version "5.3.1"
   resolved "https://registry.npmjs.org/read-package-tree/-/read-package-tree-5.3.1.tgz"
   integrity sha512-mLUDsD5JVtlZxjSlPPx1RETkNjjvQYuweKwNVt1Sn8kP5Jh44pvYuUHCp6xSVDZWbNxVxG5lyZJ921aJH61sTw==
@@ -7746,6 +7877,15 @@ resolve@^1.1.6, resolve@^1.10.0, resolve@^1.18.1, resolve@^1.20.0:
   integrity sha512-Hhtrw0nLeSrFQ7phPp4OOcVjLPIeMnRlr5mcnVuMe7M/7eBn98A3hmFRLoFo3DLZkivSYwhRUJTyPyWAk56WLw==
   dependencies:
     is-core-module "^2.8.1"
+    path-parse "^1.0.7"
+    supports-preserve-symlinks-flag "^1.0.0"
+
+resolve@^1.7.1:
+  version "1.22.1"
+  resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.22.1.tgz#27cb2ebb53f91abb49470a928bba7558066ac177"
+  integrity sha512-nBpuuYuY5jFsli/JIs1oldw6fOQCBioohqWZg/2hiaOybXOft4lonv85uDOKXdf8rhyK159cxU5cDcK/NKk8zw==
+  dependencies:
+    is-core-module "^2.9.0"
     path-parse "^1.0.7"
     supports-preserve-symlinks-flag "^1.0.0"
 
@@ -8751,6 +8891,11 @@ typescript@~3.7.3:
   version "3.7.7"
   resolved "https://registry.npmjs.org/typescript/-/typescript-3.7.7.tgz"
   integrity sha512-MmQdgo/XenfZPvVLtKZOq9jQQvzaUAUpcKW8Z43x9B2fOm4S5g//tPtMweZUIP+SoBqrVPEIm+dJeQ9dfO0QdA==
+
+typescript@~3.8.3:
+  version "3.8.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.8.3.tgz#409eb8544ea0335711205869ec458ab109ee1061"
+  integrity sha512-MYlEfn5VrLNsgudQTVJeNaQFUAI7DkhnOjdpAp4T+ku1TfQClewlbSuTVHiA+8skNBgaf02TL/kLOvig4y3G8w==
 
 uglify-js@^3.1.4:
   version "3.15.3"
