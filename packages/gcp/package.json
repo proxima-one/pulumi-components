@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-gcp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "pulumi k8s cluster common package",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
