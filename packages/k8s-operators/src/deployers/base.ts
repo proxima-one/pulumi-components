@@ -12,7 +12,7 @@ export class KubernetesDeployer {
   public constructor(protected readonly params: DeployParameters) {
     this.provider = new k8s.Provider(
       this.params.name,
-      {kubeconfig: this.params.kubeconfig},
+      { kubeconfig: this.params.kubeconfig },
       {}
     );
   }

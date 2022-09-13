@@ -1,25 +1,26 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
+import { Certificate } from "../cert-manager/certificate";
+
+export interface MinioOperatorArgs {
+  namespace: pulumi.Input<string>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
+  ingress?: {
+    consoleHost: string;
+    consolePath?: string;
+    certificateIssuer: string;
+  };
+}
 
 /**
  * Installs minio/operator helm chart
  */
 export class MinioOperator extends pulumi.ComponentResource {
-  /**
-   * Helm chart was used to create the operator
-   */
-  public readonly chart: k8s.helm.v3.Chart;
-
-  /**
-   * If publicHost is given - certificate will be created via cert-manager
-   */
-  //public readonly certificate?: certManager.Certificate;
-
   public readonly publicHost?: string;
 
   public constructor(
     name: string,
-    args: MinIOOperatorArgs,
+    args: MinioOperatorArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima-k8s:MinioOperator", name, args, opts);
@@ -28,37 +29,41 @@ export class MinioOperator extends pulumi.ComponentResource {
       enabled: false,
     };
 
-    // if (args.console?.publicHost) {
-    //   this.publicHost = args.console.publicHost;
-    //
-    //   const certificate = new certManager.Certificate(
-    //     `${name}-cert`,
-    //     { namespace: args.namespace, domain: args.console.publicHost },
-    //     { parent: this }
-    //   );
-    //
-    //   ingressValues.enabled = true;
-    //   ingressValues.ingressClassName = "nginx";
-    //   ingressValues.tls = [
-    //     {
-    //       hots: [args.console.publicHost],
-    //       secretName: certificate.secretName,
-    //     },
-    //   ];
-    //   ingressValues.host = args.console.publicHost;
-    //   ingressValues.path = args.console.path || "/";
-    //
-    //   this.certificate = certificate;
-    // }
+    if (args.ingress?.consoleHost) {
+      this.publicHost = args.ingress.consoleHost;
 
-    this.chart = new k8s.helm.v3.Chart(
+      const certificate = new Certificate(
+        `${name}-cert`,
+        {
+          namespace: args.namespace,
+          domain: args.ingress.consoleHost,
+          issuer: args.ingress.certificateIssuer,
+        },
+        { parent: this }
+      );
+
+      ingressValues.enabled = true;
+      ingressValues.ingressClassName = "nginx";
+      ingressValues.tls = [
+        {
+          hots: [args.ingress.consoleHost],
+          secretName: certificate.secretName,
+        },
+      ];
+      ingressValues.host = args.ingress.consoleHost;
+      ingressValues.path = args.ingress.consolePath || "/";
+
+      //this.certificate = certificate;
+    }
+
+    const chart = new k8s.helm.v3.Release(
       name,
       {
-        fetchOpts: {
+        repositoryOpts: {
           repo: "https://operator.min.io/",
         },
         chart: "operator",
-        version: "4.4.2",
+        version: "4.5.0",
         namespace: args.namespace,
         values: {
           operator: {
@@ -68,20 +73,10 @@ export class MinioOperator extends pulumi.ComponentResource {
             ingress: ingressValues,
           },
         },
-        apiVersions: ["networking.k8s.io/v1/Ingress"],
       },
       { parent: this }
     );
 
     this.registerOutputs();
   }
-}
-
-export interface MinIOOperatorArgs {
-  namespace: pulumi.Input<string>;
-  nodeSelector?: pulumi.Input<Record<string, string>>;
-  console?: {
-    publicHost?: string;
-    path?: string;
-  };
 }

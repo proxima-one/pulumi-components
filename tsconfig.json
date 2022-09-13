@@ -37,16 +37,19 @@
       "path": "packages/bsc-node"
     },
     {
-      "path": "packages/do-cluster"
+      "path": "packages/digitalocean"
     },
     {
       "path": "packages/ethereum-node"
     },
     {
+      "path": "packages/gcp"
+    },
+    {
       "path": "packages/helpers"
     },
     {
-      "path": "packages/k8s-cluster"
+      "path": "packages/k8s-operators"
     },
     {
       "path": "packages/polygon-node"

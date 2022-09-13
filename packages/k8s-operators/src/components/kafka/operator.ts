@@ -1,6 +1,13 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 
+export interface KafkaOperatorArgs {
+  namespace: pulumi.Input<string>;
+  watchNamespaces: pulumi.Input<string[]>;
+  nodeSelector?: pulumi.Input<Record<string, string>>;
+  watchAnyNamespace: boolean;
+}
+
 /**
  * Installs strimzi-kafka-operator helm chart
  */
@@ -34,7 +41,7 @@ export class KafkaOperator extends pulumi.ComponentResource {
           repo: "https://strimzi.io/charts",
         },
         chart: "strimzi-kafka-operator",
-        version: "0.27.0",
+        version: "0.31.0",
         namespace: args.namespace,
         values: values,
       },
@@ -43,11 +50,4 @@ export class KafkaOperator extends pulumi.ComponentResource {
 
     this.registerOutputs();
   }
-}
-
-export interface KafkaOperatorArgs {
-  namespace: pulumi.Input<string>;
-  watchNamespaces: pulumi.Input<string[]>;
-  nodeSelector?: pulumi.Input<Record<string, string>>;
-  watchAnyNamespace: boolean;
 }

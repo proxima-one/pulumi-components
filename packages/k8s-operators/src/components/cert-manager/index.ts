@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import { HelmMeta } from "../../interfaces";
 
-export interface CertManagerInputs {
+export interface CertManagerArgs {
   namespace?: pulumi.Input<string>;
   version?: string;
 
@@ -24,26 +24,22 @@ export interface CertManagerInputs {
   };
 }
 
-export interface CertManagerOutputs {
-  meta: pulumi.Output<HelmMeta>;
-}
-
+export type CertificateIssuer = "letsencrypt" | "letsencrypt-stage" | "zerossl";
 /**
  * @noInheritDoc
  */
-export class CertManager
-  extends pulumi.ComponentResource
-  implements CertManagerOutputs
-{
-  readonly meta: pulumi.Output<HelmMeta>;
+export class CertManager extends pulumi.ComponentResource {
+  private readonly meta: pulumi.Output<HelmMeta>;
+  public readonly issuers: CertificateIssuer[];
 
-  constructor(
+  public constructor(
     name: string,
-    args: CertManagerInputs,
+    args: CertManagerArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima-k8s:CertManager", name, args, opts);
 
+    this.issuers = [];
     this.meta = pulumi.output<HelmMeta>({
       chart: "cert-manager",
       version: args?.version ?? "v1.9.1",
@@ -86,6 +82,8 @@ export class CertManager
     //   });
 
     if (args.zerossl?.enabled) {
+      this.issuers.push("zerossl");
+
       const hmacSecret = new k8s.core.v1.Secret(
         `${name}-zerossl-hmac-key`,
         {
@@ -142,6 +140,8 @@ export class CertManager
     }
 
     if (args.letsencrypt) {
+      this.issuers.push("letsencrypt");
+
       const letsencryptIssuer = new k8s.apiextensions.CustomResource(
         `${name}-letsencrypt`,
         {
@@ -176,6 +176,8 @@ export class CertManager
       );
 
       if (args.letsencrypt.staging) {
+        this.issuers.push("letsencrypt-stage");
+
         const letsencryptIssuerStage = new k8s.apiextensions.CustomResource(
           `${name}-letsencrypt-stage`,
           {

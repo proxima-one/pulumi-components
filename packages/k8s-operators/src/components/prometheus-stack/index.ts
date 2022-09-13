@@ -13,11 +13,11 @@ export interface PrometheusArgs {
   };
   helmOverride?: HelmOverride;
   ingress?: {
-    alertUrl?: string;
-    promUrl?: string;
-    grafanaUrl?: string;
+    alertHost?: string;
+    promHost?: string;
+    grafanaHost?: string;
     oauthUrl?: pulumi.Input<string>;
-    certificateIssuer?: string;
+    certificateIssuer: string;
   };
   lokiUrl?: pulumi.Input<string>;
   pagerDuty?: {
@@ -31,18 +31,10 @@ export interface UserPassword {
   password: string;
 }
 
-export interface PrometheusOutputs {
-  status: pulumi.Output<k8s.types.output.helm.v3.ReleaseStatus>;
-  grafanaAdmin: pulumi.Output<UserPassword>;
-}
-
 /*
 Deploys kube-prometheus-stack including Grafana
  */
-export class PrometheusStack
-  extends pulumi.ComponentResource
-  implements PrometheusOutputs
-{
+export class PrometheusStack extends pulumi.ComponentResource {
   public readonly grafanaAdmin: pulumi.Output<UserPassword>;
   public readonly status: pulumi.Output<k8s.types.output.helm.v3.ReleaseStatus>;
   private readonly meta: pulumi.Output<HelmMeta>;
@@ -87,20 +79,20 @@ export class PrometheusStack
             kubeDns: { enabled: true },
             grafana: {
               adminPassword: password.result,
-              ingress: args.ingress?.grafanaUrl
+              ingress: args.ingress?.grafanaHost
                 ? {
                     enabled: true,
                     annotations: {
                       "kubernetes.io/ingress.class": "nginx",
                       "nginx.ingress.kubernetes.io/ssl-redirect": "true",
                       "cert-manager.io/cluster-issuer":
-                        args.ingress.certificateIssuer ?? "letsencrypt",
+                        args.ingress.certificateIssuer,
                     },
-                    hosts: [args.ingress.grafanaUrl],
+                    hosts: [args.ingress.grafanaHost],
                     tls: [
                       {
                         secretName: "tls-lets",
-                        hosts: [args.ingress.grafanaUrl],
+                        hosts: [args.ingress.grafanaHost],
                       },
                     ],
                   }
@@ -121,20 +113,21 @@ export class PrometheusStack
             },
             prometheus: {
               ingress:
-                args.ingress?.promUrl && args.ingress?.oauthUrl
+                args.ingress?.promHost && args.ingress?.oauthUrl
                   ? {
                       enabled: true,
-                      hosts: [args.ingress.promUrl],
+                      hosts: [args.ingress.promHost],
                       tls: [
                         {
                           secretName: "tls-lets-pr",
-                          hosts: [args.ingress.promUrl],
+                          hosts: [args.ingress.promHost],
                         },
                       ],
                       annotations: {
                         "nginx.ingress.kubernetes.io/auth-signin": pulumi.interpolate`https://${args.ingress.oauthUrl}/oauth2/start`,
                         "nginx.ingress.kubernetes.io/auth-url": pulumi.interpolate`https://${args.ingress.oauthUrl}/oauth2/auth`,
-                        "cert-manager.io/cluster-issuer": "letsencrypt",
+                        "cert-manager.io/cluster-issuer":
+                          args.ingress.certificateIssuer,
                         "kubernetes.io/ingress.class": "nginx",
                         "nginx.ingress.kubernetes.io/ssl-redirect": "true",
                       },
@@ -232,7 +225,7 @@ export class PrometheusStack
                   }
                 : {}),
               ingress:
-                args.ingress?.alertUrl && args.ingress?.oauthUrl
+                args.ingress?.alertHost && args.ingress?.oauthUrl
                   ? {
                       enabled: true,
                       annotations: {
@@ -240,13 +233,14 @@ export class PrometheusStack
                         "nginx.ingress.kubernetes.io/auth-signin": pulumi.interpolate`https://${args.ingress.oauthUrl}/oauth2/start`,
                         "kubernetes.io/ingress.class": "nginx",
                         "nginx.ingress.kubernetes.io/ssl-redirect": "true",
-                        "cert-manager.io/cluster-issuer": "letsencrypt",
+                        "cert-manager.io/cluster-issuer":
+                          args.ingress.certificateIssuer,
                       },
-                      hosts: [args.ingress.alertUrl],
+                      hosts: [args.ingress.alertHost],
                       tls: [
                         {
                           secretName: "tls-lets-al",
-                          hosts: [args.ingress.alertUrl],
+                          hosts: [args.ingress.alertHost],
                         },
                       ],
                     }

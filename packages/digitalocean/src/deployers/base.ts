@@ -10,9 +10,7 @@ export interface DeployParameters {
 export class DigitaloceanDeployer {
   protected readonly provider: digitalocean.Provider;
 
-  public constructor(
-    protected readonly params: DeployParameters
-  ) {
+  public constructor(protected readonly params: DeployParameters) {
     this.provider = new digitalocean.Provider(params.name, {
       token: params.apiToken,
     });

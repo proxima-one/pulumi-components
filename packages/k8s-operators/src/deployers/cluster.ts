@@ -4,9 +4,13 @@ import * as random from "@pulumi/random";
 import * as components from "../components";
 import { Persistence } from "../interfaces";
 import { KubernetesDeployer } from "./base";
+import { CertificateIssuer } from "../components/cert-manager";
+import { KafkaOperator } from "../components/kafka";
+import { MinioOperator } from "../components/minio";
 
 export class KubernetesOperatorsDeployer extends KubernetesDeployer {
   public deploy(args: KubernetesOperatorsArgs): DeployedCluster {
+    const certificateIssuer = args.certificateIssuer ?? "letsencrypt";
     const storageClasses: Record<string, k8s.storage.v1.StorageClass> = {};
     const getPersistenceDependencies = (
       persistence: Persistence
@@ -73,12 +77,12 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
     }
 
     let oauth: components.oauth2.Oauth | undefined;
-    if (!args.oAuth.disabled) {
+    if (!args.oauth.disabled) {
       const oauthNS = new k8s.core.v1.Namespace(
-        args.oAuth.namespace,
+        args.oauth.namespace,
         {
           metadata: {
-            name: args.oAuth.namespace,
+            name: args.oauth.namespace,
           },
         },
         { provider: this.provider }
@@ -99,12 +103,19 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
         "oauth",
         {
           namespace: oauthNS.metadata.name,
-          clientId: args.oAuth.clientId,
-          clientSecret: args.oAuth.clientSecret,
-          cookieSecret: secretValue,
-          oauthUrl: `oauth.${args.publicHost}`,
+          provider: {
+            type: "github",
+            org: args.oauth.github.org,
+            clientId: args.oauth.github.clientId,
+            clientSecret: args.oauth.github.clientSecret,
+            cookieSecret: secretValue,
+          },
+          ingress: {
+            host: `oauth.${args.publicHost}`,
+            certificateIssuer: certificateIssuer,
+          },
           domain: args.publicHost,
-          emailDomains: args.oAuth.emailDomains,
+          emailDomains: args.oauth.emailDomains,
         },
         { provider: this.provider }
       );
@@ -148,11 +159,11 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             alertManager: args.monitoring.alertManager.persistence,
           },
           ingress: {
-            alertUrl: `al.${args.publicHost}`,
-            oauthUrl: oauth?.oauthUrl,
-            certificateIssuer: "letsencrypt",
-            grafanaUrl: `grafana.${args.publicHost}`,
-            promUrl: `prom.${args.publicHost}`,
+            alertHost: `al.${args.publicHost}`,
+            oauthUrl: oauth?.publicHost,
+            certificateIssuer: certificateIssuer,
+            grafanaHost: `grafana.${args.publicHost}`,
+            promHost: `prom.${args.publicHost}`,
           },
           pagerDuty: args.monitoring.alertManager.pagerDuty
             ? {
@@ -173,6 +184,59 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
       );
     }
 
+    let kafkaOperator: KafkaOperator | undefined;
+    if (!args.kafka.disabled) {
+      const namespace = new k8s.core.v1.Namespace(
+        args.kafka.namespace,
+        {
+          metadata: {
+            name: args.kafka.namespace,
+          },
+        },
+        { provider: this.provider }
+      );
+
+      kafkaOperator = new KafkaOperator(
+        "kafka-operator",
+        {
+          namespace: namespace.metadata.name,
+          watchAnyNamespace: args.kafka.watchAnyNamespace,
+          watchNamespaces: args.kafka.watchNamespaces,
+        },
+        { provider: this.provider }
+      );
+    }
+
+    let minioOperator: MinioOperator | undefined;
+    if (!args.minio.disabled) {
+      const namespace = new k8s.core.v1.Namespace(
+        args.minio.namespace,
+        {
+          metadata: {
+            name: args.minio.namespace,
+          },
+        },
+        { provider: this.provider }
+      );
+
+      minioOperator = new MinioOperator(
+        "kafka-operator",
+        {
+          namespace: namespace.metadata.name,
+          ingress: {
+            consoleHost: `minio-operator.${args.publicHost}`,
+            certificateIssuer: certificateIssuer,
+          },
+        },
+        { provider: this.provider }
+      );
+    }
+    const operators: DeployedOperator[] = [];
+    if (certManager) operators.push("cert-manager");
+    if (prometheus) operators.push("prometheus");
+    if (kafkaOperator) operators.push("kafka");
+    if (minioOperator) operators.push("minio");
+
     return {
       ingressIP: ingressController?.publicIP,
       grafana: prometheus
@@ -181,6 +245,8 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             password: prometheus.grafanaAdmin.password,
           }
         : undefined,
+      operators: operators,
+      certificateIssuers: certManager?.issuers ?? [],
     };
   }
 
@@ -191,13 +257,16 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
       monitoring: { disabled: true },
       certManager: { disabled: true },
       ingress: { disabled: true },
-      oAuth: { disabled: true },
+      oauth: { disabled: true },
       publicHost: `${this.params.name}.cluster.proxima.one`,
+      kafka: { disabled: true },
+      minio: { disabled: true },
     };
     customization(args);
     return this.deploy(args);
   }
 }
+
 //
 // public deployDashboards(args: GrafanaDashboardsArgs) {
 //   new k8s.core.v1.ConfigMap(dashboard.name, {
@@ -224,7 +293,15 @@ export interface DeployedCluster {
     user: pulumi.Output<string>;
     password: pulumi.Output<string>;
   };
+  certificateIssuers: CertificateIssuer[];
+  operators: DeployedOperator[];
 }
+
+export type DeployedOperator =
+  | "kafka"
+  | "minio"
+  | "cert-manager"
+  | "prometheus";
 
 export interface SubsystemBase {
   disabled?: false;
@@ -238,6 +315,7 @@ export interface Disabled {
 export interface KubernetesOperatorsArgs {
   publicHost: string;
   ingress: ({} & SubsystemBase) | Disabled;
+  certificateIssuer?: string;
   certManager:
     | ({
         letsencrypt?: {
@@ -273,12 +351,22 @@ export interface KubernetesOperatorsArgs {
         };
       } & SubsystemBase)
     | Disabled;
-  oAuth:
+  oauth:
     | ({
-        clientId: string;
-        clientSecret: string;
+        github: {
+          org: string;
+          clientId: string;
+          clientSecret: string;
+        };
         emailDomains: string[];
       } & SubsystemBase)
     | Disabled;
+  kafka:
+    | ({
+        watchNamespaces: pulumi.Input<string[]>;
+        watchAnyNamespace: boolean;
+      } & SubsystemBase)
+    | Disabled;
+  minio: ({} & SubsystemBase) | Disabled;
   storageClasses?: { name: string; args: k8s.storage.v1.StorageClassArgs }[];
 }

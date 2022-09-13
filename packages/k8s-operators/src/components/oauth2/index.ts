@@ -1,27 +1,32 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
-import { Ingress, HelmOverride, HelmMeta } from "../../interfaces";
+import { HelmMeta, HelmOverride } from "../../interfaces";
 import { merge } from "lodash";
 
 export interface OAuthArgs {
   namespace?: pulumi.Input<string>;
-  ingress?: Ingress;
   helmOverride?: HelmOverride;
+  provider: OAuthProvider;
+  domain: pulumi.Input<string>;
+  emailDomains: pulumi.Input<string[]>;
+  ingress: {
+    host: pulumi.Input<string>;
+    certificateIssuer: string;
+  };
+}
 
+export type OAuthProvider = GithubProvider;
+
+export interface GithubProvider {
+  type: "github";
+  org: string;
   clientId: pulumi.Input<string>;
   clientSecret: pulumi.Input<string>;
   cookieSecret: pulumi.Input<string>;
-  domain: pulumi.Input<string>;
-  oauthUrl: pulumi.Input<string>;
-  emailDomains: pulumi.Input<string[]>;
 }
 
-export interface OauthOutput {
-  oauthUrl: pulumi.Output<string>;
-}
-
-export class Oauth extends pulumi.ComponentResource implements OauthOutput {
-  public readonly oauthUrl: pulumi.Output<string>;
+export class Oauth extends pulumi.ComponentResource {
+  public readonly publicHost: pulumi.Output<string>;
 
   constructor(
     name: string,
@@ -43,15 +48,15 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
           namespace: args.namespace,
         },
         stringData: {
-          "client-id": args.clientId,
-          "client-secret": args.clientSecret,
-          "cookie-secret": args.cookieSecret,
+          "client-id": args.provider.clientId,
+          "client-secret": args.provider.clientSecret,
+          "cookie-secret": args.provider.cookieSecret,
         },
       },
       { parent: this }
     );
 
-    this.oauthUrl = pulumi.output(args.oauthUrl);
+    this.publicHost = pulumi.output(args.ingress.host);
     const oauth = new k8s.helm.v3.Release(
       name,
       {
@@ -77,8 +82,8 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
                 .apply((x) => x.join("\n")),
             },
             extraArgs: {
-              provider: "github",
-              "github-org": "proxima-one",
+              provider: args.provider.type,
+              "github-org": args.provider.org,
               "whitelist-domain": `.${args.domain}`,
               "cookie-domain": `.${args.domain}`,
               scope: "user:email",
@@ -88,13 +93,14 @@ export class Oauth extends pulumi.ComponentResource implements OauthOutput {
               path: "/",
               annotations: {
                 "kubernetes.io/ingress.class": "nginx",
-                "cert-manager.io/cluster-issuer": "letsencrypt",
+                "cert-manager.io/cluster-issuer":
+                  args.ingress.certificateIssuer,
               },
-              hosts: [args.oauthUrl],
+              hosts: [args.ingress.host],
               tls: [
                 {
                   secretName: `${name}-tls`,
-                  hosts: [args.oauthUrl],
+                  hosts: [args.ingress.host],
                 },
               ],
             },

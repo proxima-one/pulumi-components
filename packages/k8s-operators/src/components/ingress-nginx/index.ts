@@ -3,27 +3,20 @@ import * as k8s from "@pulumi/kubernetes";
 import { HelmMeta, HelmOverride } from "../../interfaces";
 import { merge } from "lodash";
 
-export interface IngressNginxControllerInputs {
+export interface IngressNginxControllerArgs {
   namespace?: pulumi.Input<string>;
   helmOverride?: HelmOverride;
-}
-
-export interface IngressNginxControllerOutputs {
-  publicIP: pulumi.Output<string>;
 }
 
 /**
  * @noInheritDoc
  */
-export class IngressNginxController
-  extends pulumi.ComponentResource
-  implements IngressNginxControllerOutputs
-{
-  readonly publicIP: pulumi.Output<string>;
+export class IngressNginxController extends pulumi.ComponentResource {
+  public readonly publicIP: pulumi.Output<string>;
 
-  constructor(
+  public constructor(
     name: string,
-    args: IngressNginxControllerInputs,
+    args: IngressNginxControllerArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima-k8s:IngressNginxController", name, args, opts);

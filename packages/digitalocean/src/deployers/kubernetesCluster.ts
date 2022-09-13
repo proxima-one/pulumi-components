@@ -33,22 +33,31 @@ export interface DeployedKubernetesCluster {
 
 export class KubernetesClusterDeployer extends DigitaloceanDeployer {
   public deploy(args: KubernetesClusterArgs): DeployedKubernetesCluster {
-    const cluster = new digitalocean.KubernetesCluster(args.name, {
-      name: args.name,
-      region: args.region,
-      version: args.version,
-      autoUpgrade: args.autoUpgrade ?? false,
-      ha: args.ha ?? false,
+    const cluster = new digitalocean.KubernetesCluster(
+      args.name,
+      {
+        name: args.name,
+        region: args.region,
+        version: args.version,
+        autoUpgrade: args.autoUpgrade ?? false,
+        ha: args.ha ?? false,
 
-      nodePool: toNodePool(args.primaryNodePool),
-    }, {provider: this.provider});
+        nodePool: toNodePool(args.primaryNodePool),
+      },
+      { provider: this.provider }
+    );
 
-    const otherNodePools = (args.otherNodePools ?? []).map(x =>
-      new digitalocean.KubernetesNodePool(`np-${x.name}`, {
-        clusterId: cluster.id,
-        ...toNodePool(x),
-      }, {provider: this.provider})
-    )
+    const otherNodePools = (args.otherNodePools ?? []).map(
+      (x) =>
+        new digitalocean.KubernetesNodePool(
+          `np-${x.name}`,
+          {
+            clusterId: cluster.id,
+            ...toNodePool(x),
+          },
+          { provider: this.provider }
+        )
+    );
 
     function toNodePool(args: NodePool): KubernetesClusterNodePool {
       return {
@@ -56,25 +65,27 @@ export class KubernetesClusterDeployer extends DigitaloceanDeployer {
         size: args.size,
         nodeCount: args.nodeCount ?? 1,
         autoScale: !!args.autoScale,
-        maxNodes: args.autoScale
-          ? args.autoScale.maxNodes
-          : undefined,
-        minNodes: args.autoScale
-          ? args.autoScale.minNodes
-          : undefined,
+        maxNodes: args.autoScale ? args.autoScale.maxNodes : undefined,
+        minNodes: args.autoScale ? args.autoScale.minNodes : undefined,
         tags: args.tags,
         labels: args.labels,
-      }
+      };
     }
 
-    return {kubeconfig: createTokenKubeconfig(cluster, this.params.user, this.params.apiToken)};
+    return {
+      kubeconfig: createTokenKubeconfig(
+        cluster,
+        this.params.user,
+        this.params.apiToken
+      ),
+    };
   }
 }
 
 function createTokenKubeconfig(
   cluster: digitalocean.KubernetesCluster,
   user: pulumi.Input<string>,
-  apiToken: pulumi.Input<string>,
+  apiToken: pulumi.Input<string>
 ): pulumi.Output<string> {
   return pulumi.interpolate`apiVersion: v1
 clusters:

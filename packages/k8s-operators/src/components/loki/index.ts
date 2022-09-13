@@ -2,15 +2,13 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import {
   ComputeResources,
-  ComputeResourcesInput,
   HelmMeta,
   HelmOverride,
   Persistence,
 } from "../../interfaces";
-import * as utils from "../../utils";
 import { merge } from "lodash";
 
-export interface LokiInputs {
+export interface LokiArgs {
   namespace?: pulumi.Input<string>;
   helmOverride?: HelmOverride;
   /**
@@ -33,23 +31,17 @@ export interface LokiInputs {
   resources?: ComputeResources;
 }
 
-export interface LokiOutputs {
-  meta: pulumi.Output<HelmMeta>;
-  clusterUrl: pulumi.Output<string>;
-  persistence: pulumi.Output<Persistence | undefined>;
-}
-
 /**
  * @noInheritDoc
  */
-export class Loki extends pulumi.ComponentResource implements LokiOutputs {
-  readonly meta: pulumi.Output<HelmMeta>;
-  readonly clusterUrl: pulumi.Output<string>;
-  readonly persistence: pulumi.Output<Persistence | undefined>;
+export class Loki extends pulumi.ComponentResource {
+  private readonly meta: pulumi.Output<HelmMeta>;
+  public readonly clusterUrl: pulumi.Output<string>;
+  public readonly persistence: pulumi.Output<Persistence | undefined>;
 
   constructor(
     name: string,
-    args: LokiInputs,
+    args: LokiArgs,
     opts?: pulumi.ComponentResourceOptions
   ) {
     super("proxima-k8s:Loki", name, args, opts);
