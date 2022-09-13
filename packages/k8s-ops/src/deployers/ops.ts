@@ -245,6 +245,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
         : undefined,
       operators: operators,
       certificateIssuers: certManager?.issuers ?? [],
+      host: pulumi.output(args.publicHost),
     };
   }
 
@@ -375,6 +376,7 @@ export interface DeployedKubernetesOps {
   };
   certificateIssuers: CertificateIssuer[];
   operators: DeployedOperator[];
+  host: pulumi.Output<string>;
 }
 
 export type DeployedOperator =
