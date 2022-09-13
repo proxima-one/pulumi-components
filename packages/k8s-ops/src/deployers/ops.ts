@@ -252,7 +252,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
     customization: (args: KubernetesOperatorsArgs) => void
   ): DeployedKubernetesOps {
     const cfg = new pulumi.Config();
-    const host = `${this.params.name}.cluster.proxima.one`;
+    const host = `cluster.${this.params.name}.proxima.one`;
     const args: KubernetesOperatorsArgs = {
       publicHost: host,
       ingress: { namespace: "ingress" },
