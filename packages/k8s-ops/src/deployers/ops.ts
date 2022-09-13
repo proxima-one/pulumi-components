@@ -218,7 +218,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
       );
 
       minioOperator = new MinioOperator(
-        "kafka-operator",
+        "minio-operator",
         {
           namespace: namespace.metadata.name,
           ingress: {
