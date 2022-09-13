@@ -8,8 +8,8 @@ import { CertificateIssuer } from "../components/cert-manager";
 import { KafkaOperator } from "../components/kafka";
 import { MinioOperator } from "../components/minio";
 
-export class KubernetesOperatorsDeployer extends KubernetesDeployer {
-  public deploy(args: KubernetesOperatorsArgs): DeployedCluster {
+export class KubernetesOpsDeployer extends KubernetesDeployer {
+  public deploy(args: KubernetesOperatorsArgs): DeployedKubernetesOps {
     const certificateIssuer = args.certificateIssuer ?? "letsencrypt";
     const storageClasses: Record<string, k8s.storage.v1.StorageClass> = {};
     const getPersistenceDependencies = (
@@ -26,7 +26,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
         storageClasses[item.name] = new k8s.storage.v1.StorageClass(
           item.name,
           item.args,
-          { provider: this.provider }
+          this.resourceOptions()
         );
     }
 
@@ -41,7 +41,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             name: args.ingress.namespace,
           },
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
 
       ingressController = new components.ingressNginx.IngressNginxController(
@@ -49,7 +49,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
         {
           namespace: ingressControllerNS.metadata.name,
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
     }
 
@@ -62,7 +62,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             name: args.certManager.namespace,
           },
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
 
       certManager = new components.certManager.CertManager(
@@ -72,7 +72,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
           zerossl: args.certManager.zerossl,
           letsencrypt: args.certManager.letsencrypt,
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
     }
 
@@ -85,7 +85,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             name: args.oauth.namespace,
           },
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
 
       const pass = new random.RandomPassword("oauth-cookie-secret", {
@@ -117,7 +117,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
           domain: args.publicHost,
           emailDomains: args.oauth.emailDomains,
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
     }
 
@@ -131,7 +131,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             name: args.monitoring.namespace,
           },
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
 
       loki = new components.loki.Loki(
@@ -141,12 +141,11 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
           persistence: args.monitoring.loki.persistence,
           retentionHours: args.monitoring.loki.retentionHours,
         },
-        {
-          provider: this.provider,
+        this.resourceOptions({
           dependsOn: getPersistenceDependencies(
             args.monitoring.loki.persistence
           ),
-        }
+        })
       );
 
       prometheus = new components.prometheus.PrometheusStack(
@@ -172,15 +171,14 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
               }
             : undefined,
         },
-        {
-          provider: this.provider,
+        this.resourceOptions({
           dependsOn: [
             ...getPersistenceDependencies(
               args.monitoring.prometheus.persistence
             ),
             ...getPersistenceDependencies(args.monitoring.grafana.persistence),
           ],
-        }
+        })
       );
     }
 
@@ -193,7 +191,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             name: args.kafka.namespace,
           },
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
 
       kafkaOperator = new KafkaOperator(
@@ -203,7 +201,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
           watchAnyNamespace: args.kafka.watchAnyNamespace,
           watchNamespaces: args.kafka.watchNamespaces,
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
     }
 
@@ -216,7 +214,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             name: args.minio.namespace,
           },
         },
-        { provider: this.provider }
+        this.resourceOptions()
       );
 
       minioOperator = new MinioOperator(
@@ -228,7 +226,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
             certificateIssuer: certificateIssuer,
           },
         },
-        { provider: this.provider }
+        this.resourceOptions({ dependsOn: certManager })
       );
     }
     const operators: DeployedOperator[] = [];
@@ -250,17 +248,99 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
     };
   }
 
-  public deployDefault(
+  public deployDefaultGcp(
     customization: (args: KubernetesOperatorsArgs) => void
-  ): DeployedCluster {
+  ): DeployedKubernetesOps {
+    const cfg = new pulumi.Config();
+    const host = `${this.params.name}.cluster.proxima.one`;
     const args: KubernetesOperatorsArgs = {
-      monitoring: { disabled: true },
-      certManager: { disabled: true },
-      ingress: { disabled: true },
-      oauth: { disabled: true },
-      publicHost: `${this.params.name}.cluster.proxima.one`,
-      kafka: { disabled: true },
-      minio: { disabled: true },
+      publicHost: host,
+      ingress: { namespace: "ingress" },
+      kafka: {
+        watchAnyNamespace: true,
+        watchNamespaces: [],
+        namespace: "kafka-operator",
+      },
+      minio: {
+        namespace: "minio-operator",
+      },
+      certificateIssuer: "zerossl",
+      certManager: {
+        namespace: "cert-manager",
+        letsencrypt: {
+          enabled: true,
+          email: "admin@proxima.one",
+          staging: false,
+        },
+        zerossl: {
+          enabled: true,
+          keyId: cfg.require("zerossl.key"),
+          hmacKey: cfg.require("zerossl.hmac"),
+        },
+      },
+      monitoring: {
+        namespace: "monitoring",
+        loki: {
+          retentionHours: 30 * 24,
+          persistence: {
+            enabled: true,
+            sizeGB: 20,
+            storageClass: "premium-rwo",
+          },
+        },
+        prometheus: {
+          persistence: {
+            enabled: true,
+            sizeGB: 10,
+            storageClass: "premium-rwo",
+          },
+        },
+        alertManager: {
+          persistence: {
+            enabled: true,
+            sizeGB: 2,
+            storageClass: "premium-rwo",
+          },
+          pagerDuty: {
+            url: "https://events.pagerduty.com/generic/2010-04-15/create_event.json",
+            secret: cfg.require("pagerduty.key"),
+          },
+        },
+        grafana: {
+          persistence: {
+            enabled: true,
+            sizeGB: 10,
+            storageClass: "premium-rwo",
+          },
+        },
+      },
+      storageClasses: [
+        {
+          name: "premium-rwo-xfs",
+          args: {
+            provisioner: "pd.csi.storage.gke.io",
+            metadata: {
+              name: "premium-rwo-xfs",
+            },
+            parameters: {
+              type: "pd-ssd",
+              "csi.storage.k8s.io/fstype": "xfs",
+            },
+            allowVolumeExpansion: true,
+            reclaimPolicy: "Delete",
+            volumeBindingMode: "WaitForFirstConsumer",
+          },
+        },
+      ],
+      oauth: {
+        namespace: "oauth",
+        github: {
+          org: "proxima-one",
+          clientId: cfg.require("oauth.clientid"),
+          clientSecret: cfg.require("oauth.clientsecret"),
+        },
+        emailDomains: ["*"],
+      },
     };
     customization(args);
     return this.deploy(args);
@@ -287,7 +367,7 @@ export class KubernetesOperatorsDeployer extends KubernetesDeployer {
 //   data: Record<string, string | Buffer>;
 // }
 
-export interface DeployedCluster {
+export interface DeployedKubernetesOps {
   ingressIP?: pulumi.Output<string>;
   grafana?: {
     user: pulumi.Output<string>;

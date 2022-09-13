@@ -1,13 +1,11 @@
+import { strict as assert } from "assert";
 import * as gcp from "@pulumi/gcp";
 import * as pulumi from "@pulumi/pulumi";
 import { GcpDeployer } from "./base";
-import { strict as assert } from "assert";
 
 export interface KubernetesClusterArgs {
   name: string;
   version: string;
-  autoUpgrade?: boolean;
-  ha?: boolean;
   nodePools: NodePool[];
 }
 
@@ -16,11 +14,10 @@ export interface NodePool {
   diskSizeGb?: pulumi.Input<number>;
   name: string;
   labels?: Record<string, string>;
-
   nodeCount?: number;
   autoScale?: {
-    maxNodes?: number;
-    minNodes?: number;
+    maxNodes: number;
+    minNodes: number;
   };
 }
 
@@ -39,7 +36,7 @@ export class KubernetesClusterDeployer extends GcpDeployer {
       args.name,
       {
         name: args.name,
-        location: `${gcp.config.zone}`,
+        location: this.params.zone,
         removeDefaultNodePool: true,
         minMasterVersion: args.version,
         initialNodeCount: 1,
@@ -47,39 +44,57 @@ export class KubernetesClusterDeployer extends GcpDeployer {
       { provider: this.provider }
     );
 
-    const otherNodePools = args.nodePools.map(
+    const nodePools = args.nodePools.map(
       (x) =>
         new gcp.container.NodePool(
           `np-${x.name}`,
           {
-            ...toNodePool(x),
+            ...this.toNodePool(x, cluster.name),
           },
           { provider: this.provider }
         )
     );
 
-    const toNodePool = (args: NodePool): gcp.container.NodePoolArgs => {
-      return {
-        name: args.name,
-        location: this.params.zone,
-        cluster: cluster.name,
-        nodeConfig: {
-          machineType: args.machineType,
-          diskSizeGb: args.diskSizeGb,
-          labels: args.labels,
-          oauthScopes: [
-            "https://www.googleapis.com/auth/cloud-platform",
-            "https://www.googleapis.com/auth/compute",
-            "https://www.googleapis.com/auth/devstorage.read_only",
-            "https://www.googleapis.com/auth/logging.write",
-            "https://www.googleapis.com/auth/monitoring",
-          ],
-        },
-      };
-    };
+    const nodePoolsAwaiter = pulumi.all(nodePools.map((x) => x.maxPodsPerNode));
 
     return {
-      kubeconfig: this.createKubeconfig(cluster),
+      kubeconfig: nodePoolsAwaiter.apply((x) => this.createKubeconfig(cluster)),
+    };
+  }
+
+  private toNodePool(
+    args: NodePool,
+    cluster: pulumi.Input<string>
+  ): gcp.container.NodePoolArgs {
+    assert(
+      (args.nodeCount && args.nodeCount > 0) ||
+        (args.autoScale && args.autoScale?.minNodes > 0),
+      "no nodes sepcified in pool"
+    );
+
+    return {
+      name: args.name,
+      location: this.params.zone,
+      cluster: cluster,
+      nodeCount: args.nodeCount,
+      autoscaling: args.autoScale
+        ? {
+            maxNodeCount: args.autoScale.maxNodes,
+            minNodeCount: args.autoScale.minNodes,
+          }
+        : undefined,
+      nodeConfig: {
+        machineType: args.machineType,
+        diskSizeGb: args.diskSizeGb,
+        labels: args.labels,
+        oauthScopes: [
+          "https://www.googleapis.com/auth/cloud-platform",
+          "https://www.googleapis.com/auth/compute",
+          "https://www.googleapis.com/auth/devstorage.read_only",
+          "https://www.googleapis.com/auth/logging.write",
+          "https://www.googleapis.com/auth/monitoring",
+        ],
+      },
     };
   }
 
