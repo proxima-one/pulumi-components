@@ -165,7 +165,7 @@ export class StateManager extends pulumi.ComponentResource {
           ],
         },
       },
-      { parent: this }
+      { parent: this, dependsOn: this.deployment }
     );
 
     this.connectionDetails = pulumi
