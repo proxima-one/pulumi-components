@@ -55,11 +55,15 @@ export class StateManager extends pulumi.ComponentResource {
     const volumeName = name;
 
     this.pvc = new k8s.core.v1.PersistentVolumeClaim(
-      `${name}-premium`,
+      `${name}`,
       {
         metadata: {
           namespace: args.namespace,
+          //name: name, // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
           labels: labels,
+          annotations: {
+            "pulumi.com/skipAwait": "true",
+          },
         },
         spec: {
           storageClassName: args.storage.class,
