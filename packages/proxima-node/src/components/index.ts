@@ -14,3 +14,4 @@ export * from "./near-indexer";
 export * from "./streamdb";
 export * from "./pgadmin";
 export * from "./generics";
+export * from "./state-manager";
