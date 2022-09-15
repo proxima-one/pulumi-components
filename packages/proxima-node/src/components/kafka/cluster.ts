@@ -33,7 +33,7 @@ export class KafkaCluster extends pulumi.ComponentResource {
         },
         spec: {
           kafka: {
-            version: "2.8.0",
+            versgiion: "2.8.0",
             replicas: args.replicas ?? 1,
             listeners: [
               {
