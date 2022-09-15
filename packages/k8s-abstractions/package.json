@@ -1,5 +1,5 @@
 {
-  "name": "@proxima-one/pulumi-k8s-ops",
+  "name": "@proxima-one/pulumi-k8s-abstractions",
   "version": "0.0.3",
   "description": "pulumi k8s cluster common package",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
@@ -24,10 +24,9 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@pulumi/docker": "^3.1.0",
-    "@pulumi/pulumi": "^3.0.0",
-    "@pulumi/random": "^4.3.1",
     "@pulumi/kubernetes": "^3.21.2",
+    "@pulumi/pulumi": "^3.40.0",
+    "@pulumi/random": "^4.3.1",
     "handlebars": "^4.7.7",
     "js-yaml": "^4.0.0",
     "lodash": "^4.17.21"
@@ -41,6 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
     "jest": "^27.4.5",
+
     "json-schema-to-typescript": "^10.1.5",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.1.2",

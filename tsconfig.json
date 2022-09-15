@@ -49,7 +49,10 @@
       "path": "packages/helpers"
     },
     {
-      "path": "packages/k8s-operators"
+      "path": "packages/k8s-abstractions"
+    },
+    {
+      "path": "packages/k8s-ops"
     },
     {
       "path": "packages/polygon-node"
