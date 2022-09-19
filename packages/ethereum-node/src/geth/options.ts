@@ -34,6 +34,7 @@ export interface GethOptions {
 interface ApiOptions {
   http?: HttpOptions;
   ws?: WsOptions;
+  auth?: AuthOptions;
 }
 
 interface NetworkingOptions {
@@ -81,6 +82,13 @@ interface WsOptions {
   origins?: string[];
 }
 
+interface AuthOptions {
+  address?: string;
+  port?: number;
+  vhosts?: string[];
+  jwtSecret?: string;
+}
+
 type GethApi = "eth" | "net" | "web3" | "personal" | string;
 type SyncMode = "snap" | "full" | "light" | string;
 type Network =
@@ -110,6 +118,8 @@ export function optionsToArgs(options: GethOptions): string[] {
   if (options.api?.ws != undefined) args.push(...wsArgs(options.api.ws));
 
   if (options.api?.http != undefined) args.push(...httpArgs(options.api.http));
+
+  if (options.api?.auth != undefined) args.push(...authArgs(options.api.auth));
 
   if (options.networking != undefined)
     args.push(...networkingArgs(options.networking));
@@ -164,6 +174,22 @@ function httpArgs(opts: HttpOptions): string[] {
 
   if (opts.corsDomain != undefined)
     args.push("--http.corsdomain", opts.corsDomain);
+
+  return args;
+}
+
+function authArgs(opts: AuthOptions): string[] {
+  const args: string[] = [];
+
+  if (opts.port != undefined) args.push("--authrpc.port", opts.port.toString());
+
+  if (opts.address != undefined) args.push("--authrpc.addr", opts.address);
+
+  if (opts.vhosts != undefined)
+    args.push("--authrpc.vhosts", opts.vhosts.join(","));
+
+  if (opts.jwtSecret != undefined)
+    args.push("--authrpc.jwtsecret", opts.jwtSecret);
 
   return args;
 }
