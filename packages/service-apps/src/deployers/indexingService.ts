@@ -182,9 +182,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             content: mongoUri.apply((uri) =>
               yaml.dump({
                 streams: app.streams,
-                timeRange: app.timeRange
-                  ? parseTimeRange(app.timeRange)
-                  : undefined,
+                timeRange: app.timeRange ? TimeRangeToIso8601(app.timeRange) : undefined,
                 target: {
                   dbUri: uri,
                   dbName: dbName,
@@ -334,20 +332,19 @@ export interface IndexingServiceAppV1 {
   mode?: IndexingServiceMode;
 }
 
-export interface TimeRange {
-  from?: number;
-  to?: number;
+function TimeRangeToIso8601(range: TimeRange): {
+  from?: string;
+  to?: string;
+} {
+  return {
+    from: range.from?.toISOString(),
+    to: range.to?.toISOString()
+  }
 }
 
-function parseTimeRange(s: TimeRange | string): TimeRange {
-  if (typeof s != "string") {
-    return s;
-  }
-  const [from, to] = s.split("-");
-  return {
-    from: from.length > 0 ? parseInt(from) : undefined,
-    to: to.length > 0 ? parseInt(to) : undefined,
-  };
+export interface TimeRange {
+  from?: Date;
+  to?: Date;
 }
 
 export interface IndexingServiceAppV2 {
@@ -366,8 +363,7 @@ export interface IndexingServiceAppV2 {
       };
     }[]
   >;
-  // String examples: "1662495440-1562495440", "1662495440-", "-1562495440"
-  timeRange?: TimeRange | string;
+  timeRange?: TimeRange;
 
   db: {
     name?: string;
