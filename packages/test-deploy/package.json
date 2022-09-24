@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-test-deploy",
-  "version": "0.1.39",
+  "version": "0.1.40",
   "private": true,
   "description": "pulumi components to run proxima service apps",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
@@ -26,7 +26,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-service-apps": "^0.2.7",
+    "@proxima-one/pulumi-service-apps": "^0.2.8",
     "@pulumi/kubernetes": "^3.20.3",
     "@pulumi/kubernetesx": "^0.1.6",
     "@pulumi/pulumi": "^3.37.2"
