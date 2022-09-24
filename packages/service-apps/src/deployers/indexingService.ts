@@ -182,7 +182,9 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             content: mongoUri.apply((uri) =>
               yaml.dump({
                 streams: app.streams,
-                timeRange: app.timeRange ? TimeRangeToIso8601(app.timeRange) : undefined,
+                timeRange: app.timeRange
+                  ? TimeRangeToIso8601(app.timeRange)
+                  : undefined,
                 target: {
                   dbUri: uri,
                   dbName: dbName,
@@ -338,8 +340,8 @@ function TimeRangeToIso8601(range: TimeRange): {
 } {
   return {
     from: range.from?.toISOString(),
-    to: range.to?.toISOString()
-  }
+    to: range.to?.toISOString(),
+  };
 }
 
 export interface TimeRange {
