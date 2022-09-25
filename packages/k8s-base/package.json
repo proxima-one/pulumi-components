@@ -1,6 +1,6 @@
 {
-  "name": "@proxima-one/pulumi-k8s-ops",
-  "version": "0.1.0",
+  "name": "@proxima-one/pulumi-k8s-base",
+  "version": "0.1.1",
   "description": "pulumi k8s cluster common package",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
@@ -24,10 +24,8 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-k8s-base": "0.1.1",
-    "@pulumi/docker": "^3.1.0",
     "@pulumi/kubernetes": "^3.21.2",
-    "@pulumi/pulumi": "^3.0.0",
+    "@pulumi/pulumi": "^3.40.0",
     "@pulumi/random": "^4.3.1",
     "handlebars": "^4.7.7",
     "js-yaml": "^4.0.0",
@@ -42,6 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
     "jest": "^27.4.5",
+
     "json-schema-to-typescript": "^10.1.5",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.1.2",

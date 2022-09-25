@@ -60,6 +60,9 @@ export class StateManager extends pulumi.ComponentResource {
         metadata: {
           namespace: args.namespace,
           labels: labels,
+          annotations: {
+            "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
+          },
         },
         spec: {
           storageClassName: args.storage.class,
@@ -165,7 +168,7 @@ export class StateManager extends pulumi.ComponentResource {
           ],
         },
       },
-      { parent: this }
+      { parent: this, dependsOn: this.deployment }
     );
 
     this.connectionDetails = pulumi

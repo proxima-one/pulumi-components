@@ -33,7 +33,7 @@ export class KafkaCluster extends pulumi.ComponentResource {
         },
         spec: {
           kafka: {
-            version: "2.8.0",
+            version: args.version ?? "2.8.0",
             replicas: args.replicas ?? 1,
             listeners: [
               {
@@ -253,6 +253,7 @@ export interface KafkaClusterArgs {
    * Brokers count. Default 1
    */
   replicas?: number;
+  version?: string;
   kafka: {
     storage: NewStorageClaim;
     resources?: ResourceRequirements;

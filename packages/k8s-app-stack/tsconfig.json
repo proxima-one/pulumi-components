@@ -26,6 +26,9 @@
   "references": [
     {
       "path": "../k8s-base"
+    },
+    {
+      "path": "../k8s-ops"
     }
   ]
 }
