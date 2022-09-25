@@ -49,6 +49,9 @@
       "path": "packages/helpers"
     },
     {
+      "path": "packages/k8s-app-stack"
+    },
+    {
       "path": "packages/k8s-base"
     },
     {

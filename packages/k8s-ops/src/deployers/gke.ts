@@ -1,4 +1,8 @@
-import { DeployedKubernetesOps, KubernetesOperatorsArgs, KubernetesOpsDeployer } from "./ops";
+import {
+  DeployedKubernetesOps,
+  KubernetesOperatorsArgs,
+  KubernetesOpsDeployer,
+} from "./ops";
 import * as pulumi from "@pulumi/pulumi";
 
 export class GkeOpsDeployer extends KubernetesOpsDeployer {

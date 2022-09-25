@@ -10,7 +10,7 @@ import {
 export interface DeployParams {
   name: string;
   kubeconfig: pulumi.Input<string>;
-  storageClasses?: pulumi.Input<StorageClassMeta>[];
+  storageClasses?: pulumi.Input<pulumi.Input<StorageClassMeta>[]>;
 }
 
 const providersLookup: Record<string, k8s.Provider> = {};
@@ -23,7 +23,7 @@ export class KubernetesDeployer {
   public constructor(params: DeployParams) {
     this.name = params.name;
     this.storageClasses = params.storageClasses
-      ? pulumi.all(params.storageClasses)
+      ? pulumi.output(params.storageClasses).apply((x) => pulumi.all(x))
       : pulumi.output([]);
 
     this.provider =
