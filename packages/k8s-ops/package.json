@@ -24,7 +24,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-k8s-base": "^0.0.3",
+    "@proxima-one/pulumi-k8s-base": "0.0.3",
     "@pulumi/docker": "^3.1.0",
     "@pulumi/kubernetes": "^3.21.2",
     "@pulumi/pulumi": "^3.0.0",
