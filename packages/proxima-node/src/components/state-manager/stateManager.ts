@@ -55,7 +55,7 @@ export class StateManager extends pulumi.ComponentResource {
     const volumeName = name;
 
     this.pvc = new k8s.core.v1.PersistentVolumeClaim(
-      `${name}`,
+      `${name}-premium`,
       {
         metadata: {
           namespace: args.namespace,
