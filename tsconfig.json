@@ -49,7 +49,7 @@
       "path": "packages/helpers"
     },
     {
-      "path": "packages/k8s-abstractions"
+      "path": "packages/k8s-base"
     },
     {
       "path": "packages/k8s-ops"

@@ -3,7 +3,7 @@ import * as k8s from "@pulumi/kubernetes";
 import * as random from "@pulumi/random";
 import * as components from "../components";
 import { Persistence } from "../interfaces";
-import { KubernetesDeployer } from "./base";
+import { KubernetesDeployer } from "@proxima-one/pulumi-k8s-base";
 import { CertificateIssuer } from "../components/cert-manager";
 import { KafkaOperator } from "../components/kafka";
 import { MinioOperator } from "../components/minio";

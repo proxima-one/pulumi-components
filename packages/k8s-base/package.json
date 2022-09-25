@@ -1,5 +1,5 @@
 {
-  "name": "@proxima-one/pulumi-k8s-abstractions",
+  "name": "@proxima-one/pulumi-k8s-base",
   "version": "0.0.3",
   "description": "pulumi k8s cluster common package",
   "repository": "git@github.com:proxima-one/pulumi-components.git",

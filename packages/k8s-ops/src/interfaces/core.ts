@@ -77,13 +77,6 @@ export interface ComputeResources {
   };
 }
 
-export type ComputeResourcesInput =
-  | {
-      cpu: string;
-      memory: string;
-    }
-  | string;
-
 export interface SimpleHealthProbe {
   /**
    * url is the HTTP url that will be used by
