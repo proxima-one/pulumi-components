@@ -96,6 +96,10 @@ export class AppStack<TNamespace extends string> {
     this.services.push(func(params));
   }
 
+  public service(name: string, type: string, params: pulumi.Input<any>) {
+    this.services.push({name, type, params});
+  }
+
   public appGroup(
     name: string,
     namespace: TNamespace,
@@ -110,6 +114,7 @@ export class AppStack<TNamespace extends string> {
 
   public output(): pulumi.Output<DeployedAppStack> {
     return pulumi.output({
+      kubeconfig: this.kubernetesDeployParams.kubeconfig,
       appGroups: this.appGroups,
       services: this.services,
       imageRegistrySecrets: this.imageRegistrySecrets,

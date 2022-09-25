@@ -2,6 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { ImageRegistrySecret } from "@proxima-one/pulumi-k8s-base";
 
 export interface DeployedAppStack {
+  kubeconfig: pulumi.Input<string>;
   appGroups: AppGroup[];
   imageRegistrySecrets: ImageRegistrySecret[];
   services: DeployedService[];
