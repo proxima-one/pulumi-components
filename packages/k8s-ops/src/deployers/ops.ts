@@ -3,7 +3,10 @@ import * as k8s from "@pulumi/kubernetes";
 import * as random from "@pulumi/random";
 import * as components from "../components";
 import { Persistence } from "../interfaces";
-import { KubernetesDeployer } from "@proxima-one/pulumi-k8s-base";
+import {
+  KubernetesDeployer,
+  StorageClassMeta,
+} from "@proxima-one/pulumi-k8s-base";
 import { CertificateIssuer } from "../components/cert-manager";
 import { KafkaOperator } from "../components/kafka";
 import { MinioOperator } from "../components/minio";
@@ -23,11 +26,12 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
     };
     if (args.storageClasses) {
       for (const item of args.storageClasses)
-        storageClasses[item.name] = new k8s.storage.v1.StorageClass(
-          item.name,
-          item.args,
-          this.resourceOptions()
-        );
+        if (item.deployArgs)
+          storageClasses[item.name] = new k8s.storage.v1.StorageClass(
+            item.name,
+            item.deployArgs,
+            this.options()
+          );
     }
 
     let ingressController:
@@ -41,7 +45,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             name: args.ingress.namespace,
           },
         },
-        this.resourceOptions()
+        this.options()
       );
 
       ingressController = new components.ingressNginx.IngressNginxController(
@@ -49,7 +53,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
         {
           namespace: ingressControllerNS.metadata.name,
         },
-        this.resourceOptions()
+        this.options()
       );
     }
 
@@ -62,7 +66,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             name: args.certManager.namespace,
           },
         },
-        this.resourceOptions()
+        this.options()
       );
 
       certManager = new components.certManager.CertManager(
@@ -72,7 +76,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
           zerossl: args.certManager.zerossl,
           letsencrypt: args.certManager.letsencrypt,
         },
-        this.resourceOptions()
+        this.options()
       );
     }
 
@@ -85,7 +89,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             name: args.oauth.namespace,
           },
         },
-        this.resourceOptions()
+        this.options()
       );
 
       const pass = new random.RandomPassword("oauth-cookie-secret", {
@@ -117,7 +121,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
           domain: args.publicHost,
           emailDomains: args.oauth.emailDomains,
         },
-        this.resourceOptions()
+        this.options()
       );
     }
 
@@ -131,7 +135,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             name: args.monitoring.namespace,
           },
         },
-        this.resourceOptions()
+        this.options()
       );
 
       loki = new components.loki.Loki(
@@ -141,7 +145,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
           persistence: args.monitoring.loki.persistence,
           retentionHours: args.monitoring.loki.retentionHours,
         },
-        this.resourceOptions({
+        this.options({
           dependsOn: getPersistenceDependencies(
             args.monitoring.loki.persistence
           ),
@@ -171,7 +175,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
               }
             : undefined,
         },
-        this.resourceOptions({
+        this.options({
           dependsOn: [
             ...getPersistenceDependencies(
               args.monitoring.prometheus.persistence
@@ -191,7 +195,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             name: args.kafka.namespace,
           },
         },
-        this.resourceOptions()
+        this.options()
       );
 
       kafkaOperator = new KafkaOperator(
@@ -201,7 +205,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
           watchAnyNamespace: args.kafka.watchAnyNamespace,
           watchNamespaces: args.kafka.watchNamespaces,
         },
-        this.resourceOptions()
+        this.options()
       );
     }
 
@@ -214,7 +218,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             name: args.minio.namespace,
           },
         },
-        this.resourceOptions()
+        this.options()
       );
 
       minioOperator = new MinioOperator(
@@ -226,7 +230,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             certificateIssuer: certificateIssuer,
           },
         },
-        this.resourceOptions({ dependsOn: certManager })
+        this.options({ dependsOn: certManager })
       );
     }
     const operators: DeployedOperator[] = [];
@@ -246,6 +250,12 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
       operators: operators,
       certificateIssuers: certManager?.issuers ?? [],
       host: pulumi.output(args.publicHost),
+      storageClasses: pulumi.output(
+        (args.storageClasses ?? []).map((x) => ({
+          name: x.name,
+          labels: x.labels,
+        }))
+      ),
     };
   }
 
@@ -253,7 +263,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
     customization: (args: KubernetesOperatorsArgs) => void
   ): DeployedKubernetesOps {
     const cfg = new pulumi.Config();
-    const host = `cluster.${this.params.name}.proxima.one`;
+    const host = `cluster.${this.name}.proxima.one`;
     const args: KubernetesOperatorsArgs = {
       publicHost: host,
       ingress: { namespace: "ingress" },
@@ -318,7 +328,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
       storageClasses: [
         {
           name: "premium-rwo-xfs",
-          args: {
+          deployArgs: {
             provisioner: "pd.csi.storage.gke.io",
             metadata: {
               name: "premium-rwo-xfs",
@@ -330,6 +340,71 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             allowVolumeExpansion: true,
             reclaimPolicy: "Delete",
             volumeBindingMode: "WaitForFirstConsumer",
+          },
+          labels: {
+            type: "ssd",
+            fstype: "xfs",
+          },
+        },
+        {
+          name: "standard-rwo-xfs",
+          deployArgs: {
+            provisioner: "pd.csi.storage.gke.io",
+            metadata: {
+              name: "standard-rwo-xfs",
+            },
+            parameters: {
+              type: "pd-balanced",
+              "csi.storage.k8s.io/fstype": "xfs",
+            },
+            allowVolumeExpansion: true,
+            reclaimPolicy: "Delete",
+            volumeBindingMode: "WaitForFirstConsumer",
+          },
+          labels: {
+            type: "balanced",
+            fstype: "xfs",
+          },
+        },
+        {
+          name: "standard-xfs",
+          deployArgs: {
+            provisioner: "pd.csi.storage.gke.io",
+            metadata: {
+              name: "standard-rwo-xfs",
+            },
+            parameters: {
+              type: "pd-standard",
+              "csi.storage.k8s.io/fstype": "xfs",
+            },
+            allowVolumeExpansion: true,
+            reclaimPolicy: "Delete",
+            volumeBindingMode: "WaitForFirstConsumer",
+          },
+          labels: {
+            type: "hdd",
+            fstype: "xfs",
+          },
+        },
+        {
+          name: "premium-rwo",
+          labels: {
+            type: "ssd",
+            fstype: "ext4",
+          },
+        },
+        {
+          name: "standard-rwo",
+          labels: {
+            type: "balanced",
+            fstype: "ext4",
+          },
+        },
+        {
+          name: "standard",
+          labels: {
+            type: "hdd",
+            fstype: "ext4",
           },
         },
       ],
@@ -377,6 +452,7 @@ export interface DeployedKubernetesOps {
   certificateIssuers: CertificateIssuer[];
   operators: DeployedOperator[];
   host: pulumi.Output<string>;
+  storageClasses: pulumi.Output<StorageClassMeta[]>;
 }
 
 export type DeployedOperator =
@@ -450,5 +526,9 @@ export interface KubernetesOperatorsArgs {
       } & SubsystemBase)
     | Disabled;
   minio: ({} & SubsystemBase) | Disabled;
-  storageClasses?: { name: string; args: k8s.storage.v1.StorageClassArgs }[];
+  storageClasses?: {
+    name: string;
+    deployArgs?: k8s.storage.v1.StorageClassArgs;
+    labels: Record<string, string>;
+  }[];
 }

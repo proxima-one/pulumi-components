@@ -17,7 +17,7 @@ export class NamespacesDeployer extends KubernetesDeployer {
         {
           metadata: metadata,
         },
-        this.resourceOptions()
+        this.options()
       ).metadata.name;
     }
 

@@ -25,7 +25,7 @@ export class ImageRegistryDeployer extends KubernetesDeployer {
                 },
                 type: "kubernetes.io/dockerconfigjson",
               },
-              this.resourceOptions()
+              this.options()
             );
 
             result.push(
@@ -114,10 +114,4 @@ function toDockerConfigJsonString(
       2
     )
   ).toString("base64");
-}
-
-function getImageHost(image: string): string | undefined {
-  const segments = image.split("/");
-  if (segments[0]?.includes(".")) return segments[0];
-  return undefined;
 }
