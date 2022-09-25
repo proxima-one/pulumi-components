@@ -206,6 +206,7 @@ export class ProximaServices<
                 name: `${key}-authToken`,
               },
             },
+            imageTag: newBlockIndexerArgs.imageTag,
             nodeSelector: args.nodeSelector,
           },
           { parent: this }
@@ -568,6 +569,7 @@ type ProvisionBlockIndexerArgs = {
   storage: {
     mongodb: string;
   };
+  imageTag?: string;
 };
 
 type DocumentCollectionArgs = ImportDocumentCollectionArgs;
