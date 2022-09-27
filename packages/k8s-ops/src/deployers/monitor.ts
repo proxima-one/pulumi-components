@@ -6,7 +6,7 @@ export class MonitorDeployer extends KubernetesDeployer {
   public deploy(args: MonitorArgs): DeployedMonitor {
     const monitors = pulumi.output(args.namespaces).apply(namespaces => namespaces.map(ns => {
       return new k8s.apiextensions.CustomResource(
-        `${name}-${ns}`,
+        `${args.name}-${ns}`,
         {
           apiVersion: "monitoring.coreos.com/v1",
           kind: "PodMonitor",
