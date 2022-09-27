@@ -60,7 +60,7 @@ export class KubernetesServiceDeployer extends KubernetesDeployer {
 
         if (filteredSecrets.length == 0)
           throw new Error(
-            `Image Pull Secret for ${opts?.image} ${opts?.registry} not found in namespace ${namespace}`
+            `Image Pull Secretnot found in namespace ${namespace}`
           );
 
         return filteredSecrets.map((x) => ({ name: x.secretName }));

@@ -41,7 +41,7 @@ export abstract class AppDeployerBase extends KubernetesServiceDeployer {
     const [cluster, envDraft] = stack.split("-");
 
     super({
-      name: stack == "amur" ? "infra-k8s" : `${cluster}-k8s`,
+      name: cluster == "amur" ? "infra-k8s" : `${cluster}-k8s`,
       kubeconfig: appStack.kubeconfig,
       namespace: appGroup.namespace,
       imageRegistrySecrets: appStack.imageRegistrySecrets,
@@ -55,8 +55,6 @@ export abstract class AppDeployerBase extends KubernetesServiceDeployer {
     this.publicHost = appStack.publicHost;
     this.stack = stack;
     this.project = project;
-
-    this.dump();
   }
 
   protected requireService<T = any>(

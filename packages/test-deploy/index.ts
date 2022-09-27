@@ -3,7 +3,7 @@ import * as proxima from "@proxima-one/pulumi-service-apps";
 import { IndexingServiceDeployer } from "@proxima-one/pulumi-service-apps";
 
 const indexDeployer = new IndexingServiceDeployer({
-  targetStack: "amur-dev",
+  targetStack: "buh",
   project: "dev-test",
 });
 
@@ -11,7 +11,7 @@ const shard0 = indexDeployer.deploy({
   apiKind: "indexing-service/v1",
 
   imageName: "quay.io/proxima.one/services:fungible-token-apis-0.0.29-29769d6",
-  name: "ft-raw-0",
+  name: "ft-test-0",
   network: "eth-goerli",
   stream:
     "v1.eth-goerli.fungible-token.streams.proxima.one;" +
@@ -35,12 +35,15 @@ const shard0 = indexDeployer.deploy({
 
 const cloudShard = indexDeployer.deploy({
   apiKind: "indexing-service/v1",
-  name: "ft-raw-1",
+  name: "ft-test-1",
 
   imageName: "quay.io/proxima.one/services:fungible-token-apis-0.0.29-29769d6",
   network: "eth-goerli",
   stream:
     "v1.eth-goerli.fungible-token.streams.proxima.one;" +
     "v1.new-tokens.eth-goerli.fungible-token.streams.proxima.one",
-  db: { endpoint: { type: "import", name: "indexingservices-01" }, name: "dev-test-db-delete-me" },
+  db: {
+    endpoint: { type: "import", name: "indexingservices-01" },
+    name: "dev-test-db-delete-me",
+  },
 });

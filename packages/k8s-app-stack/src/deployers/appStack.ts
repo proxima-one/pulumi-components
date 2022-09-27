@@ -120,7 +120,7 @@ export class AppStack<TNamespace extends string> {
   ) {
     this.appGroups.push({
       name,
-      namespace,
+      namespace: this.namespaces[namespace],
       nodeSelectors: nodeSelectors ?? {},
     });
   }
