@@ -4,42 +4,44 @@ import { KubernetesDeployer } from "@proxima-one/pulumi-k8s-base";
 
 export class MonitorDeployer extends KubernetesDeployer {
   public deploy(args: MonitorArgs): DeployedMonitor {
-    const monitors = pulumi.output(args.namespaces).apply(namespaces => namespaces.map(ns => {
-      return new k8s.apiextensions.CustomResource(
-        `${args.name}-${ns}`,
-        {
-          apiVersion: "monitoring.coreos.com/v1",
-          kind: "PodMonitor",
-          metadata: {
-            name: `${ns}-pod-monitor`,
-            namespace: ns,
-          },
-          labels: {
-            name: "pod-monitor",
-          },
-          spec: {
-            podTargetLabels: args.targetLabels,
-            selector: {
-              matchLabels: {
-                monitoring: "true",
-              }
+    const monitors = pulumi.output(args.namespaces).apply((namespaces) =>
+      namespaces.map((ns) => {
+        return new k8s.apiextensions.CustomResource(
+          `${args.name}-${ns}`,
+          {
+            apiVersion: "monitoring.coreos.com/v1",
+            kind: "PodMonitor",
+            metadata: {
+              name: `${ns}-pod-monitor`,
+              namespace: ns,
             },
-            podMetricsEndpoints: [
-              {
-                port: "http-metrics",
-                path: "/metrics",
+            labels: {
+              name: "pod-monitor",
+            },
+            spec: {
+              podTargetLabels: args.targetLabels,
+              selector: {
+                matchLabels: {
+                  monitoring: "true",
+                },
               },
-            ],
+              podMetricsEndpoints: [
+                {
+                  port: "http-metrics",
+                  path: "/metrics",
+                },
+              ],
+            },
           },
-        }, this.options());
-    }));
+          this.options()
+        );
+      })
+    );
     return {};
   }
 }
 
-export interface DeployedMonitor {
-
-}
+export interface DeployedMonitor {}
 
 export interface MonitorArgs {
   name: string;

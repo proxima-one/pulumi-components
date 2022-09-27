@@ -26,8 +26,8 @@ export class KubernetesServiceDeployer extends KubernetesDeployer {
   }
 
   protected imagePullSecrets(opts?: {
-    image?: string;
-    registry?: string;
+    image?: pulumi.Input<string>;
+    registry?: pulumi.Input<string>;
   }): pulumi.Input<{ name: string }[]> {
     if (!this.imageRegistrySecrets) {
       if (opts?.registry) throw new Error("no image registry secrets provided");
@@ -35,14 +35,17 @@ export class KubernetesServiceDeployer extends KubernetesDeployer {
       return [];
     }
 
-    const imageHost = opts?.image ? getImageHost(opts.image) : undefined;
+    const imageHost = opts?.image
+      ? pulumi.output(opts.image).apply(getImageHost)
+      : undefined;
 
     return pulumi
       .all([
         pulumi.output(this.imageRegistrySecrets),
         pulumi.output(this.namespace),
+        imageHost,
       ])
-      .apply(([s, namespace]) => {
+      .apply(([s, namespace, imageHost]) => {
         let filteredSecrets = s.filter((x) => x.namespace == namespace);
 
         if (opts?.registry)

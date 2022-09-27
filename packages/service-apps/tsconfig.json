@@ -20,6 +20,9 @@
   ],
   "references": [
     {
+      "path": "../k8s-app-stack"
+    },
+    {
       "path": "../proxima-node"
     }
   ]

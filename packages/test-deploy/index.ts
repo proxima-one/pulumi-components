@@ -42,5 +42,5 @@ const cloudShard = indexDeployer.deploy({
   stream:
     "v1.eth-goerli.fungible-token.streams.proxima.one;" +
     "v1.new-tokens.eth-goerli.fungible-token.streams.proxima.one",
-  db: { endpoint: { type: "cloud" }, name: "dev-test-db-delete-me" },
+  db: { endpoint: { type: "import", name: "indexingservices-01" }, name: "dev-test-db-delete-me" },
 });

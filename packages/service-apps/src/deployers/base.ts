@@ -1,87 +1,85 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as k8s from "@pulumi/kubernetes";
+import { KubernetesServiceDeployer } from "@proxima-one/pulumi-k8s-base";
+import { DeployedAppStack } from "@proxima-one/pulumi-k8s-app-stack";
 
-export interface DeploymentParameters {
+export interface DeployParams {
+  org?: string;
   project?: string;
   targetStack?: string;
 }
 
-export abstract class AppDeployerBase {
+export abstract class AppDeployerBase extends KubernetesServiceDeployer {
   protected readonly stack: string;
+  protected readonly cluster: string;
   protected readonly project: string;
   protected readonly env: string;
-  protected readonly k8s: k8s.Provider;
-  protected readonly deployOptions: pulumi.Output<DeploymentOptions>;
   protected readonly publicHost: pulumi.Output<string>;
-  protected readonly node: string;
+  private readonly appStack: pulumi.Output<pulumi.Unwrap<DeployedAppStack>>;
 
-  public constructor(private readonly params: DeploymentParameters) {
-    this.stack = this.params.targetStack ?? pulumi.getStack();
-    this.project = this.params.project ?? pulumi.getProject();
+  public constructor(
+    private readonly params: DeployParams,
+    private readonly targetAppGroup: string
+  ) {
+    const stack = params.targetStack ?? pulumi.getStack();
+    const project = params.project ?? pulumi.getProject();
+    const org = params.org ?? "proxima-one";
+    const appStackReference = getStackReference(
+      `${org}/${stack}-stack/default`
+    );
 
-    const [node, envDraft] = this.stack.split("-");
+    const appStack = appStackReference.getOutput("appStack") as pulumi.Output<
+      pulumi.Unwrap<DeployedAppStack>
+    >;
+
+    const appGroup = appStack.appGroups.apply((x) => {
+      const appGroup = x.find((y) => y.name == targetAppGroup);
+      if (!appGroup)
+        throw new Error(`AppGroup ${targetAppGroup} not found in ${stack}`);
+      return appGroup;
+    });
+
+    const [cluster, envDraft] = stack.split("-");
+
+    super({
+      name: stack == "amur" ? "infra-k8s" : `${cluster}-k8s`,
+      kubeconfig: appStack.kubeconfig,
+      namespace: appGroup.namespace,
+      imageRegistrySecrets: appStack.imageRegistrySecrets,
+      nodeSelectors: appGroup.nodeSelectors,
+      storageClasses: appStack.storageClasses?.apply((x) => x ?? []),
+    });
+
+    this.appStack = appStack;
     this.env = envDraft ?? "prod";
-    this.node = node;
+    this.cluster = cluster;
+    this.publicHost = appStack.publicHost;
+    this.stack = stack;
+    this.project = project;
 
-    // note, infra-k8s for backwards compatibility
-    this.k8s = getKubernetesProvider(
-      node,
-      node == "amur" ? "infra-k8s" : `${node}-k8s`
-    );
-
-    const servicesStack = getStackReference(
-      `proxima-one/${this.stack}-services/default`
-    );
-    this.deployOptions = servicesStack.requireOutput(
-      "periphery"
-    ) as pulumi.Output<DeploymentOptions>;
-
-    this.publicHost = servicesStack.requireOutput(
-      "publicHost"
-    ) as pulumi.Output<string>;
+    this.dump();
   }
 
-  protected dump() {
+  protected requireService<T = any>(
+    name: string,
+    type: string
+  ): pulumi.Output<T> {
+    return this.appStack.apply((x) => {
+      const service = x.services.find((x) => x.name == name && x.type == type);
+      if (!service)
+        throw new Error(
+          `Required service ${name} ${type} not found in ${this.stack}`
+        );
+      return service.params as T;
+    });
+  }
+
+  private dump() {
     console.log("STACK: ", this.stack);
-    console.log("NODE: ", this.node);
+    console.log("CLUSTER: ", this.cluster);
     console.log("ENV: ", this.env);
     console.log("PROJECT: ", this.project);
   }
-
-  protected parseResourceRequirements(
-    req: ComputeResources
-  ): ResourceRequirements {
-    const [cpu, memory] =
-      typeof req == "string" ? req.split(",") : [req.cpu, req.memory];
-
-    return {
-      requests: {
-        cpu: cpu.split("/")[0],
-        memory: memory.split("/")[0],
-      },
-      limits: {
-        cpu: cpu.split("/")[1],
-        memory: memory.split("/")[1],
-      },
-    };
-  }
 }
-
-function getKubernetesProvider(
-  node: string,
-  providerName: string
-): k8s.Provider {
-  if (k8sProviders[node]) return k8sProviders[node];
-
-  const infraStack = getStackReference(`proxima-one/proxima-gke/${node}`);
-  const kubeconfig = infraStack.getOutput("kubeconfig");
-
-  return (k8sProviders[node] = new k8s.Provider(providerName, {
-    kubeconfig: kubeconfig,
-  }));
-}
-
-const k8sProviders: Record<string, k8s.Provider> = {};
 
 function getStackReference(name: string): pulumi.StackReference {
   return stacksPool[name]
@@ -90,38 +88,3 @@ function getStackReference(name: string): pulumi.StackReference {
 }
 
 const stacksPool: Record<string, pulumi.StackReference> = {};
-
-interface DeploymentOptions {
-  services: {
-    namespace: string;
-    imagePullSecret: string;
-  };
-  storage: {
-    namespace: string;
-  };
-  cloudMongoDb: {
-    uri: string;
-  };
-  nodeSelectors: {
-    indexingService: Record<string, string>;
-    storage: Record<string, string>;
-    webService: Record<string, string>;
-  };
-}
-
-export type ComputeResources =
-  | {
-      cpu: string;
-      memory: string;
-    }
-  | string;
-
-interface ResourceRequirements {
-  requests: ResourceMetrics;
-  limits: ResourceMetrics;
-}
-
-interface ResourceMetrics extends Record<string, string> {
-  memory: string;
-  cpu: string;
-}

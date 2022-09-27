@@ -36,3 +36,13 @@ export type StorageSize = string;
   Reference class by name or by labels: { "fstype": "xfs", "type": "ssd" }
  */
 export type StorageClassRequest = string | Record<string, string>;
+
+export interface ResourceRequirements {
+  requests: ResourceMetrics;
+  limits: ResourceMetrics;
+}
+
+export interface ResourceMetrics extends Record<string, string> {
+  memory: string;
+  cpu: string;
+}

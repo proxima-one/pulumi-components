@@ -1,38 +1,23 @@
 import * as pulumi from "@pulumi/pulumi";
-import {
-  AppDeployerBase,
-  ComputeResources,
-  DeploymentParameters,
-} from "./base";
+import { AppDeployerBase } from "./base";
 import {
   MongoDB,
   MongoDBAuth,
   MongoDbConnectionDetails,
   MongoDbStorage,
 } from "@proxima-one/pulumi-proxima-node";
+import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
 export class MongoDeployer extends AppDeployerBase {
-  public constructor(params: DeploymentParameters) {
-    super(params);
-  }
-
-  protected get namespace() {
-    return this.deployOptions.storage.namespace;
-  }
-
-  protected get nodeSelector() {
-    return this.deployOptions.nodeSelectors.storage;
-  }
-
   public deploy(app: MongoApp): DeployedMongoApp {
-    const name = app.name ?? this.project;
+    const name = app.name ?? this.name;
     const mongodb = new MongoDB(
       name,
       {
-        nodeSelector: this.nodeSelector,
+        nodeSelector: this.nodeSelectors,
         resources: pulumi
           .output(app.resources)
-          .apply((x) => this.parseResourceRequirements(x ?? defaultResources)),
+          .apply((x) => this.getResourceRequirements(x ?? defaultResources)),
         namespace: this.namespace,
         auth: app.auth,
         storage: app.storage,
@@ -42,7 +27,7 @@ export class MongoDeployer extends AppDeployerBase {
             }
           : undefined,
       },
-      { provider: this.k8s }
+      this.options()
     );
 
     return {
