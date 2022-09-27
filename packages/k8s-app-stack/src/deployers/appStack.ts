@@ -48,6 +48,14 @@ export class AppStackDeployer {
         })
       : { secrets: [] };
 
+    if (args.namespaceMonitors) {
+      const monitors = new k8sOps.MonitorDeployer(this.kubernetesDeployParams).deploy({
+        name: "ns",
+        namespaces: Object.values(args.namespaces),
+        targetLabels: args.namespaceMonitors.targetLabels,
+      });
+    }
+
     return new AppStack<T>(
       this.kubernetesDeployParams,
       this.ops,
@@ -62,6 +70,9 @@ export interface AppStackArgs<T extends string> {
   registries?: pulumi.Input<
     Record<string, pulumi.Input<k8sBase.ImageRegistryInfo | string>>
   >;
+  namespaceMonitors?: {
+    targetLabels: string[];
+  };
 }
 
 export class AppStack<TNamespace extends string> {
