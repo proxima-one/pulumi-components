@@ -5,6 +5,7 @@ import {
   ComputeResources,
   StorageClassRequest,
   StorageClassMeta,
+  ResourceRequirements,
 } from "../interfaces";
 
 export interface DeployParams {
@@ -53,7 +54,7 @@ export class KubernetesDeployer {
 
   protected getResourceRequirements(
     req: ComputeResources
-  ): k8s.types.input.core.v1.ResourceRequirements {
+  ): ResourceRequirements {
     const [cpu, memory] =
       typeof req == "string" ? req.split(",") : [req.cpu, req.memory];
 

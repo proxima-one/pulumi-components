@@ -48,6 +48,16 @@ export class AppStackDeployer {
         })
       : { secrets: [] };
 
+    if (args.namespaceMonitors) {
+      const monitors = new k8sOps.MonitorDeployer(
+        this.kubernetesDeployParams
+      ).deploy({
+        name: "ns",
+        namespaces: Object.values(args.namespaces),
+        targetLabels: args.namespaceMonitors.targetLabels,
+      });
+    }
+
     return new AppStack<T>(
       this.kubernetesDeployParams,
       this.ops,
@@ -62,19 +72,22 @@ export interface AppStackArgs<T extends string> {
   registries?: pulumi.Input<
     Record<string, pulumi.Input<k8sBase.ImageRegistryInfo | string>>
   >;
+  namespaceMonitors?: {
+    targetLabels: string[];
+  };
 }
 
 export class AppStack<TNamespace extends string> {
-  private readonly appGroups: AppGroup[] = [];
-  private readonly services: DeployedService[] = [];
+  public readonly appGroups: AppGroup[] = [];
+  public readonly services: DeployedService[] = [];
 
   public constructor(
-    private readonly kubernetesDeployParams: k8sBase.DeployParams,
-    private readonly ops: pulumi.Input<
+    public readonly kubernetesDeployParams: k8sBase.DeployParams,
+    public readonly ops: pulumi.Input<
       pulumi.Unwrap<k8sOps.DeployedKubernetesOps>
     >,
-    private readonly namespaces: Record<TNamespace, pulumi.Input<string>>,
-    private readonly imageRegistrySecrets: pulumi.Input<
+    public readonly namespaces: Record<TNamespace, pulumi.Input<string>>,
+    public readonly imageRegistrySecrets: pulumi.Input<
       k8sBase.ImageRegistrySecret[]
     >
   ) {}
@@ -97,7 +110,7 @@ export class AppStack<TNamespace extends string> {
   }
 
   public service(name: string, type: string, params: pulumi.Input<any>) {
-    this.services.push({name, type, params});
+    this.services.push({ name, type, params });
   }
 
   public appGroup(
@@ -107,17 +120,8 @@ export class AppStack<TNamespace extends string> {
   ) {
     this.appGroups.push({
       name,
-      namespace,
+      namespace: this.namespaces[namespace],
       nodeSelectors: nodeSelectors ?? {},
-    });
-  }
-
-  public output(): pulumi.Output<DeployedAppStack> {
-    return pulumi.output({
-      kubeconfig: this.kubernetesDeployParams.kubeconfig,
-      appGroups: this.appGroups,
-      services: this.services,
-      imageRegistrySecrets: this.imageRegistrySecrets,
     });
   }
 }

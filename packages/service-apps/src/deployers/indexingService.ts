@@ -1,24 +1,20 @@
 import * as pulumi from "@pulumi/pulumi";
-import {
-  AppDeployerBase,
-  ComputeResources,
-  DeploymentParameters,
-} from "./base";
+import { AppDeployerBase, DeployParams } from "./base";
 import { WebServiceDeployer, ConfigFile } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { MongoDbStorage } from "@proxima-one/pulumi-proxima-node";
-import { parseInt } from "lodash";
 import * as yaml from "js-yaml";
+import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
   private webService: WebServiceDeployer;
   private mongo: MongoDeployer;
 
-  public constructor(params: DeploymentParameters) {
-    super(params);
+  public constructor(params: DeployParams) {
+    super(params, "indexing");
 
-    this.webService = new WebServiceDeployer(params);
-    this.mongo = new MongoDeployer(params);
+    this.webService = new WebServiceDeployer(params, "indexing");
+    this.mongo = new MongoDeployer(params, "indexing-storage");
   }
 
   public deploy(app: IndexingServiceApp): DeployedIndexingService {
@@ -28,7 +24,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
     const mode = app.mode ?? "live";
 
     const db = app.db.endpoint;
-    let mongoUri = this.deployOptions.cloudMongoDb.uri;
+    let mongoUri: pulumi.Input<string>;
 
     if (db.type == "provision") {
       const mongo = this.mongo.deploy({
@@ -45,6 +41,11 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       });
 
       mongoUri = mongo.connectionDetails.endpoint;
+    } else {
+      mongoUri = this.requireService<{ endpoint: string }>(
+        db.name,
+        "mongodb"
+      ).endpoint;
     }
 
     switch (app.apiKind) {
@@ -315,7 +316,7 @@ export interface IndexingServiceAppV1 {
   db: {
     name?: string;
     endpoint:
-      | { type: "cloud" }
+      | { type: "import"; name: string }
       | ({ type: "provision" } & {
           storage: pulumi.Input<MongoDbStorage>;
           resources?: pulumi.Input<ComputeResources>;
@@ -370,7 +371,7 @@ export interface IndexingServiceAppV2 {
   db: {
     name?: string;
     endpoint:
-      | { type: "cloud" }
+      | { type: "import"; name: string }
       | ({ type: "provision" } & {
           storage: pulumi.Input<MongoDbStorage>;
           resources?: pulumi.Input<ComputeResources>;

@@ -8,19 +8,12 @@ import {
   ingressAnnotations,
   ingressSpec,
 } from "@proxima-one/pulumi-proxima-node";
-import { AppDeployerBase, ComputeResources } from "./base";
+import { AppDeployerBase, DeployParams } from "./base";
+import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
 export class WebServiceDeployer extends AppDeployerBase {
-  protected get namespace(): pulumi.Output<string> {
-    return this.deployOptions.services.namespace;
-  }
-
-  protected get imagePullSecret(): pulumi.Output<string> {
-    return this.deployOptions.services.imagePullSecret;
-  }
-
-  protected get nodeSelector() {
-    return this.deployOptions.nodeSelectors.webService;
+  public constructor(params: DeployParams, targetAppGroup?: string) {
+    super(params, targetAppGroup ?? "web-service");
   }
 
   public deploy(app: WebService): DeployedServiceApp {
@@ -44,7 +37,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                 {}
               ),
           },
-          { provider: this.k8s }
+          this.options()
         )
       : undefined;
 
@@ -92,11 +85,7 @@ export class WebServiceDeployer extends AppDeployerBase {
               },
               spec: {
                 restartPolicy: "Always",
-                imagePullSecrets: [
-                  {
-                    name: this.imagePullSecret,
-                  },
-                ],
+                imagePullSecrets: this.imagePullSecrets({ image: imageName }),
                 containers: [
                   {
                     image: imageName,
@@ -122,7 +111,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                     resources: pulumi
                       .output(part.resources)
                       .apply((x) =>
-                        this.parseResourceRequirements(x ?? defaultResources)
+                        this.getResourceRequirements(x ?? defaultResources)
                       ),
                     volumeMounts: app.configFiles?.map((file) => {
                       return {
@@ -151,7 +140,7 @@ export class WebServiceDeployer extends AppDeployerBase {
             },
           },
         },
-        { provider: this.k8s }
+        this.options()
       );
 
       const { service, ingresses } = pulumi
@@ -176,7 +165,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                 })),
               },
             },
-            { dependsOn: deployment, provider: this.k8s }
+            this.options({ dependsOn: deployment })
           );
 
           const ingressRules = pulumi
@@ -219,7 +208,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                   idx == 0 ? partFullName : `${partFullName}-${idx + 1}`,
                   {
                     metadata: {
-                      namespace: this.deployOptions.services.namespace,
+                      namespace: this.namespace,
                       annotations: ingressAnnotations({
                         certIssuer: "zerossl",
                         sslRedirect: true,
@@ -245,7 +234,7 @@ export class WebServiceDeployer extends AppDeployerBase {
                       },
                     }),
                   },
-                  { dependsOn: service, provider: this.k8s }
+                  this.options({ dependsOn: service })
                 )
             );
           });
