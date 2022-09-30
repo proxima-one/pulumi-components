@@ -95,7 +95,7 @@ export class DockerBsc extends pulumi.ComponentResource {
       networksAdvanced: [{ name: networkName }],
       envs: [pulumi.concat(`DATA_DIR=`, this.bscOptions.dataDir)],
       image: bscImage.name,
-      restart: "unless-stopped",
+      restart: "always",
       volumes: volumes,
       entrypoints: [entrypointPath],
       uploads: resolvedArgs.apply((args) => [

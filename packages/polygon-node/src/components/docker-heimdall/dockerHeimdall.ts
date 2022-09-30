@@ -116,7 +116,7 @@ export class DockerHeimdall extends pulumi.ComponentResource {
       {
         image: "rabbitmq:3-alpine",
         networksAdvanced: [{ name: networkName }],
-        restart: "unless-stopped",
+        restart: "always",
         ports: resolvedArgs.ports?.apply((ports) =>
           ports?.rabbitmq ? [{ external: ports?.rabbitmq, internal: 5672 }] : []
         ),
