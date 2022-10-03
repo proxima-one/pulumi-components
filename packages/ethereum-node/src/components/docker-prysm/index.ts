@@ -109,7 +109,7 @@ export class DockerPrysm extends pulumi.ComponentResource {
       name,
       {
         image: prysmImage.name,
-        restart: "on-failure",
+        restart: "always",
         networksAdvanced: [{ name: networkName }],
         envs: [],
         command: this.cliArgs,

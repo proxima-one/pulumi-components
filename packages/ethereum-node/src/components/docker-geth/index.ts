@@ -90,7 +90,7 @@ export class DockerGeth extends pulumi.ComponentResource {
       name,
       {
         image: gethImage.name,
-        restart: "on-failure",
+        restart: "always",
         hostname: `${name}`,
         domainname: `${name}`,
         networksAdvanced: [{ name: networkName }],
