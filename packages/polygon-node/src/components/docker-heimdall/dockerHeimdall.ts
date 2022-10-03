@@ -139,7 +139,7 @@ export class DockerHeimdall extends pulumi.ComponentResource {
       networksAdvanced: [{ name: networkName }],
       envs: [pulumi.concat(`DATA_DIR=`, dataDir)],
       image: heimdallImage.name,
-      restart: "unless-stopped",
+      restart: "always",
       volumes: volumes,
       entrypoints: [entrypointPath],
       uploads: [
