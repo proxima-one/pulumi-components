@@ -6,16 +6,16 @@ import * as yaml from "js-yaml";
 import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
-  private webService: k8sServices.deployers.WebServiceDeployer;
-  private mongo: k8sServices.deployers.MongoDeployer;
+  private webService: k8sServices.WebServiceDeployer;
+  private mongo: k8sServices.MongoDeployer;
 
   public constructor(params: DeployParams) {
     super(params);
 
-    this.webService = new k8sServices.deployers.WebServiceDeployer(
+    this.webService = new k8sServices.WebServiceDeployer(
       this.getDeployParams("indexing")
     );
-    this.mongo = new k8sServices.deployers.MongoDeployer(
+    this.mongo = new k8sServices.MongoDeployer(
       this.getDeployParams("indexing-storage")
     );
   }
@@ -187,7 +187,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configs: k8sServices.deployers.ConfigFile[] = [
+        const configs: k8sServices.ConfigFile[] = [
           {
             path: "/app/config/config.yaml",
             content: mongoUri.apply((uri) =>
@@ -396,7 +396,7 @@ export interface IndexingServiceAppV2 {
   // Default "live"
   mode?: IndexingServiceMode;
   // {filePath: content};
-  configFiles?: k8sServices.deployers.ConfigFile[];
+  configFiles?: k8sServices.ConfigFile[];
 }
 
 export type IndexingServiceMode =
