@@ -178,7 +178,7 @@ export interface EvmIndexer {
 }
 
 export type DbSettings =
-  | { type: "import"; endpoint: "string"; name: string }
+  | { type: "import"; endpoint: string; name: string }
   | {
       type: "provision";
       params: ProvisionMongoDbParams;
