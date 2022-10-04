@@ -77,7 +77,7 @@ export class EvmIndexerDeployer {
           ws: app.connection.wss,
         },
         logging: true,
-        "goroutines-limit": 20,
+        "goroutines-limit": app.computeLimit ?? 20,
       }
     ).apply(json => yaml.dump(json, { indent: 2}));
 
@@ -172,6 +172,10 @@ export interface EvmIndexer {
   publicHost?: pulumi.Input<string>;
   imageName?: pulumi.Input<string>;
   env?: pulumi.Input<string>;
+  /*
+  Goroutines limit, default 20
+   */
+  computeLimit?: pulumi.Input<number>;
 }
 
 export type DbSettings =
