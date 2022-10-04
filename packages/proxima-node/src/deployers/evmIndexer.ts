@@ -56,33 +56,28 @@ export class EvmIndexerDeployer {
       };
     });
 
-    const config = pulumi
-      .all([db, passwords.resolve(auth.password)])
-      .apply(([db, password]) =>
-        yaml.dump(
-          {
-            storage: {
-              type: "MongoDB",
-              compress: "zlib",
-              uri: db.endpoint,
-              database: db.name,
-            },
-            server: {
-              host: "0.0.0.0",
-              port: 50052,
-              metricsPort: 2112,
-              superUserToken: password,
-            },
-            "rpc-endpoint": {
-              http: app.connection.http,
-              ws: app.connection.wss,
-            },
-            logging: true,
-            "goroutines-limit": 20,
-          },
-          { indent: 2 }
-        )
-      );
+    const config = pulumi.all(
+      {
+        storage: {
+          type: "MongoDB",
+          compress: "zlib",
+          uri: db.endpoint,
+          database: db.name,
+        },
+        server: {
+          host: "0.0.0.0",
+          port: 50052,
+          metricsPort: 2112,
+          superUserToken: passwords.resolve(auth.password),
+        },
+        "rpc-endpoint": {
+          http: app.connection.http,
+          ws: app.connection.wss,
+        },
+        logging: true,
+        "goroutines-limit": 20,
+      }
+    ).apply(json => yaml.dump(json, { indent: 2}));
 
     const webService = this.webServiceDeployer.deploy({
       name: app.name,
