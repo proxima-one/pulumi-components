@@ -42,6 +42,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         name: `${name}-db`,
         webUI: true,
         resources: db.resources,
+        replicaSet: db.replicaSet,
         version: "4.4",
         auth: {
           user: "proxima",
@@ -318,21 +319,24 @@ export type IndexingServiceApp = (
   | IndexingServiceAppV2
 ) & { name?: string };
 
+export interface IndexingServiceDb {
+  name?: string;
+  endpoint:
+    | { type: "import"; name: string }
+    | ({ type: "provision" } & {
+    storage: pulumi.Input<MongoDbStorage>;
+    replicaSet?: number;
+    resources?: pulumi.Input<ComputeResources>;
+  });
+}
+
 export interface IndexingServiceAppV1 {
   apiKind: "indexing-service/v1";
 
   network: pulumi.Input<string>;
   streamDbUrl?: string;
   stream: pulumi.Input<string>;
-  db: {
-    name?: string;
-    endpoint:
-      | { type: "import"; name: string }
-      | ({ type: "provision" } & {
-          storage: pulumi.Input<MongoDbStorage>;
-          resources?: pulumi.Input<ComputeResources>;
-        });
-  };
+  db: IndexingServiceDb;
 
   imageName?: pulumi.Input<string>;
   indexName?: string;
@@ -380,15 +384,7 @@ export interface IndexingServiceAppV2 {
   >;
   timeRange?: TimeRange;
 
-  db: {
-    name?: string;
-    endpoint:
-      | { type: "import"; name: string }
-      | ({ type: "provision" } & {
-          storage: pulumi.Input<MongoDbStorage>;
-          resources?: pulumi.Input<ComputeResources>;
-        });
-  };
+  db: IndexingServiceDb;
   resources?: pulumi.Input<{
     consumer?: pulumi.Input<ComputeResources>;
     server?: pulumi.Input<ComputeResources>;
