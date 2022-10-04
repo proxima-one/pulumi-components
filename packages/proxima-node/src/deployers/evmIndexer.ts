@@ -47,6 +47,8 @@ export class EvmIndexerDeployer {
           password: { type: "random", name: `${app.name}-mongo`, length: 32 },
           database: "evm-indexer",
         },
+        webUI: db.params.webUI !== undefined,
+        publicHost: db.params.webUI ? pulumi.output(db.params.webUI).apply(x => x.publicHost) : undefined,
         version: "4.4",
       });
 
@@ -182,6 +184,9 @@ export type DbSettings =
 export interface ProvisionMongoDbParams {
   resource: ComputeResources;
   storage: Storage;
+  webUI?: {
+    publicHost: pulumi.Input<string>;
+  }
 }
 
 export interface DeployedEvmIndexer extends DeployedServiceApp {
