@@ -90,7 +90,7 @@ export class EvmIndexerDeployer {
       imageName: imageName,
       parts: {
         api: {
-          resources: app.resources ?? "50m/2000m;300Mi/6Gi",
+          resources: app.resources ?? "50m/2000m,300Mi/6Gi",
           env: {},
           args: ["--config", "/app/config.yaml", "--indexer", "--server"],
           deployStrategy: {
