@@ -97,6 +97,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const deployedWebService = this.webService.deploy({
           name: name,
           imageName: app.imageName,
+          publicHost: this.publicHost,
           parts: {
             consumer: {
               disabled: mode == "server-only",
@@ -217,6 +218,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           name: name,
           imageName: app.imageName,
           configFiles: configs,
+          publicHost: this.publicHost,
           parts: {
             consumer: {
               disabled: mode == "server-only",
