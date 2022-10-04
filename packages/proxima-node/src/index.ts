@@ -1,4 +1,4 @@
 export * from "./components";
 export * from "./apps";
 export * from "./helpers";
-export * from "./deployers";
+export * as deployers from "./deployers";

@@ -1,11 +1,4 @@
 import {
-  DeployedServiceApp,
-  MongoDbStorage,
-  MongoDeployer,
-  PasswordResolver,
-  WebServiceDeployer,
-} from "@proxima-one/pulumi-proxima-node";
-import {
   ComputeResources,
   ServiceDeployParameters,
 } from "@proxima-one/pulumi-k8s-base";
@@ -13,6 +6,10 @@ import * as pulumi from "@pulumi/pulumi";
 import { Password } from "../components/types";
 import * as yaml from "js-yaml";
 import { strict as assert } from "assert";
+import { DeployedServiceApp, WebServiceDeployer } from "./webService";
+import { MongoDeployer } from "./mongo";
+import { PasswordResolver } from "../helpers";
+import { MongoDbStorage } from "../components/mongodb";
 
 export class EthIndexerDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
