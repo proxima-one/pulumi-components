@@ -87,6 +87,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
               spec: {
                 restartPolicy: "Always",
                 imagePullSecrets: this.imagePullSecrets({ image: imageName }),
+                nodeSelector: this.nodeSelectors,
                 containers: [
                   {
                     image: imageName,
