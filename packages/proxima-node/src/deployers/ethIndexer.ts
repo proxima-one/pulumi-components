@@ -1,6 +1,7 @@
 import {
   ComputeResources,
   ServiceDeployParameters,
+  Storage,
 } from "@proxima-one/pulumi-k8s-base";
 import * as pulumi from "@pulumi/pulumi";
 import { Password } from "../components/types";
@@ -9,7 +10,6 @@ import { strict as assert } from "assert";
 import { DeployedServiceApp, WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
-import { MongoDbStorage } from "../components/mongodb";
 
 export class EthIndexerDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
@@ -186,7 +186,7 @@ export type DbSettings =
 
 export interface ProvisionMongoDbParams {
   resource: ComputeResources;
-  storage: MongoDbStorage;
+  storage: Storage;
 }
 
 export interface DeployedEthIndexer extends DeployedServiceApp {

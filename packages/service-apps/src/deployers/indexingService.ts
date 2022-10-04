@@ -31,7 +31,11 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
     if (db.type == "provision") {
       const mongo = this.mongo.deploy({
-        storage: db.storage,
+        storage: pulumi.output(db.storage).apply((x) => {
+          if (x.type == "new")
+            return { type: "provision", size: x.size, class: x.class };
+          return x.name;
+        }),
         name: `${name}-db`,
         webUI: true,
         resources: db.resources,

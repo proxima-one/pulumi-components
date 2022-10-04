@@ -8,11 +8,13 @@ import {
 import {
   ComputeResources,
   KubernetesServiceDeployer,
+  Storage,
 } from "@proxima-one/pulumi-k8s-base";
 
 export class MongoDeployer extends KubernetesServiceDeployer {
   public deploy(app: MongoApp): DeployedMongoApp {
     const name = app.name ?? this.name;
+
     const mongodb = new MongoDB(
       name,
       {
@@ -22,7 +24,16 @@ export class MongoDeployer extends KubernetesServiceDeployer {
           .apply((x) => this.getResourceRequirements(x ?? defaultResources)),
         namespace: this.namespace,
         auth: app.auth,
-        storage: app.storage,
+        storage: pulumi.output(app.storage).apply((storage) => {
+          if (typeof storage == "string")
+            return { type: "existing", name: storage } as any;
+
+          return this.storageClass(storage.class).apply((cl) => ({
+            type: "new",
+            size: storage.size,
+            class: cl ?? "",
+          }));
+        }),
         mongoExpress: app.webUI
           ? {
               endpoint: pulumi
@@ -47,7 +58,7 @@ const defaultResources = {
 
 export interface MongoApp {
   name?: string;
-  storage: pulumi.Input<MongoDbStorage>;
+  storage: pulumi.Input<Storage>;
   version: "4.4";
   auth: MongoDBAuth;
   resources?: pulumi.Input<ComputeResources>;
