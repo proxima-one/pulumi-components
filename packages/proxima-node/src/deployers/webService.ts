@@ -176,35 +176,35 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             .apply(([publicHost, ports]) =>
               ports
                 ? ports
-                  .filter((x) => x.ingress)
-                  .map<IngressDef>((port) => {
-                    const hosts: string[] = [];
-                    if (port.ingress?.overrideHost) {
-                      hosts.push(...port.ingress.overrideHost);
-                    } else {
-                      if (publicHost)
-                        hosts.push(
-                          `${port.ingress?.subDomain ?? name}.${publicHost}`
-                        );
-                      if (port.ingress?.host)
-                        hosts.push(...port.ingress.host);
-                    }
+                    .filter((x) => x.ingress)
+                    .map<IngressDef>((port) => {
+                      const hosts: string[] = [];
+                      if (port.ingress?.overrideHost) {
+                        hosts.push(...port.ingress.overrideHost);
+                      } else {
+                        if (publicHost)
+                          hosts.push(
+                            `${port.ingress?.subDomain ?? name}.${publicHost}`
+                          );
+                        if (port.ingress?.host)
+                          hosts.push(...port.ingress.host);
+                      }
 
-                    assert(
-                      hosts.length > 0,
-                      "no hosts specified for ingress"
-                    );
+                      assert(
+                        hosts.length > 0,
+                        "no hosts specified for ingress"
+                      );
 
-                    return {
-                      hosts: hosts,
-                      path: port.ingress?.path ?? "/",
-                      backend: {
-                        serviceName: service.metadata.name,
-                        servicePort: port.servicePort ?? port.containerPort,
-                        protocol: port.ingress?.protocol ?? "http",
-                      },
-                    };
-                  })
+                      return {
+                        hosts: hosts,
+                        path: port.ingress?.path ?? "/",
+                        backend: {
+                          serviceName: service.metadata.name,
+                          servicePort: port.servicePort ?? port.containerPort,
+                          protocol: port.ingress?.protocol ?? "http",
+                        },
+                      };
+                    })
                 : []
             );
 
