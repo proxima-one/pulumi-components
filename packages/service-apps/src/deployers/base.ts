@@ -1,5 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
-import { KubernetesServiceDeployer } from "@proxima-one/pulumi-k8s-base";
+import { ServiceDeployParameters } from "@proxima-one/pulumi-k8s-base";
 import { DeployedAppStack } from "@proxima-one/pulumi-k8s-app-stack";
 
 export interface DeployParams {
@@ -8,7 +8,7 @@ export interface DeployParams {
   targetStack?: string;
 }
 
-export abstract class AppDeployerBase extends KubernetesServiceDeployer {
+export abstract class AppDeployerBase {
   protected readonly stack: string;
   protected readonly cluster: string;
   protected readonly project: string;
@@ -16,38 +16,17 @@ export abstract class AppDeployerBase extends KubernetesServiceDeployer {
   protected readonly publicHost: pulumi.Output<string>;
   private readonly appStack: pulumi.Output<pulumi.Unwrap<DeployedAppStack>>;
 
-  public constructor(
-    private readonly params: DeployParams,
-    private readonly targetAppGroup: string
-  ) {
-    const stack = params.targetStack ?? pulumi.getStack();
-    const project = params.project ?? pulumi.getProject();
-    const org = params.org ?? "proxima-one";
+  public constructor(private readonly params: DeployParams) {
+    const stack = this.params.targetStack ?? pulumi.getStack();
+    const project = this.params.project ?? pulumi.getProject();
+    const org = this.params.org ?? "proxima-one";
     const appStackReference = getStackReference(
       `${org}/${stack}-stack/default`
     );
-
+    const [cluster, envDraft] = stack.split("-");
     const appStack = appStackReference.getOutput("appStack") as pulumi.Output<
       pulumi.Unwrap<DeployedAppStack>
     >;
-
-    const appGroup = appStack.appGroups.apply((x) => {
-      const appGroup = x.find((y) => y.name == targetAppGroup);
-      if (!appGroup)
-        throw new Error(`AppGroup ${targetAppGroup} not found in ${stack}`);
-      return appGroup;
-    });
-
-    const [cluster, envDraft] = stack.split("-");
-
-    super({
-      name: cluster == "amur" ? "infra-k8s" : `${cluster}-k8s`,
-      kubeconfig: appStack.kubeconfig,
-      namespace: appGroup.namespace,
-      imageRegistrySecrets: appStack.imageRegistrySecrets,
-      nodeSelectors: appGroup.nodeSelectors,
-      storageClasses: appStack.storageClasses?.apply((x) => x ?? []),
-    });
 
     this.appStack = appStack;
     this.env = envDraft ?? "prod";
@@ -55,6 +34,26 @@ export abstract class AppDeployerBase extends KubernetesServiceDeployer {
     this.publicHost = appStack.publicHost;
     this.stack = stack;
     this.project = project;
+  }
+
+  protected getDeployParams(targetAppGroup: string): ServiceDeployParameters {
+    const appGroup = this.appStack.appGroups.apply((x) => {
+      const appGroup = x.find((y) => y.name == targetAppGroup);
+      if (!appGroup)
+        throw new Error(
+          `AppGroup ${targetAppGroup} not found in ${this.stack}`
+        );
+      return appGroup;
+    });
+
+    return {
+      name: this.cluster == "amur" ? "infra-k8s" : `${this.cluster}-k8s`,
+      kubeconfig: this.appStack.kubeconfig,
+      namespace: appGroup.namespace,
+      imageRegistrySecrets: this.appStack.imageRegistrySecrets,
+      nodeSelectors: appGroup.nodeSelectors,
+      storageClasses: this.appStack.storageClasses?.apply((x) => x ?? []),
+    };
   }
 
   protected requireService<T = any>(
