@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-test-deploy",
-  "version": "0.1.44",
+  "version": "0.1.45",
   "private": true,
   "description": "pulumi components to run proxima service apps",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
@@ -29,8 +29,8 @@
     "tsconfig-paths": "^3.9.0"
   },
   "dependencies": {
-    "@proxima-one/pulumi-proxima-node": "^0.13.31",
-    "@proxima-one/pulumi-service-apps": "^0.2.12",
+    "@proxima-one/pulumi-proxima-node": "^0.13.32",
+    "@proxima-one/pulumi-service-apps": "^0.2.13",
     "@pulumi/kubernetes": "^3.20.3",
     "@pulumi/kubernetesx": "^0.1.6",
     "@pulumi/pulumi": "^3.37.2"
