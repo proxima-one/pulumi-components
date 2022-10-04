@@ -176,6 +176,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             .apply(([publicHost, ports]) =>
               ports
                 ? ports
+                    .filter((x) => x.ingress)
                     .map<IngressDef | undefined>((port) => {
                       const hosts: string[] = [];
                       if (port.ingress?.overrideHost) {
@@ -203,8 +204,8 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                         },
                       };
                     })
-                  .filter((def) => def)  // remove undefined
-                  .map<IngressDef>((def) => def!)
+                    .filter((def) => def)  // remove undefined
+                    .map<IngressDef>((def) => def!)
                 : []
             );
 
