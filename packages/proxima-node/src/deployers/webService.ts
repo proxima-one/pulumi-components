@@ -9,6 +9,7 @@ import {
   ComputeResources,
   KubernetesServiceDeployer,
 } from "@proxima-one/pulumi-k8s-base";
+import { strict as assert } from "assert";
 
 export class WebServiceDeployer extends KubernetesServiceDeployer {
   public deploy(app: WebService): DeployedServiceApp {
@@ -186,6 +187,11 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                         if (port.ingress?.host)
                           hosts.push(...port.ingress.host);
                       }
+
+                      assert(
+                        hosts.length > 0,
+                        "no hosts specified for ingress"
+                      );
 
                       return {
                         hosts: hosts,

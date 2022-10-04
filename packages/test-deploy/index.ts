@@ -1,3 +1,4 @@
+//require("./tsfix");
 import * as pulumi from "@pulumi/pulumi";
 import * as proxima from "@proxima-one/pulumi-service-apps";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
@@ -22,7 +23,7 @@ class TestDeployer extends AppDeployerBase {
           type: "provision",
           params: {
             resource: "100m/400m,100Mi/2Gi",
-            storage: {size: "100Gi", class: {type: "ssd", fstype: "xfs"}}
+            storage: { size: "100Gi", class: { type: "ssd", fstype: "xfs" } },
           },
         },
       }

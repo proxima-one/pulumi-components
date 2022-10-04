@@ -116,7 +116,7 @@ export class EvmIndexerDeployer {
                     protocol: "grpc",
                     overrideHost: [app.publicHost],
                   }
-                : {},
+                : undefined,
             },
           ],
         },
