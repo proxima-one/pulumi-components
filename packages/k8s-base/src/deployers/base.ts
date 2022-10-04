@@ -14,8 +14,7 @@ export interface DeployParams {
   storageClasses?: pulumi.Input<pulumi.Input<StorageClassMeta>[]>;
 }
 
-if (!PROVIDERS_LOOKUP)
-  PROVIDERS_LOOKUP = {};
+if (!PROVIDERS_LOOKUP) PROVIDERS_LOOKUP = {};
 
 export class KubernetesDeployer {
   protected readonly provider: k8s.Provider;
