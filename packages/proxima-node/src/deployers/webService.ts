@@ -204,10 +204,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                       };
                     })
                   .filter((def) => def)  // remove undefined
-                  .map<IngressDef>((def) => {
-                    assert(def)  // always true because of previous filter
-                    return def
-                  })
+                  .map<IngressDef>((def) => def!)
                 : []
             );
 
