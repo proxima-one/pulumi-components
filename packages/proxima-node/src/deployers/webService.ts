@@ -10,6 +10,7 @@ import {
   KubernetesServiceDeployer,
 } from "@proxima-one/pulumi-k8s-base";
 import { strict as assert } from "assert";
+import {assign} from "lodash";
 
 export class WebServiceDeployer extends KubernetesServiceDeployer {
   public deploy(app: WebService): DeployedServiceApp {
@@ -175,7 +176,6 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             .apply(([publicHost, ports]) =>
               ports
                 ? ports
-                    .filter((x) => x.ingress)
                     .map<IngressDef | undefined>((port) => {
                       const hosts: string[] = [];
                       if (port.ingress?.overrideHost) {
@@ -204,6 +204,10 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                       };
                     })
                   .filter((def) => def)  // remove undefined
+                  .map<IngressDef>((def) => {
+                    assert(def)  // always true because of previous filter
+                    return def
+                  })
                 : []
             );
 
