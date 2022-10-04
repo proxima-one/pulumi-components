@@ -11,7 +11,7 @@ import { DeployedServiceApp, WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
 
-export class EthIndexerDeployer {
+export class EvmIndexerDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
   private readonly mongoDeployer: MongoDeployer;
 
@@ -20,7 +20,7 @@ export class EthIndexerDeployer {
     this.mongoDeployer = new MongoDeployer(params);
   }
 
-  public deploy(app: EthIndexer): DeployedEthIndexer {
+  public deploy(app: EvmIndexer): DeployedEvmIndexer {
     if (!app.connection.http && !app.connection.wss) {
       throw new Error(
         "Invalid arguments: at least one argument of http.url or ws.url should be specified."
@@ -45,7 +45,7 @@ export class EthIndexerDeployer {
         auth: {
           user: "proxima",
           password: { type: "random", name: `${app.name}-mongo`, length: 32 },
-          database: "eth-indexer",
+          database: "evm-indexer",
         },
         version: "4.4",
       });
@@ -100,7 +100,7 @@ export class EthIndexerDeployer {
             labels: {
               env: app.env ?? "dev",
               app: app.name,
-              serviceType: "eth-indexer",
+              serviceType: "evm-indexer",
             },
           },
           ports: [
@@ -161,7 +161,7 @@ export class EthIndexerDeployer {
   }
 }
 
-export interface EthIndexer {
+export interface EvmIndexer {
   name: string;
   db: pulumi.Input<DbSettings>;
   auth?: {
@@ -189,12 +189,12 @@ export interface ProvisionMongoDbParams {
   storage: Storage;
 }
 
-export interface DeployedEthIndexer extends DeployedServiceApp {
-  connectionDetails: pulumi.Output<EthIndexerConnectionDetails>;
-  publicConnectionDetails?: pulumi.Output<EthIndexerConnectionDetails>;
+export interface DeployedEvmIndexer extends DeployedServiceApp {
+  connectionDetails: pulumi.Output<EvmIndexerConnectionDetails>;
+  publicConnectionDetails?: pulumi.Output<EvmIndexerConnectionDetails>;
 }
 
-export interface EthIndexerConnectionDetails {
+export interface EvmIndexerConnectionDetails {
   endpoint: string;
   authToken: string;
 }
