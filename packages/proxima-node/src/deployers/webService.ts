@@ -10,7 +10,6 @@ import {
   KubernetesServiceDeployer,
 } from "@proxima-one/pulumi-k8s-base";
 import { strict as assert } from "assert";
-import {assign} from "lodash";
 
 export class WebServiceDeployer extends KubernetesServiceDeployer {
   public deploy(app: WebService): DeployedServiceApp {
