@@ -22,6 +22,9 @@ export class IndexingServiceDeployer extends AppDeployerBase {
     const indexName = app.indexName ?? this.project;
     const dbName = app.db.name ?? "proxima";
     const mode = app.mode ?? "live";
+    const streamDbUrl = app.streamDbUrl ?? "streams.proxima.one:443";
+    const consumerAddr = streamDbUrl.split(":")[0];
+    const consumerPort = streamDbUrl.split(":")[1] ?? "443";
 
     const db = app.db.endpoint;
     let mongoUri: pulumi.Input<string>;
@@ -64,8 +67,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         });
 
         const consumerEnv: Record<string, string> = {
-          CONSUME_HOST: "streams.proxima.one",
-          CONSUME_PORT: "443",
+          CONSUME_HOST: consumerAddr,
+          CONSUME_PORT: consumerPort,
         };
 
         if (mode == "fast-sync") consumerEnv["FAST_SYNC_MODE"] = "true";
@@ -161,8 +164,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         });
 
         const consumerEnv: Record<string, string> = {
-          CONSUME_HOST: "streams.proxima.one",
-          CONSUME_PORT: "443",
+          CONSUME_HOST: consumerAddr,
+          CONSUME_PORT: consumerPort,
         };
 
         const serverEnv = {
@@ -312,6 +315,7 @@ export interface IndexingServiceAppV1 {
   apiKind: "indexing-service/v1";
 
   network: pulumi.Input<string>;
+  streamDbUrl?: string;
   stream: pulumi.Input<string>;
   db: {
     name?: string;
@@ -357,6 +361,7 @@ export interface IndexingServiceAppV2 {
   imageName?: pulumi.Input<string>;
   indexName?: string;
 
+  streamDbUrl?: string;
   streams: Record<
     string,
     {
