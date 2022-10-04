@@ -8,7 +8,7 @@ export class PasswordResolver {
     pulumi.Output<string>
   > = {};
 
-  public constructor(private readonly baseResource: pulumi.Resource) {}
+  public constructor(private readonly baseResource?: pulumi.Resource) {}
 
   public resolve(password: Password): pulumi.Output<string> {
     switch (password.type) {

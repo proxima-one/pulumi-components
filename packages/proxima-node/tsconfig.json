@@ -18,5 +18,9 @@
     "**/*.spec.ts",
     "**/*.test.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../k8s-base"
+    }
+  ]
 }

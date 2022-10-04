@@ -1,3 +1,5 @@
+// TODO: Remove this component after migrating eth indexer data to buh cluster. ./deployers/ethIndexer.ts should be used instead
+
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as yaml from "js-yaml";

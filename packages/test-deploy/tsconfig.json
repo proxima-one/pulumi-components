@@ -20,6 +20,9 @@
   ],
   "references": [
     {
+      "path": "../proxima-node"
+    },
+    {
       "path": "../service-apps"
     }
   ]

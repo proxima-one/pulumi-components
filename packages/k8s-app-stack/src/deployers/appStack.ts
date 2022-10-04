@@ -62,7 +62,7 @@ export class AppStackDeployer {
       this.kubernetesDeployParams,
       this.ops,
       namespaces,
-      imageRegistries.secrets
+      pulumi.output(imageRegistries.secrets)
     );
   }
 }
@@ -83,11 +83,11 @@ export class AppStack<TNamespace extends string> {
 
   public constructor(
     public readonly kubernetesDeployParams: k8sBase.DeployParams,
-    public readonly ops: pulumi.Input<
+    public readonly ops: pulumi.Output<
       pulumi.Unwrap<k8sOps.DeployedKubernetesOps>
     >,
     public readonly namespaces: Record<TNamespace, pulumi.Input<string>>,
-    public readonly imageRegistrySecrets: pulumi.Input<
+    public readonly imageRegistrySecrets: pulumi.Output<
       k8sBase.ImageRegistrySecret[]
     >
   ) {}

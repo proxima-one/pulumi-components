@@ -29,6 +29,7 @@
     "@kubernetes/client-node": "^0.16.1",
     "@proxima-one/proxima-config": "0.3.1-preview.eb64fb9.0+eb64fb9",
     "@proxima-one/proxima-utils": "^0.1.5",
+    "@proxima-one/pulumi-k8s-base": "^0.1.3",
     "@pulumi/kubernetes": "^3.0.0",
     "@pulumi/kubernetesx": "^0.1.5",
     "@pulumi/minio": "^0.2.0",

@@ -1,20 +1,23 @@
 import * as pulumi from "@pulumi/pulumi";
 import { AppDeployerBase, DeployParams } from "./base";
-import { WebServiceDeployer, ConfigFile } from "./webService";
-import { MongoDeployer } from "./mongo";
+import * as k8sServices from "@proxima-one/pulumi-proxima-node";
 import { MongoDbStorage } from "@proxima-one/pulumi-proxima-node";
 import * as yaml from "js-yaml";
 import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
-  private webService: WebServiceDeployer;
-  private mongo: MongoDeployer;
+  private webService: k8sServices.WebServiceDeployer;
+  private mongo: k8sServices.MongoDeployer;
 
   public constructor(params: DeployParams) {
-    super(params, "indexing");
+    super(params);
 
-    this.webService = new WebServiceDeployer(params, "indexing");
-    this.mongo = new MongoDeployer(params, "indexing-storage");
+    this.webService = new k8sServices.WebServiceDeployer(
+      this.getDeployParams("indexing")
+    );
+    this.mongo = new k8sServices.MongoDeployer(
+      this.getDeployParams("indexing-storage")
+    );
   }
 
   public deploy(app: IndexingServiceApp): DeployedIndexingService {
@@ -31,7 +34,11 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
     if (db.type == "provision") {
       const mongo = this.mongo.deploy({
-        storage: db.storage,
+        storage: pulumi.output(db.storage).apply((x) => {
+          if (x.type == "new")
+            return { type: "provision", size: x.size, class: x.class };
+          return x.name;
+        }),
         name: `${name}-db`,
         webUI: true,
         resources: db.resources,
@@ -87,7 +94,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
         const resources = pulumi.output(app.resources);
         const deployedWebService = this.webService.deploy({
-          name: app.name,
+          name: name,
           imageName: app.imageName,
           parts: {
             consumer: {
@@ -180,7 +187,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configs: ConfigFile[] = [
+        const configs: k8sServices.ConfigFile[] = [
           {
             path: "/app/config/config.yaml",
             content: mongoUri.apply((uri) =>
@@ -206,7 +213,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
         const resources = pulumi.output(app.resources);
         const deployedWebService = this.webService.deploy({
-          name: app.name,
+          name: name,
           imageName: app.imageName,
           configFiles: configs,
           parts: {
@@ -389,7 +396,7 @@ export interface IndexingServiceAppV2 {
   // Default "live"
   mode?: IndexingServiceMode;
   // {filePath: content};
-  configFiles?: ConfigFile[];
+  configFiles?: k8sServices.ConfigFile[];
 }
 
 export type IndexingServiceMode =
