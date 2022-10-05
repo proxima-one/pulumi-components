@@ -24,6 +24,7 @@ export class MongoDeployer extends KubernetesServiceDeployer {
           .apply((x) => this.getResourceRequirements(x ?? defaultResources)),
         namespace: this.namespace,
         auth: app.auth,
+        replicaSet: app.replicaSet,
         storage: pulumi.output(app.storage).apply((storage) => {
           if (typeof storage == "string")
             return { type: "existing", name: storage } as any;
