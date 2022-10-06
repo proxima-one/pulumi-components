@@ -40,7 +40,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           return x.name;
         }),
         name: `${name}-db`,
-        webUI: true,
         resources: db.resources,
         replicaSet: db.replicaSet,
         version: "4.4",
