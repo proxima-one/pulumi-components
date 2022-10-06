@@ -67,7 +67,7 @@ export class MongoDB extends pulumi.ComponentResource {
           repo: "https://charts.bitnami.com/bitnami",
         },
         chart: "mongodb",
-        version: "10.31.1",
+        version: "13.1.7",
         namespace: args.namespace,
         values: {
           auth: passwords.resolve(auth.password).apply((pass) => {
@@ -85,7 +85,7 @@ export class MongoDB extends pulumi.ComponentResource {
           architecture: replicaSet.apply((x) =>
             x == undefined ? "standalone" : "replicaset"
           ),
-          replicaSetHostnames: false,
+          //replicaSetHostnames: false,
           resources: args.resources ?? {
             requests: {
               cpu: "100m",
