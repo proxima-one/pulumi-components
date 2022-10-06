@@ -85,6 +85,7 @@ export class MongoDB extends pulumi.ComponentResource {
           architecture: replicaSet.apply((x) =>
             x == undefined ? "standalone" : "replicaset"
           ),
+          replicaSetHostnames: false,
           resources: args.resources ?? {
             requests: {
               cpu: "100m",
