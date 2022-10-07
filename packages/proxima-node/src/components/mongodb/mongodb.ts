@@ -79,6 +79,9 @@ export class MongoDB extends pulumi.ComponentResource {
               passwords: [pass],
             };
           }),
+          livenessProbe: {
+            timeoutSeconds: 15
+          },
           persistence: persistence,
           nodeSelector: args.nodeSelector,
           replicaCount: replicaSet.apply((x) => x ?? 1),
