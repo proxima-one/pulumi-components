@@ -48,7 +48,9 @@ export class EvmIndexerDeployer {
           database: "evm-indexer",
         },
         webUI: db.params.webUI !== undefined,
-        publicHost: db.params.webUI ? pulumi.output(db.params.webUI).apply(x => x.publicHost) : undefined,
+        publicHost: db.params.webUI
+          ? pulumi.output(db.params.webUI).apply((x) => x.publicHost)
+          : undefined,
         version: "4.4",
       });
 
@@ -58,8 +60,8 @@ export class EvmIndexerDeployer {
       };
     });
 
-    const config = pulumi.all(
-      {
+    const config = pulumi
+      .all({
         storage: {
           type: "MongoDB",
           compress: "zlib",
@@ -78,8 +80,8 @@ export class EvmIndexerDeployer {
         },
         logging: true,
         "goroutines-limit": app.computeLimit ?? 20,
-      }
-    ).apply(json => yaml.dump(json, { indent: 2}));
+      })
+      .apply((json) => yaml.dump(json, { indent: 2 }));
 
     const webService = this.webServiceDeployer.deploy({
       name: app.name,
@@ -190,7 +192,7 @@ export interface ProvisionMongoDbParams {
   storage: Storage;
   webUI?: {
     publicHost: pulumi.Input<string>;
-  }
+  };
 }
 
 export interface DeployedEvmIndexer extends DeployedServiceApp {

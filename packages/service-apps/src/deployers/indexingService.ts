@@ -326,10 +326,10 @@ export interface IndexingServiceDb {
   endpoint:
     | { type: "import"; name: string }
     | ({ type: "provision" } & {
-    storage: pulumi.Input<MongoDbStorage>;
-    replicaSet?: number;
-    resources?: pulumi.Input<ComputeResources>;
-  });
+        storage: pulumi.Input<MongoDbStorage>;
+        replicaSet?: number;
+        resources?: pulumi.Input<ComputeResources>;
+      });
 }
 
 export interface IndexingServiceAppV1 {
