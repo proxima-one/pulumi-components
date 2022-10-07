@@ -67,7 +67,7 @@ export class MongoExpress extends pulumi.ComponentResource {
           repo: "https://cowboysysop.github.io/charts/",
         },
         chart: "mongo-express",
-        version: "2.6.5",
+        version: "2.7.1",
         namespace: args.namespace,
         values: {
           nodeSelector: args.nodeSelector,
