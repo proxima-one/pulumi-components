@@ -80,7 +80,10 @@ export class MongoDB extends pulumi.ComponentResource {
             };
           }),
           livenessProbe: {
-            timeoutSeconds: 15
+            enabled: false,
+          },
+          readinessProbe: {
+            enabled: false,
           },
           persistence: persistence,
           nodeSelector: args.nodeSelector,
