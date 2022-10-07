@@ -67,7 +67,7 @@ export class MongoDB extends pulumi.ComponentResource {
           repo: "https://charts.bitnami.com/bitnami",
         },
         chart: "mongodb",
-        version: "13.1.7",
+        version: "11.2.0",
         namespace: args.namespace,
         values: {
           auth: passwords.resolve(auth.password).apply((pass) => {
