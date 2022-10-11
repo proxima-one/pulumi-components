@@ -78,6 +78,7 @@ export class EvmIndexerDeployer {
         },
         logging: true,
         "goroutines-limit": app.computeLimit ?? 20,
+        network: app.network,
       }
     ).apply(json => yaml.dump(json, { indent: 2}));
 
@@ -176,6 +177,7 @@ export interface EvmIndexer {
   Goroutines limit, default 20
    */
   computeLimit?: pulumi.Input<number>;
+  network?: pulumi.Input<string>;
 }
 
 export type DbSettings =
