@@ -79,6 +79,16 @@ export class MongoExpress extends pulumi.ComponentResource {
           basicAuthPassword: passwords.resolve(auth.password),
           siteCookieSecret: passwords.resolve(siteCookieSecret),
           siteSessionSecret: passwords.resolve(siteSessionSecret),
+          livenessProbe: {
+            timeoutSeconds: 10,
+            failureThreshold: 10,
+            periodSeconds: 60,
+          },
+          readinessProbe: {
+            timeoutSeconds: 10,
+            failureThreshold: 10,
+            periodSeconds: 60,
+          }
         },
       },
       { parent: this }

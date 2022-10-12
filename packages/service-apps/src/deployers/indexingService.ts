@@ -43,6 +43,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         webUI: true,
         resources: db.resources,
         replicaSet: db.replicaSet,
+        publicHost: pulumi.interpolate`${name}-db.${this.publicHost}`,
         version: "4.4",
         auth: {
           user: "proxima",
