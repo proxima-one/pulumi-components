@@ -39,7 +39,7 @@ export class MongoDeployer extends KubernetesServiceDeployer {
           ? {
               endpoint: pulumi
                 .output(app.publicHost)
-                .apply((host) => `${name}.${host}`),
+                .apply((host) => `${host}`),
             }
           : undefined,
       },
