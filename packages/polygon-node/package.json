@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-polygon-node",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "pulumi components to run geth",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
@@ -25,7 +25,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-ethereum-node": "^0.1.5",
+    "@proxima-one/pulumi-ethereum-node": "^0.1.6",
     "@proxima-one/pulumi-helpers": "^0.1.1",
     "@pulumi/command": "^0.0.3",
     "@pulumi/docker": "^3.1.0",
