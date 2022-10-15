@@ -117,7 +117,8 @@ export class DockerEthNode extends pulumi.ComponentResource {
         jwtSecret: jwtSecret,
         executionEndpoint: pulumi.interpolate`http://${this.geth.container.domainname}:8551`,
         existingNetwork: networkName,
-        checkpointUrl: configs[args.network].checkpointUrl ?? args.checkpointUrl,
+        checkpointUrl:
+          configs[args.network].checkpointUrl ?? args.checkpointUrl,
       },
       { parent: this }
     );
@@ -137,11 +138,11 @@ const configs: Record<EthNodeNetwork, EthNetworkConfig> = {
   mainnet: {
     gethImage: "ethereum/client-go:v1.10.25",
     prysmImage: "gcr.io/prysmaticlabs/prysm/beacon-chain:v3.1.1",
-    checkpointUrl: "https://mainnet.checkpoint.sigp.io"
+    checkpointUrl: "https://mainnet.checkpoint.sigp.io",
   },
   goerli: {
     gethImage: "ethereum/client-go:v1.10.25",
     prysmImage: "gcr.io/prysmaticlabs/prysm/beacon-chain:v3.1.1",
-    checkpointUrl: "https://goerli.checkpoint-sync.ethpandaops.io"
+    checkpointUrl: "https://goerli.checkpoint-sync.ethpandaops.io",
   },
 };

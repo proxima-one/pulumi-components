@@ -47,7 +47,9 @@ export class DockerBscNode extends pulumi.ComponentResource {
       `bor-${name}`,
       {
         ports: resolvedArgs.ports?.apply((x) => x?.bsc),
-        imageName: resolvedArgs.apply((args) => args.image ?? configs[args.network].image),
+        imageName: resolvedArgs.apply(
+          (args) => args.image ?? configs[args.network].image
+        ),
         configFile: resolvedArgs.apply((args) => configs[args.network].config),
         genesisFile: resolvedArgs.apply(
           (args) => configs[args.network].genesis
@@ -92,7 +94,7 @@ export class DockerBscNode extends pulumi.ComponentResource {
 const configs: Record<BscNodeNetwork, BscNetworkConfig> = {
   mainnet: {
     seeds: [],
-    image: "quay.io/proxima.one/bsc-geth:1.1.16" ,
+    image: "quay.io/proxima.one/bsc-geth:1.1.16",
     config: FileHelpers.resolve(
       path.resolve(__dirname, "networks", "mainnet", "config.toml")
     ).toString("utf8"),

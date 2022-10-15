@@ -73,8 +73,12 @@ export class DockerPrysm extends pulumi.ComponentResource {
     }
 
     if (args.checkpointUrl) {
-      cliArgs.push(pulumi.interpolate`--checkpoint-sync-url=${args.checkpointUrl}`);
-      cliArgs.push(pulumi.interpolate`--genesis-beacon-api-url=${args.checkpointUrl}`);
+      cliArgs.push(
+        pulumi.interpolate`--checkpoint-sync-url=${args.checkpointUrl}`
+      );
+      cliArgs.push(
+        pulumi.interpolate`--genesis-beacon-api-url=${args.checkpointUrl}`
+      );
     }
 
     this.cliArgs = pulumi.all(cliArgs);
