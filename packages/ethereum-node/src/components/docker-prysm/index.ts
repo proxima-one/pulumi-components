@@ -12,6 +12,7 @@ export interface DockerPrysmArgs {
   executionEndpoint: pulumi.Input<string>;
   jwtSecret: pulumi.Input<string>;
   network: "goerli-prater" | "mainnet";
+  checkpointUrl?: pulumi.Input<string>;
   ports?: pulumi.Input<PrysmPorts | undefined>;
 }
 
@@ -69,6 +70,11 @@ export class DockerPrysm extends pulumi.ComponentResource {
     if (args.network == "goerli-prater") {
       cliArgs.push(`--genesis-state=${genesisFilePathInContainer}`);
       cliArgs.push(`--prater`);
+    }
+
+    if (args.checkpointUrl) {
+      cliArgs.push(pulumi.interpolate`--checkpoint-sync-url=${args.checkpointUrl}`);
+      cliArgs.push(pulumi.interpolate`--genesis-beacon-api-url=${args.checkpointUrl}`);
     }
 
     this.cliArgs = pulumi.all(cliArgs);
