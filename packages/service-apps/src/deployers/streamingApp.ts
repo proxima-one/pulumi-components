@@ -157,42 +157,57 @@ export class StreamingAppDeployer extends AppDeployerBase {
   private getNetworkService(
     network: Network
   ): pulumi.Output<StreamingAppService> {
-    return this.requireService<{ endpointTemplate: string }>(
+    const blockchainGateway = this.requireService<{ endpointTemplate: string }>(
       "main",
       "blockchain-gateway"
-    ).apply((params) => {
-      const endpoint = params.endpointTemplate.replace("{NETWORK}", network);
-      if (!evmNetworks.includes(network as any))
-        throw new Error(`network ${network} is not supported`);
+    );
 
-      return {
-        type: "eth-network",
-        name: network,
-        params: {
-          network: network,
-          type: "eth",
-          endpoints: {
-            http: {
-              connectionString: `provider=http;host=${endpoint}`,
-              slots: 100,
-              dedicated: true,
-              fetch: true,
-              streaming: false,
-            },
-            wss: {
-              connectionString: `provider=ws;host=${endpoint.replace(
-                "https://",
-                "wss://"
-              )}`,
-              slots: 10,
-              dedicated: true,
-              fetch: false,
-              streaming: true,
+    const evmIndexer = this.findService(network, "evm-indexer");
+
+    return pulumi
+      .all([blockchainGateway, evmIndexer])
+      .apply(([gatewayParams, evmIndexerParams]) => {
+        const endpoint = gatewayParams.endpointTemplate.replace(
+          "{NETWORK}",
+          network
+        );
+        if (!evmNetworks.includes(network as any))
+          throw new Error(`network ${network} is not supported`);
+
+        return {
+          type: "eth-network",
+          name: network,
+          params: {
+            network: network,
+            type: "eth",
+            endpoints: {
+              http: {
+                connectionString: `provider=http;host=${endpoint}`,
+                slots: 100,
+                dedicated: true,
+                fetch: true,
+                streaming: false,
+              },
+              wss: {
+                connectionString: `provider=ws;host=${endpoint.replace(
+                  "https://",
+                  "wss://"
+                )}`,
+                slots: 10,
+                dedicated: true,
+                fetch: false,
+                streaming: true,
+              },
+              indexer: evmIndexerParams
+                ? {
+                    uri: evmIndexerParams.connectionDetails.endpoint,
+                    authToken: evmIndexerParams.connectionDetails.authToken,
+                  }
+                : undefined,
             },
           },
-        },
-      };
-    });
+        };
+      });
   }
 
   private getStateManagerService(

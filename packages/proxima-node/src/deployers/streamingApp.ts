@@ -18,7 +18,7 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
   }
 
   public deployAll(apps: StreamingApp[]): DeployedStreamingApp[] {
-    return apps.map(x => this.deploy(x));
+    return apps.map((x) => this.deploy(x));
   }
 
   public deploy(app: StreamingApp): DeployedStreamingApp {

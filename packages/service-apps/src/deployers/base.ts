@@ -56,17 +56,26 @@ export abstract class AppDeployerBase {
     };
   }
 
+  protected findService<T = any>(
+    name: string,
+    type: string
+  ): pulumi.Output<T | undefined> {
+    return this.appStack.apply((x) => {
+      const service = x.services.find((x) => x.name == name && x.type == type);
+      return service?.params as T;
+    });
+  }
+
   protected requireService<T = any>(
     name: string,
     type: string
   ): pulumi.Output<T> {
-    return this.appStack.apply((x) => {
-      const service = x.services.find((x) => x.name == name && x.type == type);
-      if (!service)
+    return this.findService<T>(name, type).apply((x) => {
+      if (!x)
         throw new Error(
           `Required service ${name} ${type} not found in ${this.stack}`
         );
-      return service.params as T;
+      return x;
     });
   }
 
