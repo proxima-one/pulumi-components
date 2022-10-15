@@ -446,4 +446,4 @@ type Value =
   | undefined
   | null;
 
-type JsonObject = ComplexValue;
+export type JsonObject = ComplexValue;

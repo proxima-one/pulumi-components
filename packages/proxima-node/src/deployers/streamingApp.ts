@@ -17,6 +17,10 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
     this.webServiceDeployer = new WebServiceDeployer(params);
   }
 
+  public deployAll(apps: StreamingApp[]): DeployedStreamingApp[] {
+    return apps.map(x => this.deploy(x));
+  }
+
   public deploy(app: StreamingApp): DeployedStreamingApp {
     // deploy as webservice just without publishing ports. does webServiceDeployer still correct name??
     const resolvedArgs = pulumi.output(app);
