@@ -88,7 +88,7 @@ export class MongoExpress extends pulumi.ComponentResource {
             timeoutSeconds: 10,
             failureThreshold: 10,
             periodSeconds: 60,
-          }
+          },
         },
       },
       { parent: this }
