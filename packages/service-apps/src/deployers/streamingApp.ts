@@ -105,6 +105,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
         };
 
         const args: JsonObject = _.merge(
+          {},
           this.tuningArgs,
           streamProducingArgs,
           streamProcessingArgs,
