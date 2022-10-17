@@ -128,14 +128,14 @@ export class EvmIndexerDeployer {
     const connectionDetails = pulumi
       .all([
         webService.namespace,
-        apiPart.service,
+        apiPart.service.apply(x => x?.metadata?.name),
         passwords.resolve(auth.password),
       ])
-      .apply(([ns, svc, pass]) => {
-        assert(svc);
+      .apply(([ns, svcName, pass]) => {
+        assert(svcName);
         return {
           authToken: pass,
-          endpoint: `${svc.metadata.name}.${ns}.svc.cluster.local:${50052}`,
+          endpoint: `${svcName}.${ns}.svc.cluster.local:${50052}`,
         };
       });
 
