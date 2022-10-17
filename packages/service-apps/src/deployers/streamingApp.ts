@@ -181,6 +181,12 @@ export class StreamingAppDeployer extends AppDeployerBase {
           params: {
             network: network,
             type: "eth",
+            indexer: evmIndexerParams
+              ? {
+                uri: evmIndexerParams.connectionDetails.endpoint,
+                authToken: evmIndexerParams.connectionDetails.authToken,
+              }
+              : undefined,
             endpoints: {
               http: {
                 connectionString: `provider=http;host=${endpoint}`,
@@ -199,12 +205,6 @@ export class StreamingAppDeployer extends AppDeployerBase {
                 fetch: false,
                 streaming: true,
               },
-              indexer: evmIndexerParams
-                ? {
-                    uri: evmIndexerParams.connectionDetails.endpoint,
-                    authToken: evmIndexerParams.connectionDetails.authToken,
-                  }
-                : undefined,
             },
           },
         };
