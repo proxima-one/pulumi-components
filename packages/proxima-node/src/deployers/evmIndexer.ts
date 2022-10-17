@@ -128,7 +128,7 @@ export class EvmIndexerDeployer {
     const connectionDetails = pulumi
       .all([
         webService.namespace,
-        apiPart.service.apply(x => x?.metadata?.name),
+        apiPart.service.apply((x) => x?.metadata?.name),
         passwords.resolve(auth.password),
       ])
       .apply(([ns, svcName, pass]) => {

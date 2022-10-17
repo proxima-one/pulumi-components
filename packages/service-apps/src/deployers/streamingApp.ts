@@ -183,9 +183,9 @@ export class StreamingAppDeployer extends AppDeployerBase {
             type: "eth",
             indexer: evmIndexerParams
               ? {
-                uri: evmIndexerParams.connectionDetails.endpoint,
-                authToken: evmIndexerParams.connectionDetails.authToken,
-              }
+                  uri: evmIndexerParams.connectionDetails.endpoint,
+                  authToken: evmIndexerParams.connectionDetails.authToken,
+                }
               : undefined,
             endpoints: {
               http: {
