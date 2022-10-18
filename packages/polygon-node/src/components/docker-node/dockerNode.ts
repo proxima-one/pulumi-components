@@ -18,6 +18,8 @@ export interface DockerPolygonNodeArgs {
     heimdall?: HeimdallPorts;
   }>;
   verbose?: boolean;
+  borImage?: pulumi.Input<string>;
+  heimdallImage?: pulumi.Input<string>;
 }
 
 export interface PolygonNetworkConfig {
@@ -53,7 +55,7 @@ export class DockerPolygonNode extends pulumi.ComponentResource {
       {
         existingNetwork: networkName,
         imageName: resolvedArgs.apply(
-          (args) => configs[args.network].heimdallImage
+          (args) => args.heimdallImage ?? configs[args.network].heimdallImage
         ),
         ports: resolvedArgs.ports?.apply((x) => x?.heimdall),
         heimdallOptions: resolvedArgs.apply((args) => {
@@ -73,7 +75,7 @@ export class DockerPolygonNode extends pulumi.ComponentResource {
       {
         ports: resolvedArgs.ports?.apply((x) => x?.bor),
         existingNetwork: networkName,
-        imageName: resolvedArgs.apply((args) => configs[args.network].borImage),
+        imageName: resolvedArgs.apply((args) => args.borImage ?? configs[args.network].borImage),
         borOptions: pulumi
           .all([resolvedArgs, this.heimdall.restServerContainer.domainname])
           .apply<BorOptions>(([args, restServ]) => {
