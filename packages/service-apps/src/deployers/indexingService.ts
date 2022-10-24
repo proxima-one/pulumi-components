@@ -150,17 +150,15 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         });
 
         const deployedServer = deployedWebService.parts["server"];
-        const serviceMetadata = deployedServer
-          ? deployedServer.service.apply((x) => x!.metadata)
+        const internalHost = deployedServer
+          ? deployedServer.internalHost
           : undefined;
         return {
           name: pulumi.output(name),
           networks: pulumi.output(app.network).apply((x) => [x]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
-          internalEndpoint: serviceMetadata
-            ? serviceMetadata.apply(
-                (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
-              )
+          internalEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:27000`)
             : undefined,
         };
       }
@@ -287,8 +285,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         });
 
         const deployedServer = deployedWebService.parts["server"];
-        const serviceMetadata = deployedServer
-          ? deployedServer.service.apply((x) => x!.metadata)
+        const internalHost = deployedServer
+          ? deployedServer.internalHost
           : undefined;
         return {
           name: pulumi.output(name),
@@ -306,10 +304,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             ),
           ]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
-          internalEndpoint: serviceMetadata
-            ? serviceMetadata.apply(
-                (x) => `${x.name}.${x.namespace}.svc.cluster.local:27000`
-              )
+          internalEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:27000`)
             : undefined,
         };
       }

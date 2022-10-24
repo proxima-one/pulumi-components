@@ -145,11 +145,15 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         this.options()
       );
 
-      const { service, ingresses } = pulumi
+      const { service, ingresses, ingressRules } = pulumi
         .output(part.ports)
         .apply((ports) => {
           if (!ports || ports.length == 0)
-            return { service: undefined, ingresses: undefined };
+            return {
+              service: undefined,
+              ingresses: undefined,
+              ingressRules: undefined,
+            };
 
           const service = new k8s.core.v1.Service(
             partFullName,
@@ -247,12 +251,28 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             );
           });
 
-          return { service: service, ingresses: ingresses };
+          return { service, ingresses, ingressRules };
+        });
+
+      const serviceName = pulumi.output(service).apply((service) => {
+        if (!service) {
+          return undefined;
+        }
+        const serviceName = service?.metadata?.name;
+        assert(serviceName);
+        return serviceName;
+      });
+      const internalHost = pulumi
+        .all([this.namespace, serviceName])
+        .apply(([namespace, serviceName]) => {
+          return pulumi.interpolate`${serviceName}.${namespace}.svc.cluster.local`;
         });
 
       deployedParts[partName] = {
-        deployment: deployment,
-        service: service,
+        deployment,
+        service,
+        ingressRules,
+        internalHost,
       };
     }
 
@@ -332,6 +352,8 @@ export interface DeployedServiceApp {
 interface DeployedPart {
   deployment: k8s.apps.v1.Deployment;
   service: pulumi.Output<k8s.core.v1.Service | undefined>;
+  internalHost: pulumi.Output<string | undefined>;
+  ingressRules: pulumi.Output<IngressDef[] | undefined>;
 }
 
 interface IngressDef {
