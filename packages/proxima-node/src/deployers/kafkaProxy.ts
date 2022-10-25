@@ -45,8 +45,9 @@ export class KafkaProxyDeployer extends KubernetesServiceDeployer {
       configFiles: [
         {
           path: configPath,
-          content: pulumi.output(app.connection)
-            .apply(KafkaProxyDeployer.generateConfig)
+          content: pulumi
+            .output(app.connection)
+            .apply(KafkaProxyDeployer.generateConfig),
         },
       ],
       imageName: app.imageName,
@@ -72,17 +73,20 @@ export class KafkaProxyDeployer extends KubernetesServiceDeployer {
     });
     const servicePart = webService.parts["service"];
 
-    const publicConnectionDetails = servicePart.ingressRules.apply(
-      (rules): KafkaProxyConnectionDetails => {
-        assert(rules);
-        assert(rules.length == 1);
-        assert(rules[0].hosts.length == 1);
-        const host = rules[0].hosts[0];
-        return {
-          endpoint: `${host}:443`,
-        };
-      }
-    );
+    let publicConnectionDetails;
+    if (app.publicHost !== undefined) {
+      publicConnectionDetails = servicePart.ingressRules.apply(
+        (rules): KafkaProxyConnectionDetails => {
+          assert(rules);
+          assert(rules.length == 1);
+          assert(rules[0].hosts.length == 1);
+          const host = rules[0].hosts[0];
+          return {
+            endpoint: `${host}:443`,
+          };
+        }
+      );
+    }
 
     const connectionDetails = servicePart.internalHost.apply(
       (host): KafkaProxyConnectionDetails => ({ endpoint: `${host}:50051` })
@@ -109,7 +113,7 @@ export interface KafkaEnvConnectionDetails {
 export interface KafkaProxy {
   name?: string;
   imageName: pulumi.Input<string>;
-  publicHost: pulumi.Input<string>;
+  publicHost?: pulumi.Input<string>;
   resources?: pulumi.Input<ComputeResources>;
   connection: pulumi.Input<KafkaEnvConnectionDetails>;
 }
@@ -120,5 +124,5 @@ export interface KafkaProxyConnectionDetails {
 
 export interface DeployedKafkaProxy extends DeployedServiceApp {
   connectionDetails: pulumi.Output<KafkaProxyConnectionDetails>;
-  publicConnectionDetails: pulumi.Output<KafkaProxyConnectionDetails>;
+  publicConnectionDetails?: pulumi.Output<KafkaProxyConnectionDetails>;
 }
