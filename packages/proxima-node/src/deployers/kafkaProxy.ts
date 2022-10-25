@@ -93,9 +93,13 @@ export class KafkaProxyDeployer extends KubernetesServiceDeployer {
     );
 
     return {
-      ...webService,
-      connectionDetails,
-      publicConnectionDetails,
+      name,
+      type: "kafka-proxy",
+      params: {
+        ...webService,
+        connectionDetails,
+        publicConnectionDetails,
+      },
     };
   }
 }
@@ -122,7 +126,13 @@ export interface KafkaProxyConnectionDetails {
   endpoint: string;
 }
 
-export interface DeployedKafkaProxy extends DeployedServiceApp {
+export interface DeployedKafkaProxyParams extends DeployedServiceApp {
   connectionDetails: pulumi.Output<KafkaProxyConnectionDetails>;
   publicConnectionDetails?: pulumi.Output<KafkaProxyConnectionDetails>;
+}
+
+export interface DeployedKafkaProxy {
+  name: string;
+  type: "kafka-proxy";
+  params: DeployedKafkaProxyParams;
 }
