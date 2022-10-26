@@ -367,7 +367,7 @@ export class StreamingApp<
     ) as Readonly<StreamRecord<TOutputStream>>;
 
     this.args = opts.args ?? {};
-    this.tuningArgs = opts.args ?? {};
+    this.tuningArgs = opts.tuningArgs ?? {};
     this.requirements = opts.requirements ?? {};
 
     const hash = this.buildHash();
