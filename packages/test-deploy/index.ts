@@ -11,30 +11,52 @@ const streamingAppDeployer = new proxima.StreamingAppDeployer({
     readBuffer: 10000,
   },
 });
-streamingAppDeployer.deploy(
-  new proxima.StreamingApp({
-    name: "eth-connector-test",
-    args: {
-      network: "eth-goerli",
-      blockTimeout: 90000,
-      maxReorgDepth: 200,
-      genesisTimestampMs: 1438269973000,
-    },
-    input: null,
-    output: {
-      default: "proxima-test.eth-goerli.blocks",
-      blockSync: "proxima-test.eth-goerli.connect",
-    },
-    executable: {
-      image: "quay.io/proxima.one/streaming-app:eth-0.11.3",
-      app: "eth-connector",
-    },
-    version: proxima.SemVer.parse("1.0.0"),
-    requirements: {
-      network: "eth-goerli",
-    },
-  })
-);
+const app = new proxima.StreamingApp({
+  name: "eth-connector-test",
+  args: {
+    network: "eth-goerli",
+    blockTimeout: 90000,
+    maxReorgDepth: 200,
+    genesisTimestampMs: 1438269973000,
+  },
+  input: null,
+  output: {
+    default: "proxima-test.eth-goerli.blocks",
+    blockSync: "proxima-test.eth-goerli.connect",
+  },
+  executable: {
+    image: "quay.io/proxima.one/streaming-app:eth-0.11.3",
+    app: "eth-connector",
+  },
+  version: proxima.SemVer.parse("1.0.0"),
+  requirements: {
+    network: "eth-goerli",
+  },
+});
+const app2 = new proxima.StreamingApp({
+  name: "eth-connector-test",
+  args: {
+    network: "eth-goerli",
+    blockTimeout: 90000,
+    maxReorgDepth: 200,
+    genesisTimestampMs: 1438269973000,
+  },
+  input: `${app.output.default}?height=1000`,
+  output: {
+    default: "proxima-test.eth-goerli.blocks",
+    blockSync: "proxima-test.eth-goerli.connect",
+  },
+  executable: {
+    image: "quay.io/proxima.one/streaming-app:eth-0.11.3",
+    app: "eth-connector",
+  },
+  version: proxima.SemVer.parse("1.0.0"),
+  requirements: {
+    network: "eth-goerli",
+  },
+});
+streamingAppDeployer.deploy(app);
+streamingAppDeployer.deploy(app2);
 
 //export const streamDbs = [streamingAppDeployer.targetDb];
 

@@ -74,7 +74,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
       .apply(([availableDbs, targetDb, stateManager, requiredServices]) => {
         // resolve input using all known streamdbs
         const input = mapLookup(app.input, (stream, key) => {
-          const inputStream = InputStream.parse(key);
+          const inputStream = InputStream.parse(stream);
 
           const existInTargetDb = this.apps.find((x) =>
             x.output.includes(inputStream.id)
