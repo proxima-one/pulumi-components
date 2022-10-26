@@ -363,7 +363,7 @@ export class StreamingApp<
     // add versions to output streams
     this.output = mapLookup(
       this.output,
-      (item, key) => `${item}-${this.version.major}.${this.version.minor}`
+      (item, key) => `${item}.${this.version.major}_${this.version.minor}`
     ) as Readonly<StreamRecord<TOutputStream>>;
 
     this.args = opts.args ?? {};
