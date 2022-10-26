@@ -74,7 +74,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
       .apply(([availableDbs, targetDb, stateManager, requiredServices]) => {
         // resolve input using all known streamdbs
         const input = mapLookup(app.input, (stream, key) => {
-          const inputStream = InputStream.parse(key);
+          const inputStream = InputStream.parse(stream);
 
           const existInTargetDb = this.apps.find((x) =>
             x.output.includes(inputStream.id)
@@ -363,11 +363,11 @@ export class StreamingApp<
     // add versions to output streams
     this.output = mapLookup(
       this.output,
-      (item, key) => `${item}-${this.version.major}.${this.version.minor}`
+      (item, key) => `${item}.${this.version.major}_${this.version.minor}`
     ) as Readonly<StreamRecord<TOutputStream>>;
 
     this.args = opts.args ?? {};
-    this.tuningArgs = opts.args ?? {};
+    this.tuningArgs = opts.tuningArgs ?? {};
     this.requirements = opts.requirements ?? {};
 
     const hash = this.buildHash();

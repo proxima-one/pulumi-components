@@ -75,7 +75,9 @@ export class DockerPolygonNode extends pulumi.ComponentResource {
       {
         ports: resolvedArgs.ports?.apply((x) => x?.bor),
         existingNetwork: networkName,
-        imageName: resolvedArgs.apply((args) => args.borImage ?? configs[args.network].borImage),
+        imageName: resolvedArgs.apply(
+          (args) => args.borImage ?? configs[args.network].borImage
+        ),
         borOptions: pulumi
           .all([resolvedArgs, this.heimdall.restServerContainer.domainname])
           .apply<BorOptions>(([args, restServ]) => {
