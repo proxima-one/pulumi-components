@@ -148,9 +148,11 @@ function proximaStreamingApp(
   appExecutable: AppDefinition["executable"]
 ): AppExecutable {
   return {
+
     type: "docker",
     image: `${dockerRepo}:${appExecutable.image}-${appExecutable.version}`,
     appName: appExecutable.app,
+
   };
 }
 
