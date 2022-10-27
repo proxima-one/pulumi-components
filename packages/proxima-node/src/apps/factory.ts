@@ -36,10 +36,12 @@ export class ProximaAppFactory {
         inputStreams["default"] = appDef.input.map((x) => ({ id: x }));
       else if (appDef.input) inputStreams = appDef.input;
 
+
       let outputStreams: Record<string, string> = {};
       if (typeof appDef.output == "string")
         outputStreams["default"] = appDef.output;
       else if (appDef.output) outputStreams = appDef.output;
+
 
       apps.push({
         id: id,
