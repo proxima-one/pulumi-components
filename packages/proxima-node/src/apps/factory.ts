@@ -85,6 +85,7 @@ export class ProximaAppFactory {
           "Input object is not supported. Try createNewRuntime() instead"
         );
 
+
       apps.push({
         id: id,
         env: proximaEnv(env.sourceDb, env.targetDb, appDef.input),
