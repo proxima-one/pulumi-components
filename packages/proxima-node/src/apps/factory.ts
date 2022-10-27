@@ -169,7 +169,9 @@ function proximaEnv(
         ? undefined
         : sourceDb,
     db: targetDb,
+
     sourceStream: typeof sourceStream == "string" ? sourceStream : undefined,
+
     sourceStreams: Array.isArray(sourceStream) ? sourceStream : undefined,
   };
 }
