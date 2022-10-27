@@ -12,7 +12,6 @@ import {
   ProximaAppMetadata,
 } from "../components";
 
-
 export class ProximaAppFactory {
   public constructor(private readonly options: AppHostingOptions) {}
 
