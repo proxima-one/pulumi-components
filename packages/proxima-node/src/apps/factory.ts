@@ -20,6 +20,7 @@ export class ProximaAppFactory {
     namespace: string,
     appDefs: Record<string, AppDefinition>
   ): (ProximaAppMetadata & ProximaAppHostingOptions)[] {
+
     const apps: (ProximaAppMetadata & ProximaAppHostingOptions)[] = [];
 
     for (const [appKey, appDef] of _.entries(appDefs)) {
