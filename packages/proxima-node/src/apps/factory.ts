@@ -26,7 +26,9 @@ export class ProximaAppFactory {
     for (const [appKey, appDef] of _.entries(appDefs)) {
       const id = `${namespace}.${appKey}${appDef.version}`;
 
+
       let inputStreams: Record<string, InputStreamDef | InputStreamDef[]> = {};
+
 
       if (typeof appDef.input == "string")
         inputStreams["default"] = { id: appDef.input };
