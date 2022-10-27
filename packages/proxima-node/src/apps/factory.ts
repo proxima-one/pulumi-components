@@ -88,6 +88,7 @@ export class ProximaAppFactory {
 
       apps.push({
         id: id,
+
         env: proximaEnv(env.sourceDb, env.targetDb, appDef.input),
         executable: proximaStreamingApp(
           this.options.dockerRepo,
@@ -99,6 +100,7 @@ export class ProximaAppFactory {
           { outputStream: appDef.output },
           appDef.args
         ),
+
         hostHints: appDef.hostHints,
       });
     }
