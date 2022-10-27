@@ -112,10 +112,12 @@ export class ProximaAppFactory {
         .map((x) => eventStore.streamSelector(x))
         .flatten()
         .value();
+
       const eventStoreSinkApps: ProximaAppMetadata[] = streamsToSink.map(
         (stream) => {
           const from = typeof stream == "string" ? stream : stream.from;
           const to = typeof stream == "string" ? stream : stream.to;
+
 
           return {
             env: proximaEnv(env.sourceDb, env.targetDb, from),
