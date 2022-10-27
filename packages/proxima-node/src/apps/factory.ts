@@ -64,8 +64,11 @@ export class ProximaAppFactory {
       });
     }
 
+
     return apps;
+
   }
+
 
   public create(
     env: AppEnvironment,
