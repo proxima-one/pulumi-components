@@ -161,6 +161,7 @@ function proximaEnv(
   targetDb: string,
   sourceStream: string | string[] | undefined
 ): ProximaAppEnvironment {
+
   return {
     sourceDb:
       sourceStream === undefined
@@ -171,6 +172,7 @@ function proximaEnv(
     db: targetDb,
 
     sourceStream: typeof sourceStream == "string" ? sourceStream : undefined,
+
 
     sourceStreams: Array.isArray(sourceStream) ? sourceStream : undefined,
   };
