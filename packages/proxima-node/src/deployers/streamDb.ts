@@ -10,6 +10,7 @@ import { strict as assert } from "assert";
 import { DeployedServiceApp, WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
+import { DbSettings } from "@proxima-one/pulumi-proxima-node";
 
 export class StreamDbDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
@@ -157,21 +158,6 @@ export interface StreamDb {
   relayer?: pulumi.Input<{
     streams: Record<string, { name: string; connectTo: string }>;
   }>;
-}
-
-export type DbSettings =
-  | { type: "import"; endpoint: string; name: string }
-  | {
-      type: "provision";
-      params: ProvisionMongoDbParams;
-    };
-
-export interface ProvisionMongoDbParams {
-  resource: ComputeResources;
-  storage: Storage;
-  webUI?: {
-    publicHost: pulumi.Input<string>;
-  };
 }
 
 export interface DeployedStreamDbParams extends DeployedServiceApp {
