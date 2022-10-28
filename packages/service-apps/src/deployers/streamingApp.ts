@@ -172,7 +172,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
       "blockchain-gateway"
     );
 
-    const evmIndexer = this.findService(network, "evm-indexer") ?? this.findService(`${network}-indexer`, "evm-indexer");
+    const evmIndexer = this.findAnyService([network, `${network}-indexer`], "evm-indexer");
 
     return pulumi
       .all([blockchainGateway, evmIndexer])

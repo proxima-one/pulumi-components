@@ -152,10 +152,10 @@ export interface StreamDb {
   publicHost?: pulumi.Input<string>;
   imageName?: pulumi.Input<string>;
   env?: pulumi.Input<string>;
-
-  relayer?: pulumi.Input<{
-    streams: Record<string, { name: string; connectTo: string }>;
-  }>;
+  relayFrom?: pulumi.Input<pulumi.Input<{
+    remote: pulumi.Input<string>;
+    streams: pulumi.Input<pulumi.Input<string[]>>;
+  }[]>>;
 }
 
 export interface DeployedStreamDbParams {
