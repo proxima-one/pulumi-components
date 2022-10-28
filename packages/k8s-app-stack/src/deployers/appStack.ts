@@ -77,7 +77,7 @@ export interface AppStackArgs<T extends string> {
   };
 }
 
-export class AppStack<TNamespace extends string> {
+export class AppStack<TNamespace extends string = string> {
   public readonly appGroups: AppGroup[] = [];
   public readonly services: DeployedService[] = [];
 
@@ -97,7 +97,7 @@ export class AppStack<TNamespace extends string> {
       namespace: TNamespace;
       nodeSelectors?: pulumi.Input<Record<string, string>>;
     },
-    func: (params: k8sBase.ServiceDeployParameters) => DeployedService
+    func: (params: k8sBase.ServiceDeployParameters) => DeployedService | DeployedService[]
   ) {
     const params = {
       ...this.kubernetesDeployParams,
@@ -106,7 +106,11 @@ export class AppStack<TNamespace extends string> {
       imageRegistrySecrets: this.imageRegistrySecrets,
     };
 
-    this.services.push(func(params));
+    const deployed = func(params);
+    if (Array.isArray(deployed))
+      this.services.push(...deployed);
+    else
+      this.services.push(deployed);
   }
 
   public service(name: string, type: string, params: pulumi.Input<any>) {

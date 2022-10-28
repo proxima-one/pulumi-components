@@ -56,6 +56,15 @@ export class StreamingAppDeployer extends AppDeployerBase {
     }));
   }
 
+  public deployAll(apps: StreamingApp<
+    string,
+    Record<string, string>,
+    string,
+    Record<string, string>
+    >[]): DeployedApp[] {
+    return apps.map(x => this.deploy(x));
+  }
+
   public deploy(
     app: StreamingApp<
       string,
