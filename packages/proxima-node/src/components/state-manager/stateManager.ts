@@ -10,7 +10,7 @@ export interface StateManagerArgs {
   imagePullSecrets?: pulumi.Input<string[]>;
   imageName: pulumi.Input<string>;
   resources?: ResourceRequirements;
-  storage: NewStorageClaim;
+  storage: pulumi.Input<NewStorageClaim>;
   publicHost?: pulumi.Input<string | string[]>;
 }
 
@@ -65,11 +65,11 @@ export class StateManager extends pulumi.ComponentResource {
           },
         },
         spec: {
-          storageClassName: args.storage.class,
+          storageClassName: pulumi.output(args).storage.class,
           accessModes: ["ReadWriteOnce"],
           resources: {
             requests: {
-              storage: args.storage.size,
+              storage: pulumi.output(args).storage.size,
             },
           },
         },

@@ -1,7 +1,6 @@
 import {
   ComputeResources,
   ServiceDeployParameters,
-  Storage,
 } from "@proxima-one/pulumi-k8s-base";
 import * as pulumi from "@pulumi/pulumi";
 import { Password } from "../components/types";
@@ -127,7 +126,7 @@ export class StreamDbDeployer {
           .apply(([publicHost, pass]) => {
             return {
               authToken: pass,
-              endpoint: `${publicHost}:433`,
+              endpoint: `${publicHost}:443`,
             };
           })
       : undefined;

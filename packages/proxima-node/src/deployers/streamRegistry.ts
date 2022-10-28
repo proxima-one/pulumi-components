@@ -18,27 +18,7 @@ export class StreamRegistryDeployer {
   }
 
   public deploy(app: StreamRegistry): DeployedStreamRegistry {
-    const db: DbSettings = app.db ?? {
-      type: "provision",
-      params: {
-        storage: {
-          size: "10Gi",
-          class: "",
-        },
-        webUI: app.publicHost ? {} : undefined,
-      },
-    };
-
-    let webUiPublicHost;
-    if (db.params.webUI) {
-      if (db.params.webUI.overridePublicHost) {
-        webUiPublicHost = db.params.webUI.overridePublicHost;
-      } else {
-        if (app.publicHost) {
-          webUiPublicHost = `${app.name}-mongo.${app.publicHost}`;
-        }
-      }
-    }
+    const db = app.db;
 
     const mongo = this.mongoDeployer.deploy({
       name: app.name,
@@ -49,8 +29,10 @@ export class StreamRegistryDeployer {
         user: "proxima",
         password: { type: "random", name: `${app.name}-mongo`, length: 32 },
       },
-      webUI: webUiPublicHost !== undefined,
-      publicHost: webUiPublicHost,
+      webUI: db.params.webUI !== undefined,
+      publicHost: db.params.webUI
+        ? pulumi.output(db.params.webUI).apply((x) => x.publicHost)
+        : undefined,
       version: "4.4",
     });
 
@@ -75,7 +57,7 @@ export class StreamRegistryDeployer {
               servicePort: 80,
               ingress: app.publicHost
                 ? {
-                    host: [`stream-api.${app.publicHost}`],
+                    host: [app.publicHost],
                   }
                 : undefined,
             },
@@ -134,7 +116,7 @@ export interface StreamRegistry {
   name: string;
   imageName: string;
   resources?: ComputeResources;
-  db?: DbSettings;
+  db: DbSettings;
   publicHost?: string;
   streamDbEndpoints: {
     url: string;
@@ -152,7 +134,7 @@ type DbSettings = {
     resource?: ComputeResources;
     storage: Storage;
     webUI?: {
-      overridePublicHost?: string;
+      publicHost: pulumi.Input<string>;
     };
   };
 };
