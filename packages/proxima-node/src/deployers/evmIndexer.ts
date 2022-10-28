@@ -165,7 +165,6 @@ export class EvmIndexerDeployer {
       type: "evm-indexer",
       name: app.name,
       params: {
-        ...webService,
         connectionDetails: connectionDetails,
         publicConnectionDetails: publicConnectionDetails,
       },
