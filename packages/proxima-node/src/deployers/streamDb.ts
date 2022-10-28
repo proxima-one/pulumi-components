@@ -10,6 +10,7 @@ import { DeployedServiceApp, WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
 import { DbSettings } from "@proxima-one/pulumi-proxima-node";
+import * as _ from "lodash";
 
 export class StreamDbDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
@@ -53,13 +54,29 @@ export class StreamDbDeployer {
       };
     });
 
+    const relayerConfig = pulumi.output(app.relayFrom).apply(relayFrom => {
+      if (!relayFrom)
+        return undefined;
+
+      let i = 0;
+      return {
+        streams: pulumi.all(relayFrom).apply(x => x
+          .flatMap(relay => relay.streams.map(stream => ({
+            [`stream_${++i}`]: {
+              name: stream,
+              connectTo: relay.remote,
+            },
+          }))))
+      };
+    });
+
     const config = pulumi
-      .all({
+      .all<any>({
         storage: {
           connectionString: db.endpoint,
           db: db.name,
         },
-        relayer: app.relayer,
+        relayer: relayerConfig,
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
 
