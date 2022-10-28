@@ -135,7 +135,6 @@ export class StreamDbDeployer {
       name: app.name,
       type: "stream-db",
       params: {
-        ...webService,
         connectionDetails,
         publicConnectionDetails,
       },
@@ -159,7 +158,7 @@ export interface StreamDb {
   }>;
 }
 
-export interface DeployedStreamDbParams extends DeployedServiceApp {
+export interface DeployedStreamDbParams {
   connectionDetails: pulumi.Output<StreamDbConnectionDetails>;
   publicConnectionDetails?: pulumi.Output<StreamDbConnectionDetails>;
 }

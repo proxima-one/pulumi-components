@@ -104,7 +104,6 @@ export class StreamRegistryDeployer {
       name: app.name,
       type: "stream-registry",
       params: {
-        ...webService,
         connectionDetails,
         publicConnectionDetails,
       },
@@ -143,7 +142,7 @@ export interface StreamRegistryConnectionDetails {
   endpoint: string;
 }
 
-export interface DeployedStreamRegistryParams extends DeployedServiceApp {
+export interface DeployedStreamRegistryParams {
   connectionDetails: pulumi.Output<StreamRegistryConnectionDetails>;
   publicConnectionDetails?: pulumi.Output<StreamRegistryConnectionDetails>;
 }
