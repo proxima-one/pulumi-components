@@ -54,7 +54,6 @@ export class StreamRegistryDeployer {
             {
               name: "http",
               containerPort: containerPort,
-              servicePort: 80,
               ingress: app.publicHost
                 ? {
                     host: [app.publicHost],
@@ -95,7 +94,7 @@ export class StreamRegistryDeployer {
         assert(rules[0].hosts.length == 1);
         const host = rules[0].hosts[0];
         return {
-          endpoint: `${host}:80`,
+          endpoint: `${host}:443`,
         };
       });
     }

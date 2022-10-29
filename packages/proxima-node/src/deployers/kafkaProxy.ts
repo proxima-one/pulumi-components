@@ -61,7 +61,6 @@ export class KafkaProxyDeployer extends KubernetesServiceDeployer {
             {
               name: "grpc",
               containerPort: 50051,
-              servicePort: 443,
               ingress: {
                 protocol: "grpc",
               },
