@@ -4,3 +4,6 @@ export * from "./evmIndexer";
 export * from "./streamingApp";
 export * from "./kafkaProxy";
 export * from "./streamDb";
+export * from "./streamRegistry";
+export * from "./kafka";
+export * from "./stateManager";

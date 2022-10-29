@@ -66,6 +66,16 @@ export abstract class AppDeployerBase {
     });
   }
 
+  protected findAnyService<T = any>(
+    names: string[],
+    type: string
+  ): pulumi.Output<T | undefined> {
+    return this.appStack.apply((x) => {
+      const service = x.services.find((x) => names.includes(x.name) && x.type == type);
+      return service?.params as T;
+    });
+  }
+
   protected requireService<T = any>(
     name: string,
     type: string

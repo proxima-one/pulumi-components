@@ -56,6 +56,15 @@ export class StreamingAppDeployer extends AppDeployerBase {
     }));
   }
 
+  public deployAll(apps: StreamingApp<
+    string,
+    Record<string, string>,
+    string,
+    Record<string, string>
+    >[]): DeployedApp[] {
+    return apps.map(x => this.deploy(x));
+  }
+
   public deploy(
     app: StreamingApp<
       string,
@@ -163,7 +172,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
       "blockchain-gateway"
     );
 
-    const evmIndexer = this.findService(network, "evm-indexer");
+    const evmIndexer = this.findAnyService([network, `${network}-indexer`], "evm-indexer");
 
     return pulumi
       .all([blockchainGateway, evmIndexer])

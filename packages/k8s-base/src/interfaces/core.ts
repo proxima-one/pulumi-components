@@ -23,7 +23,7 @@ export interface StorageClassMeta {
 export type Storage =
   | string
   | {
-      size: string;
+      size: StorageSize;
       class: StorageClassRequest;
     };
 

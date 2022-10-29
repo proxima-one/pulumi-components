@@ -7,7 +7,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { Password } from "../components/types";
 import * as yaml from "js-yaml";
 import { strict as assert } from "assert";
-import { DeployedServiceApp, WebServiceDeployer } from "./webService";
+import { WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
 
@@ -79,7 +79,7 @@ export class EvmIndexerDeployer {
           ws: app.connection.wss,
         },
         logging: true,
-        "goroutines-limit": app.computeLimit ?? 20,
+        "goroutines-limit": app.indexer?.computeLimit ?? 20, // todo: don't set this option for server
         network: app.network,
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
@@ -89,10 +89,10 @@ export class EvmIndexerDeployer {
       configFiles: [{ path: "/app/config.yaml", content: config }],
       imageName: imageName,
       parts: {
-        api: {
-          resources: app.resources ?? "50m/2000m,300Mi/6Gi",
+        server: {
+          resources: app.server?.resources ?? "50m/2000m,300Mi/3Gi",
           env: {},
-          args: ["--config", "/app/config.yaml", "--indexer", "--server"],
+          args: ["--config", "/app/config.yaml", "--server"],
           deployStrategy: {
             type: "Recreate",
           },
@@ -120,13 +120,25 @@ export class EvmIndexerDeployer {
             },
           ],
         },
+        indexer: {
+          resources: app.indexer?.resources ?? "50m/2000m,300Mi/1Gi",
+          env: {},
+          args: ["--config", "/app/config.yaml", "--indexer"],
+          metrics: {
+            labels: {
+              env: app.env ?? "dev",
+              app: app.name,
+              serviceType: "evm-indexer",
+            },
+          },
+        },
       },
     });
 
-    const apiPart = webService.parts["api"];
+    const serverPart = webService.parts["server"];
 
     const connectionDetails = pulumi
-      .all([apiPart.internalHost, passwords.resolve(auth.password)])
+      .all([serverPart.internalHost, passwords.resolve(auth.password)])
       .apply(([host, pass]) => {
         assert(host);
         return {
@@ -144,15 +156,18 @@ export class EvmIndexerDeployer {
           .apply(([publicHost, pass]) => {
             return {
               authToken: pass,
-              endpoint: `${publicHost}:433`,
+              endpoint: `${publicHost}:443`,
             };
           })
       : undefined;
 
     return {
-      ...webService,
-      connectionDetails,
-      publicConnectionDetails,
+      type: "evm-indexer",
+      name: app.name,
+      params: {
+        connectionDetails: connectionDetails,
+        publicConnectionDetails: publicConnectionDetails,
+      },
     };
   }
 }
@@ -167,14 +182,20 @@ export interface EvmIndexer {
     http?: pulumi.Input<string>;
     wss?: pulumi.Input<string>;
   };
-  resources?: pulumi.Input<ComputeResources>;
+  indexer?: {
+    resources?: pulumi.Input<ComputeResources>;
+    /*
+      Goroutines limit, default 20
+     */
+    computeLimit?: pulumi.Input<number>;
+  };
+  server?: {
+    resources?: pulumi.Input<ComputeResources>;
+  };
   publicHost?: pulumi.Input<string>;
   imageName?: pulumi.Input<string>;
   env?: pulumi.Input<string>;
-  /*
-  Goroutines limit, default 20
-   */
-  computeLimit?: pulumi.Input<number>;
+
   network?: pulumi.Input<string>;
 }
 
@@ -193,7 +214,13 @@ export interface ProvisionMongoDbParams {
   };
 }
 
-export interface DeployedEvmIndexer extends DeployedServiceApp {
+export interface DeployedEvmIndexer {
+  type: "evm-indexer";
+  name: string;
+  params: EvmIndexerParams;
+}
+
+export interface EvmIndexerParams {
   connectionDetails: pulumi.Output<EvmIndexerConnectionDetails>;
   publicConnectionDetails?: pulumi.Output<EvmIndexerConnectionDetails>;
 }

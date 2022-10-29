@@ -23,6 +23,7 @@ export class KafkaCluster extends pulumi.ComponentResource {
   ) {
     super("proxima-k8s:KafkaCluster", name, args, opts);
 
+    const resolvedArgs = pulumi.output(args);
     this.kafka = new k8s.apiextensions.CustomResource(
       name,
       {
@@ -70,8 +71,8 @@ export class KafkaCluster extends pulumi.ComponentResource {
             storage: {
               type: "persistent-claim",
               deleteClaim: false,
-              size: args.kafka.storage.size,
-              class: args.kafka.storage.class,
+              size: resolvedArgs.kafka.storage.size,
+              class: resolvedArgs.kafka.storage.class,
             },
           },
           zookeeper: {
@@ -79,8 +80,8 @@ export class KafkaCluster extends pulumi.ComponentResource {
             storage: {
               type: "persistent-claim",
               deleteClaim: false,
-              size: args.zookeeper.storage.size,
-              class: args.zookeeper.storage.class,
+              size: resolvedArgs.zookeeper.storage.size,
+              class: resolvedArgs.zookeeper.storage.class,
             },
             resources: args.zookeeper.resources ?? {
               requests: {
@@ -255,7 +256,7 @@ export interface KafkaClusterArgs {
   replicas?: number;
   version?: string;
   kafka: {
-    storage: NewStorageClaim;
+    storage: pulumi.Input<NewStorageClaim>;
     resources?: ResourceRequirements;
     listeners?: {
       external?: {
@@ -264,7 +265,7 @@ export interface KafkaClusterArgs {
     };
   };
   zookeeper: {
-    storage: NewStorageClaim;
+    storage: pulumi.Input<NewStorageClaim>;
     resources?: ResourceRequirements;
   };
 }
