@@ -16,29 +16,28 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
     const name = app.name;
     const deployedParts: Record<string, DeployedPart> = {};
 
-    const configMap = app.configFiles
-      ? new k8s.core.v1.ConfigMap(
+    for (const [partName, part] of _.entries(app.parts)) {
+      if (part.disabled) continue;
+
+      const configMap = app.configFiles
+        ? new k8s.core.v1.ConfigMap(
           `${name}-config`,
           {
             metadata: {
               namespace: this.namespace,
             },
-            data: app.configFiles
+            data: app.configFiles.concat(part.configFiles ?? [])
               .map<[string, any]>((file) => [file.path, file.content])
               .reduce(
                 (acc, [k, v]: [string, any]) => ({
                   ...acc,
-                  [k.replace(/\//g, "_")]: v,
+                  [k.replace(/\//g, "_")]: v, // replace / with _ as it can't be used
                 }),
                 {}
               ),
           },
           this.options()
-        )
-      : undefined;
-
-    for (const [partName, part] of _.entries(app.parts)) {
-      if (part.disabled) continue;
+        ) : undefined;
 
       const imageName = pulumi
         .all([pulumi.output(app.imageName), pulumi.output(part.imageName)])
@@ -304,6 +303,7 @@ export interface ServiceAppPart {
   args?: pulumi.Input<pulumi.Input<string>[]>;
   metrics?: pulumi.Input<Metrics>;
   deployStrategy?: pulumi.Input<DeployStrategy>;
+  configFiles?: ConfigFile[];
   disabled?: boolean;
 }
 
