@@ -19,9 +19,11 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
     for (const [partName, part] of _.entries(app.parts)) {
       if (part.disabled) continue;
 
+      const partFullName = partName == "" ? name : `${name}-${partName}`;
+
       const configMap = app.configFiles
         ? new k8s.core.v1.ConfigMap(
-          `${partName}-config`,
+          `${partFullName}-config`,
           {
             metadata: {
               namespace: this.namespace,
@@ -47,8 +49,6 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             throw new Error(`unspecified image for part ${partName}`);
           return imageName;
         });
-
-      const partFullName = partName == "" ? name : `${name}-${partName}`;
 
       const metricsLabels = pulumi.output(part.metrics).apply((x) =>
         x
