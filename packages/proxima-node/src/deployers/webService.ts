@@ -21,7 +21,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
 
       const configMap = app.configFiles
         ? new k8s.core.v1.ConfigMap(
-          `${name}-config`,
+          `${partName}-config`,
           {
             metadata: {
               namespace: this.namespace,
