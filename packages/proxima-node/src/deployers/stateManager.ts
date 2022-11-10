@@ -27,6 +27,9 @@ export class StateManagerDeployer extends KubernetesServiceDeployer {
           class: storageClass!,
           size: args.storage.size,
         })),
+        resources: args.resource
+          ? this.getResourceRequirements(args.resource)
+          : undefined,
       },
       this.options()
     );
