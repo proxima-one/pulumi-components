@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.10](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-test-deploy@0.2.9...@proxima-one/pulumi-test-deploy@0.2.10) (2022-11-15)
+
+**Note:** Version bump only for package @proxima-one/pulumi-test-deploy
+
+
+
+
+
 ## [0.2.9](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-test-deploy@0.2.8...@proxima-one/pulumi-test-deploy@0.2.9) (2022-11-10)
 
 **Note:** Version bump only for package @proxima-one/pulumi-test-deploy
