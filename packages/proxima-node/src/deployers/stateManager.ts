@@ -10,7 +10,7 @@ import {
 // todo: migrate to WebServiceDeployer
 export class StateManagerDeployer extends KubernetesServiceDeployer {
   public deploy(args: StateManagerArgs): DeployedStateManager {
-    const image = "quay.io/proxima.one/services:state-manager-0.2.4-1685630";
+    const image = args.image ?? "quay.io/proxima.one/services:state-manager-0.2.4-1685630";
 
     const stateManager = new proxima.StateManager(
       args.name,
@@ -54,6 +54,7 @@ export interface DeployedStateManager {
 
 interface StateManagerArgs {
   name: string;
+  image?: string;
   resource?: ComputeResources;
   storage: {
     size: StorageSize;
