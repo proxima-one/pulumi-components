@@ -54,15 +54,15 @@ export class StreamDbDeployer {
       if (!relayFrom)
         return undefined;
 
-      let i = 0;
       return {
+        pollingIntervalMs: 5 * 60 * 1000,
         streams: pulumi.all(relayFrom).apply(x => x
-          .flatMap(relay => relay.streams.map(stream => [
-            `stream_${++i}`,
+          .map((relay, idx) => [
+            `stream_${idx}`,
             {
-              name: stream,
+              wildcardPatterns: relay.streams,
               connectTo: relay.remote,
-            }]))
+            }])
         ).apply(arr => Object.fromEntries(arr))
       };
     });
@@ -72,6 +72,7 @@ export class StreamDbDeployer {
         storage: {
           connectionString: db.endpoint,
           db: db.name,
+          compression: "zlib"
         },
         relayer: relayerConfig,
       })
@@ -88,7 +89,7 @@ export class StreamDbDeployer {
             STREAMING_BATCH_SIZE: "500",
             STREAMING_SLEEP_INTERVAL: "50",
           },
-          args: [],
+          args: [...app.relayFrom ? ["--readonly"] : []],
           deployStrategy: {
             type: "Recreate",
           },
