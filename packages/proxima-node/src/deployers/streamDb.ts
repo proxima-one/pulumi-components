@@ -69,6 +69,11 @@ export class StreamDbDeployer {
 
     const config = pulumi
       .all<any>({
+        server: {
+          host: "0.0.0.0",
+          port: 50051,
+          metricsPort: 2112,
+        },
         storage: {
           connectionString: db.endpoint,
           db: db.name,
