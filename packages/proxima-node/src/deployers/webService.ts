@@ -70,7 +70,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             namespace: this.namespace,
           },
           spec: {
-            replicas: 1,
+            replicas: pulumi.output(part.scale).apply(x => x ?? 1),
             selector: {
               matchLabels: matchLabels,
             },
@@ -305,6 +305,7 @@ export interface ServiceAppPart {
   deployStrategy?: pulumi.Input<DeployStrategy>;
   configFiles?: ConfigFile[];
   disabled?: boolean;
+  scale?: pulumi.Input<number>;
 }
 
 export interface DeployStrategy {
