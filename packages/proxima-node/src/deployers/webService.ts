@@ -21,14 +21,15 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
 
       const partFullName = partName == "" ? name : `${name}-${partName}`;
 
-      const configMap = app.configFiles
+      const allConfigFiles = [...app.configFiles ?? [], ...part.configFiles ?? []];
+      const configMap = allConfigFiles.length > 0
         ? new k8s.core.v1.ConfigMap(
           `${partFullName}-config`,
           {
             metadata: {
               namespace: this.namespace,
             },
-            data: app.configFiles.concat(part.configFiles ?? [])
+            data: allConfigFiles
               .map<[string, any]>((file) => [file.path, file.content])
               .reduce(
                 (acc, [k, v]: [string, any]) => ({
