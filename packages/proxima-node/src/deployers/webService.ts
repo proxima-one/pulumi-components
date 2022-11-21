@@ -115,7 +115,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                       .apply((x) =>
                         this.getResourceRequirements(x ?? defaultResources)
                       ),
-                    volumeMounts: app.configFiles?.map((file) => {
+                    volumeMounts: allConfigFiles.map((file) => {
                       return {
                         mountPath: pulumi.output(file).apply((f) => f.path),
                         subPath: pulumi

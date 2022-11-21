@@ -97,7 +97,7 @@ export class StreamDbDeployer {
       name: app.name,
       imageName: imageName,
       parts: {
-        relayer: {
+        worker: {
           disabled: app.relayFrom == undefined,
           configFiles: [{path: "/app/config.yml", content: relayConfig}],
           env: {
