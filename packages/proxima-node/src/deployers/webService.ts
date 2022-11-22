@@ -21,14 +21,15 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
 
       const partFullName = partName == "" ? name : `${name}-${partName}`;
 
-      const configMap = app.configFiles
+      const allConfigFiles = [...app.configFiles ?? [], ...part.configFiles ?? []];
+      const configMap = allConfigFiles.length > 0
         ? new k8s.core.v1.ConfigMap(
           `${partFullName}-config`,
           {
             metadata: {
               namespace: this.namespace,
             },
-            data: app.configFiles.concat(part.configFiles ?? [])
+            data: allConfigFiles
               .map<[string, any]>((file) => [file.path, file.content])
               .reduce(
                 (acc, [k, v]: [string, any]) => ({
@@ -70,7 +71,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             namespace: this.namespace,
           },
           spec: {
-            replicas: 1,
+            replicas: pulumi.output(part.scale).apply(x => x ?? 1),
             selector: {
               matchLabels: matchLabels,
             },
@@ -114,7 +115,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                       .apply((x) =>
                         this.getResourceRequirements(x ?? defaultResources)
                       ),
-                    volumeMounts: app.configFiles?.map((file) => {
+                    volumeMounts: allConfigFiles.map((file) => {
                       return {
                         mountPath: pulumi.output(file).apply((f) => f.path),
                         subPath: pulumi
@@ -305,6 +306,7 @@ export interface ServiceAppPart {
   deployStrategy?: pulumi.Input<DeployStrategy>;
   configFiles?: ConfigFile[];
   disabled?: boolean;
+  scale?: pulumi.Input<number>;
 }
 
 export interface DeployStrategy {

@@ -50,7 +50,7 @@ export class StreamDbDeployer {
       };
     });
 
-    const relayerConfig = pulumi.output(app.relayFrom).apply(relayFrom => {
+    const relaySection = pulumi.output(app.relayFrom).apply(relayFrom => {
       if (!relayFrom)
         return undefined;
 
@@ -67,37 +67,52 @@ export class StreamDbDeployer {
       };
     });
 
-    const config = pulumi
+    const commonConfig = {
+      server: {
+        host: "0.0.0.0",
+        port: 50051,
+        metricsPort: 2112,
+      },
+      storage: {
+        connectionString: db.endpoint,
+        db: db.name,
+        compression: "zlib"
+      }
+    };
+
+    const apiConfig = pulumi
       .all<any>({
-        server: {
-          host: "0.0.0.0",
-          port: 50051,
-          metricsPort: 2112,
-        },
-        storage: {
-          connectionString: db.endpoint,
-          db: db.name,
-          compression: "zlib"
-        },
-        relayer: relayerConfig,
+        ...commonConfig,
+      })
+      .apply((json) => yaml.dump(json, {indent: 2}));
+
+    const relayConfig = pulumi
+      .all<any>({
+        ...commonConfig,
+        relayer: relaySection,
       })
       .apply((json) => yaml.dump(json, {indent: 2}));
 
     const webService = this.webServiceDeployer.deploy({
       name: app.name,
-      configFiles: [{path: "/app/config.yml", content: config}],
       imageName: imageName,
       parts: {
-        api: {
-          resources: app.resources ?? "50m/2000m,300Mi/6Gi",
+        worker: {
+          disabled: app.relayFrom == undefined,
+          configFiles: [{path: "/app/config.yml", content: relayConfig}],
           env: {
             STREAMING_BATCH_SIZE: "500",
             STREAMING_SLEEP_INTERVAL: "50",
           },
-          args: [...app.relayFrom ? ["--readonly"] : []],
+          resources: app.resources ?? "50m/2000m,300Mi/6Gi",
           deployStrategy: {
             type: "Recreate",
           },
+        },
+        api: {
+          configFiles: [{path: "/app/config.yml", content: apiConfig}],
+          resources: app.resources ?? "50m/2000m,300Mi/6Gi",
+          args: [...app.relayFrom ? ["--readonly"] : []],
           metrics: {
             labels: {
               env: app.env ?? "dev",
@@ -105,6 +120,7 @@ export class StreamDbDeployer {
               serviceType: "stream-db",
             },
           },
+          scale: app.scale,
           ports: [
             {
               name: "http-metrics",
@@ -176,6 +192,7 @@ export interface StreamDb {
     remote: pulumi.Input<string>;
     streams: pulumi.Input<pulumi.Input<string[]>>;
   }[]>>;
+  scale?: pulumi.Input<number>;
 }
 
 export interface DeployedStreamDbParams {
