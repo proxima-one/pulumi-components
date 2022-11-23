@@ -154,6 +154,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
         appName: app.executable.app,
       },
       services: services,
+      stackName: this.stack,
     });
     const deployedApp: DeployedApp = {
       name: app.name,

@@ -41,6 +41,8 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
               app.executable.appName,
               "--id",
               app.name,
+              "--stack-name",
+              app.stackName ?? "default",
               "--app-args",
               JSON.stringify(app.args),
               ...(app.dryRun ? ["--dry-run"] : []),
@@ -80,6 +82,7 @@ export interface StreamingApp {
   dryRun?: pulumi.Input<boolean>;
   services?: pulumi.Input<pulumi.Input<StreamingAppService>[]>;
   resources?: pulumi.Input<ComputeResources>;
+  stackName?: string;
 }
 
 export interface StreamingAppService {
