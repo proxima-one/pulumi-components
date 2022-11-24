@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-k8s-ops",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "pulumi k8s cluster common package",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
@@ -24,7 +24,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "@proxima-one/pulumi-k8s-base": "^0.1.5",
+    "@proxima-one/pulumi-k8s-base": "^0.1.6",
     "@pulumi/docker": "^3.1.0",
     "@pulumi/kubernetes": "^3.21.2",
     "@pulumi/pulumi": "^3.0.0",
