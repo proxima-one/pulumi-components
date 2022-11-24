@@ -79,8 +79,7 @@ export class KubernetesDeployer {
     return this.storageClasses.apply((all) => {
       const match = all.filter((x) => {
         for (const item of _.entries(request)) {
-          if (x.labels[item[0]] != item[1])
-            return false;
+          if (x.labels[item[0]] != item[1]) return false;
         }
 
         return true;

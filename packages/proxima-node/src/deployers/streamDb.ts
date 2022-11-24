@@ -1,4 +1,7 @@
-import { ComputeResources, ServiceDeployParameters, } from "@proxima-one/pulumi-k8s-base";
+import {
+  ComputeResources,
+  ServiceDeployParameters,
+} from "@proxima-one/pulumi-k8s-base";
 import * as pulumi from "@pulumi/pulumi";
 import { Password } from "../components/types";
 import * as yaml from "js-yaml";
@@ -22,11 +25,11 @@ export class StreamDbDeployer {
     const passwords = new PasswordResolver();
 
     const auth = app.auth ?? {
-      password: {type: "random", name: app.name, length: 32},
+      password: { type: "random", name: app.name, length: 32 },
     };
 
     const db = pulumi.output(app.db).apply((db) => {
-      if (db.type == "import") return {endpoint: db.endpoint, name: db.name};
+      if (db.type == "import") return { endpoint: db.endpoint, name: db.name };
 
       const mongo = this.mongoDeployer.deploy({
         name: app.name,
@@ -34,7 +37,7 @@ export class StreamDbDeployer {
         resources: db.params.resource,
         auth: {
           user: "proxima",
-          password: {type: "random", name: `${app.name}-mongo`, length: 32},
+          password: { type: "random", name: `${app.name}-mongo`, length: 32 },
           database: "eventstore",
         },
         webUI: db.params.webUI !== undefined,
@@ -50,20 +53,23 @@ export class StreamDbDeployer {
       };
     });
 
-    const relaySection = pulumi.output(app.relayFrom).apply(relayFrom => {
-      if (!relayFrom)
-        return undefined;
+    const relaySection = pulumi.output(app.relayFrom).apply((relayFrom) => {
+      if (!relayFrom) return undefined;
 
       return {
         pollingIntervalMs: 5 * 60 * 1000,
-        streams: pulumi.all(relayFrom).apply(x => x
-          .map((relay, idx) => [
-            `stream_${idx}`,
-            {
-              wildcardPatterns: relay.streams,
-              connectTo: relay.remote,
-            }])
-        ).apply(arr => Object.fromEntries(arr))
+        streams: pulumi
+          .all(relayFrom)
+          .apply((x) =>
+            x.map((relay, idx) => [
+              `stream_${idx}`,
+              {
+                wildcardPatterns: relay.streams,
+                connectTo: relay.remote,
+              },
+            ])
+          )
+          .apply((arr) => Object.fromEntries(arr)),
       };
     });
 
@@ -76,22 +82,22 @@ export class StreamDbDeployer {
       storage: {
         connectionString: db.endpoint,
         db: db.name,
-        compression: "zlib"
-      }
+        compression: "zlib",
+      },
     };
 
     const apiConfig = pulumi
       .all<any>({
         ...commonConfig,
       })
-      .apply((json) => yaml.dump(json, {indent: 2}));
+      .apply((json) => yaml.dump(json, { indent: 2 }));
 
     const relayConfig = pulumi
       .all<any>({
         ...commonConfig,
         relayer: relaySection,
       })
-      .apply((json) => yaml.dump(json, {indent: 2}));
+      .apply((json) => yaml.dump(json, { indent: 2 }));
 
     const webService = this.webServiceDeployer.deploy({
       name: app.name,
@@ -99,7 +105,7 @@ export class StreamDbDeployer {
       parts: {
         worker: {
           disabled: app.relayFrom == undefined,
-          configFiles: [{path: "/app/config.yml", content: relayConfig}],
+          configFiles: [{ path: "/app/config.yml", content: relayConfig }],
           env: {
             STREAMING_BATCH_SIZE: "500",
             STREAMING_SLEEP_INTERVAL: "50",
@@ -110,9 +116,9 @@ export class StreamDbDeployer {
           },
         },
         api: {
-          configFiles: [{path: "/app/config.yml", content: apiConfig}],
+          configFiles: [{ path: "/app/config.yml", content: apiConfig }],
           resources: app.resources ?? "50m/2000m,300Mi/6Gi",
-          args: [...app.relayFrom ? ["--readonly"] : []],
+          args: [...(app.relayFrom ? ["--readonly"] : [])],
           metrics: {
             labels: {
               env: app.env ?? "dev",
@@ -131,9 +137,9 @@ export class StreamDbDeployer {
               containerPort: 50051,
               ingress: app.publicHost
                 ? {
-                  protocol: "grpc",
-                  overrideHost: [app.publicHost],
-                }
+                    protocol: "grpc",
+                    overrideHost: [app.publicHost],
+                  }
                 : undefined,
             },
           ],
@@ -155,16 +161,16 @@ export class StreamDbDeployer {
 
     const publicConnectionDetails = app.publicHost
       ? pulumi
-        .all([
-          pulumi.Output.create(app.publicHost),
-          passwords.resolve(auth.password),
-        ])
-        .apply(([publicHost, pass]) => {
-          return {
-            authToken: pass,
-            endpoint: `${publicHost}:443`,
-          };
-        })
+          .all([
+            pulumi.Output.create(app.publicHost),
+            passwords.resolve(auth.password),
+          ])
+          .apply(([publicHost, pass]) => {
+            return {
+              authToken: pass,
+              endpoint: `${publicHost}:443`,
+            };
+          })
       : undefined;
 
     return {
@@ -188,10 +194,14 @@ export interface StreamDb {
   publicHost?: pulumi.Input<string>;
   imageName?: pulumi.Input<string>;
   env?: pulumi.Input<string>;
-  relayFrom?: pulumi.Input<pulumi.Input<{
-    remote: pulumi.Input<string>;
-    streams: pulumi.Input<pulumi.Input<string[]>>;
-  }[]>>;
+  relayFrom?: pulumi.Input<
+    pulumi.Input<
+      {
+        remote: pulumi.Input<string>;
+        streams: pulumi.Input<pulumi.Input<string[]>>;
+      }[]
+    >
+  >;
   scale?: pulumi.Input<number>;
 }
 

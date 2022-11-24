@@ -71,7 +71,9 @@ export abstract class AppDeployerBase {
     type: string
   ): pulumi.Output<T | undefined> {
     return this.appStack.apply((x) => {
-      const service = x.services.find((x) => names.includes(x.name) && x.type == type);
+      const service = x.services.find(
+        (x) => names.includes(x.name) && x.type == type
+      );
       return service?.params as T;
     });
   }

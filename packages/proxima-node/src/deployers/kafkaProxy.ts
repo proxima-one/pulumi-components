@@ -63,10 +63,10 @@ export class KafkaProxyDeployer extends KubernetesServiceDeployer {
               containerPort: 50051,
               ingress: app.publicHost
                 ? {
-                  protocol: "grpc",
-                  overrideHost: [app.publicHost],
-                }
-                : undefined
+                    protocol: "grpc",
+                    overrideHost: [app.publicHost],
+                  }
+                : undefined,
             },
           ],
         },

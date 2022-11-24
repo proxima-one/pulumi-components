@@ -9,6 +9,7 @@ import queryString from "query-string";
 import { createHash } from "crypto";
 import { strict as assert } from "assert";
 import _, { parseInt } from "lodash";
+import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
 export interface StreamingAppDeployParams extends DeployParams {
   targetDb: { type: "import-kafka"; name: string };
@@ -56,13 +57,15 @@ export class StreamingAppDeployer extends AppDeployerBase {
     }));
   }
 
-  public deployAll(apps: StreamingApp<
-    string,
-    Record<string, string>,
-    string,
-    Record<string, string>
-    >[]): DeployedApp[] {
-    return apps.map(x => this.deploy(x));
+  public deployAll(
+    apps: StreamingApp<
+      string,
+      Record<string, string>,
+      string,
+      Record<string, string>
+    >[]
+  ): DeployedApp[] {
+    return apps.map((x) => this.deploy(x));
   }
 
   public deploy(
@@ -155,6 +158,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
       },
       services: services,
       stackName: this.stack,
+      resources: app.resources ?? "50m/1100m,50Mi/2Gi",
     });
     const deployedApp: DeployedApp = {
       name: app.name,
@@ -173,7 +177,10 @@ export class StreamingAppDeployer extends AppDeployerBase {
       "blockchain-gateway"
     );
 
-    const evmIndexer = this.findAnyService([network, `${network}-indexer`], "evm-indexer");
+    const evmIndexer = this.findAnyService(
+      [network, `${network}-indexer`],
+      "evm-indexer"
+    );
 
     return pulumi
       .all([blockchainGateway, evmIndexer])
@@ -308,6 +315,7 @@ export interface StreamingAppOptions<
   args?: JsonObject;
   tuningArgs?: JsonObject;
   requirements?: AppRequirements;
+  resources?: pulumi.Input<ComputeResources>;
 }
 
 export interface AppRequirements {
@@ -348,6 +356,7 @@ export class StreamingApp<
   public readonly requirements: Readonly<AppRequirements>;
   public readonly name: string;
   public readonly id: string;
+  public readonly resources?: pulumi.Input<ComputeResources>;
 
   public constructor(
     opts: StreamingAppOptions<
@@ -360,6 +369,7 @@ export class StreamingApp<
     this.name = opts.name ?? opts.executable.app;
     this.executable = opts.executable;
     this.version = opts.version;
+    this.resources = opts.resources;
     if (!opts.input) this.input = {} as StreamRecord<TInputStream>;
     else if (typeof opts.input == "string")
       this.input = { default: opts.input } as StreamRecord<TInputStream>;

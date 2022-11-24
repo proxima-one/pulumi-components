@@ -21,26 +21,31 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
 
       const partFullName = partName == "" ? name : `${name}-${partName}`;
 
-      const allConfigFiles = [...app.configFiles ?? [], ...part.configFiles ?? []];
-      const configMap = allConfigFiles.length > 0
-        ? new k8s.core.v1.ConfigMap(
-          `${partFullName}-config`,
-          {
-            metadata: {
-              namespace: this.namespace,
-            },
-            data: allConfigFiles
-              .map<[string, any]>((file) => [file.path, file.content])
-              .reduce(
-                (acc, [k, v]: [string, any]) => ({
-                  ...acc,
-                  [k.replace(/\//g, "_")]: v, // replace / with _ as it can't be used
-                }),
-                {}
-              ),
-          },
-          this.options()
-        ) : undefined;
+      const allConfigFiles = [
+        ...(app.configFiles ?? []),
+        ...(part.configFiles ?? []),
+      ];
+      const configMap =
+        allConfigFiles.length > 0
+          ? new k8s.core.v1.ConfigMap(
+              `${partFullName}-config`,
+              {
+                metadata: {
+                  namespace: this.namespace,
+                },
+                data: allConfigFiles
+                  .map<[string, any]>((file) => [file.path, file.content])
+                  .reduce(
+                    (acc, [k, v]: [string, any]) => ({
+                      ...acc,
+                      [k.replace(/\//g, "_")]: v, // replace / with _ as it can't be used
+                    }),
+                    {}
+                  ),
+              },
+              this.options()
+            )
+          : undefined;
 
       const imageName = pulumi
         .all([pulumi.output(app.imageName), pulumi.output(part.imageName)])
@@ -71,7 +76,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             namespace: this.namespace,
           },
           spec: {
-            replicas: pulumi.output(part.scale).apply(x => x ?? 1),
+            replicas: pulumi.output(part.scale).apply((x) => x ?? 1),
             selector: {
               matchLabels: matchLabels,
             },
