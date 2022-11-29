@@ -30,41 +30,55 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         parseMemory(this.getResourceRequirements(resources).limits.memory) /
           1024 ** 2
       );
+      const configFiles = [
+        {
+          path: "/app/services.yml",
+          content: (app.services ?? [])
+            .map((s) => yaml.dump(s, { indent: 2 }))
+            .join("---\n"),
+        },
+      ];
+      const args = [
+        "app",
+        "start",
+        app.executable.appName,
+        "--id",
+        app.name,
+        "--stack-name",
+        app.stackName ?? "default",
+        ...(app.dryRun ? ["--dry-run"] : []),
+      ];
+      const env = {
+        PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
+        PROXIMA_APP_CONFIG_PATH: "",
+        NODE_EXTRA_CA_CERTS:
+          "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+        NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB}`,
+      };
+
+      const argsLine = JSON.stringify(app.args);
+      if (argsLine.length > 1500) {
+        env.PROXIMA_APP_CONFIG_PATH = "/app/config.yml";
+        configFiles.push({
+          path: "/app/config.yml",
+          content: yaml.dump(app.args ?? {}, { indent: 2 }),
+        });
+      } else {
+        args.push("--app-args", JSON.stringify(app.args));
+      }
+
       this.webServiceDeployer.deploy({
         name: app.name,
         imageName: app.executable.imageName,
         parts: {
           app: {
-            args: [
-              "app",
-              "start",
-              app.executable.appName,
-              "--id",
-              app.name,
-              "--stack-name",
-              app.stackName ?? "default",
-              "--app-args",
-              JSON.stringify(app.args),
-              ...(app.dryRun ? ["--dry-run"] : []),
-            ],
+            args: args,
             deployStrategy: { type: "Recreate" },
             resources: resources,
-            env: {
-              PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
-              NODE_EXTRA_CA_CERTS:
-                "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-              NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB}`,
-            },
+            env: env,
           },
         },
-        configFiles: [
-          {
-            path: "/app/services.yml",
-            content: (app.services ?? [])
-              .map((s) => yaml.dump(s, { indent: 2 }))
-              .join("---\n"),
-          },
-        ],
+        configFiles: configFiles,
       });
       return { name: app.name };
     });
