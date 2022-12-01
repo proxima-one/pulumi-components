@@ -40,7 +40,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           return x.name;
         }),
         name: `${name}-db`,
-        webUI: true,
+        webUI: db.webUI,
         resources: db.resources,
         replicaSet: db.replicaSet,
         publicHost: pulumi.interpolate`${name}-db.${this.publicHost}`,
@@ -325,6 +325,7 @@ export interface IndexingServiceDb {
     | ({ type: "provision" } & {
         storage: pulumi.Input<MongoDbStorage>;
         replicaSet?: number;
+        webUI?: boolean;
         resources?: pulumi.Input<ComputeResources>;
       });
 }
