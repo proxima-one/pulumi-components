@@ -50,7 +50,6 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
       ];
       const env = {
         PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
-        PROXIMA_APP_CONFIG_PATH: "",
         NODE_EXTRA_CA_CERTS:
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB}`,
@@ -58,10 +57,10 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
 
       const argsLine = JSON.stringify(app.args);
       if (argsLine.length > 1500) {
-        env.PROXIMA_APP_CONFIG_PATH = "/app/config.yml";
+        args.push("--app-args-file", "/app/config.json")
         configFiles.push({
-          path: "/app/config.yml",
-          content: yaml.dump(app.args ?? {}, { indent: 2 }),
+          path: "/app/config.json",
+          content: JSON.stringify(app.args ?? {}, null, 2),
         });
       } else {
         args.push("--app-args", JSON.stringify(app.args));
