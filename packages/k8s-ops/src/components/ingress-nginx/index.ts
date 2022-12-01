@@ -45,6 +45,7 @@ export class IngressNginxController extends pulumi.ComponentResource {
                 enabled: true,
               },
               stats: true,
+              metricsEnabled: true,
               admissionWebhooks: {
                 enabled: false,
                 //timeoutSeconds: 30
@@ -54,7 +55,7 @@ export class IngressNginxController extends pulumi.ComponentResource {
           args.helmOverride?.values
         ),
       },
-      { parent: this }
+      {parent: this}
     );
 
     const frontend = pulumi
