@@ -10,11 +10,13 @@ export interface PrometheusArgs {
     prometheus: Persistence;
     grafana: Persistence;
     alertManager: Persistence;
+    ingressNginx: Persistence;
   };
   helmOverride?: HelmOverride;
   ingress?: {
     alertHost?: string;
     promHost?: string;
+    nginx?: string;
     grafanaHost?: string;
     oauthUrl?: pulumi.Input<string>;
     certificateIssuer: string;
@@ -110,6 +112,25 @@ export class PrometheusStack extends pulumi.ComponentResource {
               //   },
               // ],
               rbac: { pspEnabled: false },
+            },
+            ingressNginx: {
+              ingress: args.ingress?.nginx
+                ? {
+                  enabled: true,
+                  annotations: {
+                    "kubernetes.io/ingress.class": "nginx",
+                    "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                    "cert-manager.io/cluster-issuer":
+                    args.ingress.certificateIssuer,
+                  },
+                  hosts: [args.ingress.nginx],
+                }
+                : { enabled: false },
+              persistence: {
+                enabled: args.persistence.ingressNginx.enabled,
+                storageClassName: args.persistence.ingressNginx.storageClass,
+                size: `${args.persistence.ingressNginx.sizeGB}Gi`,
+              },
             },
             prometheus: {
               ingress:
