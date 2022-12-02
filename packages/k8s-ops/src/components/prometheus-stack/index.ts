@@ -10,7 +10,7 @@ export interface PrometheusArgs {
     prometheus: Persistence;
     grafana: Persistence;
     alertManager: Persistence;
-    ingressNginx: Persistence;
+    nginx: Persistence;
   };
   helmOverride?: HelmOverride;
   ingress?: {
@@ -113,7 +113,7 @@ export class PrometheusStack extends pulumi.ComponentResource {
               // ],
               rbac: { pspEnabled: false },
             },
-            ingressNginx: {
+            nginx: {
               ingress: args.ingress?.nginx
                 ? {
                   enabled: true,
@@ -127,9 +127,9 @@ export class PrometheusStack extends pulumi.ComponentResource {
                 }
                 : { enabled: false },
               persistence: {
-                enabled: args.persistence.ingressNginx.enabled,
-                storageClassName: args.persistence.ingressNginx.storageClass,
-                size: `${args.persistence.ingressNginx.sizeGB}Gi`,
+                enabled: args.persistence.nginx.enabled,
+                storageClassName: args.persistence.nginx.storageClass,
+                size: `${args.persistence.nginx.sizeGB}Gi`,
               },
             },
             prometheus: {
