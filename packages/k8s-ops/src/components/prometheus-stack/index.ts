@@ -132,6 +132,8 @@ export class PrometheusStack extends pulumi.ComponentResource {
                           args.ingress.certificateIssuer,
                         "kubernetes.io/ingress.class": "nginx",
                         "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                        "prometheus.io/scrape": "true",
+                        "prometheus.io/port": "10254",
                       },
                     }
                   : { enabled: false },

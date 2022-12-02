@@ -232,6 +232,18 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
         },
         this.options({ dependsOn: certManager })
       );
+
+      minioOperator = new MinioOperator(
+        "minio-operator",
+        {
+          namespace: namespace.metadata.name,
+          ingress: {
+            consoleHost: `minio-operator.${args.publicHost}`,
+            certificateIssuer: certificateIssuer,
+          },
+        },
+        this.options({ dependsOn: certManager })
+      );
     }
     const operators: DeployedOperator[] = [];
     if (certManager) operators.push("cert-manager");
