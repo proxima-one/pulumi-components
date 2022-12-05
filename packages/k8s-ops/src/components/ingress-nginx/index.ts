@@ -48,6 +48,7 @@ export class IngressNginxController extends pulumi.ComponentResource {
                   annotations: {
                     "prometheus.io/scrape": "true",
                     "prometheus.io/port": "10254",
+                    "prometheus.io/scheme": "http"
                   },
                   servicePort: 10254,
                   type: "ClusterIP",
