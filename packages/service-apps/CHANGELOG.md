@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.17](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.3.16...@proxima-one/pulumi-service-apps@0.3.17) (2022-12-05)
+
+**Note:** Version bump only for package @proxima-one/pulumi-service-apps
+
+
+
+
+
 ## [0.3.16](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.3.15...@proxima-one/pulumi-service-apps@0.3.16) (2022-12-02)
 
 **Note:** Version bump only for package @proxima-one/pulumi-service-apps
