@@ -152,6 +152,35 @@ export class PrometheusStack extends pulumi.ComponentResource {
                 podMonitorSelectorNilUsesHelmValues: false,
               },
             },
+            additionalServiceMonitor:{
+              name: "nginx-monitor",
+              labels: "",
+              endpoints: [{
+                port: "10254",
+                path: "/metrics",
+                scheme: "http",
+              }]
+              // const arg = new k8s.apiextensions.CustomResource(
+
+//     labels: {
+//       name: "ingress-nginx"
+//     },
+//     spec: {
+//       selector: {
+//         matchLabels: {
+//           monitoring: "true",
+//         },
+//       },
+//       podMetricsEndpoints: [
+//         {
+//           port: "10254",
+//           path: "/metrics",
+//         },
+//       ],
+//     },
+//   },{}
+
+            },
             // additionalPrometheusRulesMap: {
             //   "rule-name": {
             //     groups: [
@@ -260,6 +289,7 @@ export class PrometheusStack extends pulumi.ComponentResource {
     }));
   }
 }
+
 
 // pagerduty optional, alertmanager - not
 // dashboards to grafana
