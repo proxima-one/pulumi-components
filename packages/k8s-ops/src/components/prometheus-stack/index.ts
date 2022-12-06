@@ -3,6 +3,7 @@ import * as k8s from "@pulumi/kubernetes";
 import { HelmMeta, HelmOverride, Persistence } from "../../interfaces";
 import * as random from "@pulumi/random";
 import { merge } from "lodash";
+import { IngressNginxController } from "../ingress-nginx";
 
 export interface PrometheusArgs {
   namespace?: pulumi.Input<string>;
@@ -153,36 +154,27 @@ export class PrometheusStack extends pulumi.ComponentResource {
               },
             },
             additionalPodMonitor:{
-              name: "nginx-monitor",
-              labels: {
-                name: "ingress-ctrl-ingress-nginx-controller-metrics"
+              metadata:{
+                name: `nginx-pod-monitor`,
+                namespace: "monitoring",
               },
-              namespace: "ingress",
-              endpoints: [{
-                port: "10254",
-                path: "/metrics",
-                scheme: "http",
-              }]
-              // const arg = new k8s.apiextensions.CustomResource(
-
-//     labels: {
-//       name: "ingress-nginx"
-//     },
-//     spec: {
-//       selector: {
-//         matchLabels: {
-//           monitoring: "true",
-//         },
-//       },
-//       podMetricsEndpoints: [
-//         {
-//           port: "10254",
-//           path: "/metrics",
-//         },
-//       ],
-//     },
-//   },{}
-
+              labels: {
+                name: "pod-monitor"
+              },
+              spec:{
+                podTargetLabels: "ingress-ctrl-ingress-nginx-controller-metrics"
+              },
+                   selector: {
+                     matchLabels: {
+                       monitoring: "true",
+                     },
+                   },
+                   podMetricsEndpoints: [
+                     {
+                       port: "10254",
+                       path: "/metrics",
+                     },
+                ]
             },
             // additionalPrometheusRulesMap: {
             //   "rule-name": {
