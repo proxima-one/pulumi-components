@@ -155,7 +155,7 @@ export class PrometheusStack extends pulumi.ComponentResource {
             additionalServiceMonitor:{
               name: "nginx-monitor",
               labels: {
-                name: "ingress-crtl-ingress-nginx-controller"
+                name: "ingress-ctrl-ingress-nginx-controller-metrics"
               },
               namespace: "ingress",
               endpoints: [{
