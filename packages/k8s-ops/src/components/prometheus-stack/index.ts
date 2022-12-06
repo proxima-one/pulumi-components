@@ -152,7 +152,7 @@ export class PrometheusStack extends pulumi.ComponentResource {
                 podMonitorSelectorNilUsesHelmValues: false,
               },
             },
-            additionalServiceMonitor:{
+            additionalPodMonitor:{
               name: "nginx-monitor",
               labels: {
                 name: "ingress-ctrl-ingress-nginx-controller-metrics"
