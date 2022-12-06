@@ -3,7 +3,6 @@ import * as k8s from "@pulumi/kubernetes";
 import { HelmMeta, HelmOverride, Persistence } from "../../interfaces";
 import * as random from "@pulumi/random";
 import { merge } from "lodash";
-import { IngressNginxController } from "../ingress-nginx";
 
 export interface PrometheusArgs {
   namespace?: pulumi.Input<string>;
@@ -261,7 +260,6 @@ export class PrometheusStack extends pulumi.ComponentResource {
     }));
   }
 }
-
 
 // pagerduty optional, alertmanager - not
 // dashboards to grafana
