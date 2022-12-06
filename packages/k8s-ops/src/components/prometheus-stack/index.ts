@@ -153,27 +153,6 @@ export class PrometheusStack extends pulumi.ComponentResource {
                 podMonitorSelectorNilUsesHelmValues: false,
               },
             },
-            additionalServiceMonitor:{
-              metadata:{
-                name: `ingress-pod-monitor`,
-                labels: {
-                  name: "nginx-controller"
-                },
-              },
-              spec: {
-                selector: {
-                     matchLabels: {
-                       monitoring: "true",
-                     },
-                   },
-                   podMetricsEndpoints: [
-                     {
-                       port: "10254",
-                       path: "/metrics",
-                     },
-                ]
-              },
-            },
             // additionalPrometheusRulesMap: {
             //   "rule-name": {
             //     groups: [
