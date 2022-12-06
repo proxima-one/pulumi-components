@@ -155,15 +155,13 @@ export class PrometheusStack extends pulumi.ComponentResource {
             },
             additionalPodMonitor:{
               metadata:{
-                name: `ingress-ctrl-ingress-nginx-controller-metrics`,
+                name: `ingress-pod-monitor`,
                 labels: {
                   name: "pod-monitor"
                 },
               },
-              spec: [{
-                podTargetLabels: "ingress-ctrl-ingress-nginx-controller-metrics"
-              }],
-                   selector: {
+              spec: {
+                selector: {
                      matchLabels: {
                        monitoring: "true",
                      },
@@ -175,6 +173,7 @@ export class PrometheusStack extends pulumi.ComponentResource {
                        scheme: "http",
                      },
                 ]
+              },
             },
             // additionalPrometheusRulesMap: {
             //   "rule-name": {
