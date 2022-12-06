@@ -156,13 +156,13 @@ export class PrometheusStack extends pulumi.ComponentResource {
             additionalPodMonitor:{
               metadata:{
                 name: `ingress-ctrl-ingress-nginx-controller-metrics`,
+                labels: {
+                  name: "pod-monitor"
+                },
               },
-              labels: {
-                name: "pod-monitor"
-              },
-              spec:{
+              spec: [{
                 podTargetLabels: "ingress-ctrl-ingress-nginx-controller-metrics"
-              },
+              }],
                    selector: {
                      matchLabels: {
                        monitoring: "true",
