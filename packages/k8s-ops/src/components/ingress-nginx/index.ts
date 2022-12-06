@@ -44,10 +44,9 @@ export class IngressNginxController extends pulumi.ComponentResource {
               metrics: {
                 enabled: true,
                 service: {
-                  annotations: {
-                    "prometheus.io/scrape": "true",
-                    "prometheus.io/port": "10254",
-                  },
+                  labels: {
+                    name: "nginx-controller"
+                  }
                 },
               },
               enableLatencyMetrics: true,
