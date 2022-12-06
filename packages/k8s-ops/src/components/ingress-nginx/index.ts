@@ -53,7 +53,6 @@ export class IngressNginxController extends pulumi.ComponentResource {
               publishService: {
                 enabled: true,
               },
-              // stats: true,
               admissionWebhooks: {
                 enabled: false,
                 //timeoutSeconds: 30
