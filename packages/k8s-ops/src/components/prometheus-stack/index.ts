@@ -155,7 +155,7 @@ export class PrometheusStack extends pulumi.ComponentResource {
             },
             additionalPodMonitor:{
               metadata:{
-                name: `nginx-pod-monitor`,
+                name: `monitoring-pod-monitor`,
                 namespace: "monitoring",
               },
               labels: {
@@ -173,6 +173,7 @@ export class PrometheusStack extends pulumi.ComponentResource {
                      {
                        port: "10254",
                        path: "/metrics",
+                       scheme: "http",
                      },
                 ]
             },
