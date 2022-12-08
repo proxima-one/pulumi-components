@@ -115,13 +115,6 @@ export class PrometheusStack extends pulumi.ComponentResource {
                   enabled:true,
                   labelValue: "1"
                 },
-                datasource: {
-                  enabled: true,
-                  defaultDatasourceEnabled: true,
-                  label: "grafana_datasource",
-                  uid:"--Grafana--",
-                  labelValue: "1"
-                }
               }
             },
             prometheus: {
