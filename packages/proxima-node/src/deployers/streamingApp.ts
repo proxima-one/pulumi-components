@@ -57,7 +57,7 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
 
       const argsLine = JSON.stringify(app.args);
       if (argsLine.length > 1500) {
-        args.push("--app-args-file", "/app/config.json")
+        args.push("--app-args-file", "/app/config.json");
         configFiles.push({
           path: "/app/config.json",
           content: JSON.stringify(app.args ?? {}, null, 2),
