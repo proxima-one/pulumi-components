@@ -157,6 +157,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           name: pulumi.output(name),
           networks: pulumi.output(app.network).apply((x) => [x]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
+          timeRange: pulumi.output({}),
           internalEndpoint: internalHost
             ? internalHost.apply((host) => `${host}:27000`)
             : undefined,
@@ -304,6 +305,10 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             ),
           ]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
+          timeRange: pulumi.output({
+            from: app.timeRange?.from?.toISOString(),
+            to: app.timeRange?.to?.toISOString()
+          } as DeployedServiceTimeRange),
           internalEndpoint: internalHost
             ? internalHost.apply((host) => `${host}:27000`)
             : undefined,
@@ -401,9 +406,15 @@ export type IndexingServiceMode =
   | "consumer-only"
   | "fast-sync";
 
+export interface DeployedServiceTimeRange {
+  from?: string;
+  to?: string;
+}
+
 export interface DeployedIndexingService {
   name: pulumi.Output<string>;
   networks: pulumi.Output<string[]>;
   internalEndpoint: pulumi.Output<string> | undefined;
   endpoint: pulumi.Output<string>;
+  timeRange: pulumi.Output<DeployedServiceTimeRange>;
 }
