@@ -410,6 +410,7 @@ export interface DeployedServiceTimeRange {
   from?: string;
   to?: string;
 }
+
 export interface DeployedIndexingService {
   name: pulumi.Output<string>;
   networks: pulumi.Output<string[]>;
