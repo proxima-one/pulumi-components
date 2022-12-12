@@ -73,7 +73,7 @@ export class KubernetesDeployer {
   protected storageClass(
     request: StorageClassRequest,
     opts?: { failIfNoMatch: boolean }
-  ): pulumi.Output<string | undefined> {
+  ): pulumi.Output<string> | undefined {
     if (typeof request == "string") return pulumi.output(request);
 
     return this.storageClasses.apply((all) => {

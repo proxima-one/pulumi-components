@@ -8,6 +8,7 @@ import { ingressAnnotations, ingressSpec } from "../helpers";
 import {
   ComputeResources,
   KubernetesServiceDeployer,
+  Storage,
 } from "@proxima-one/pulumi-k8s-base";
 import { strict as assert } from "assert";
 
@@ -25,27 +26,46 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         ...(app.configFiles ?? []),
         ...(part.configFiles ?? []),
       ];
-      const configMap =
-        allConfigFiles.length > 0
-          ? new k8s.core.v1.ConfigMap(
-              `${partFullName}-config`,
-              {
-                metadata: {
-                  namespace: this.namespace,
-                },
-                data: allConfigFiles
-                  .map<[string, any]>((file) => [file.path, file.content])
-                  .reduce(
-                    (acc, [k, v]: [string, any]) => ({
-                      ...acc,
-                      [k.replace(/\//g, "_")]: v, // replace / with _ as it can't be used
-                    }),
-                    {}
-                  ),
+      const configMap = allConfigFiles.length > 0 ? new k8s.core.v1.ConfigMap(
+        `${partFullName}-config`,
+        {
+          metadata: {
+            namespace: this.namespace,
+          },
+          data: allConfigFiles
+            .map<[string, any]>((file) => [file.path, file.content])
+            .reduce(
+              (acc, [k, v]: [string, any]) => ({
+                ...acc,
+                [k.replace(/\//g, "_")]: v, // replace / with _ as it can't be used
+              }),
+              {}
+            ),
+        }, this.options()
+      ) : undefined;
+
+      const pvcs = pulumi.output(part.pvcs).apply(pvcs => pvcs?.map((pvcRequest, index) =>
+        typeof pvcRequest.storage == "string" ? pulumi.output(pvcRequest.storage) : new k8s.core.v1.PersistentVolumeClaim(
+        `${partFullName}-pvc-${index}`,
+        {
+          metadata: {
+            namespace: this.namespace,
+            //labels: labels,
+            annotations: {
+              "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
+            },
+          },
+          spec: {
+            storageClassName: this.storageClass(pvcRequest.storage.class),
+            accessModes: ["ReadWriteOnce"],
+            resources: {
+              requests: {
+                storage: pvcRequest.storage.size,
               },
-              this.options()
-            )
-          : undefined;
+            },
+          },
+        }, this.options()).metadata.name
+      ) ?? []);
 
       const imageName = pulumi
         .all([pulumi.output(app.imageName), pulumi.output(part.imageName)])
@@ -68,6 +88,38 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
       const matchLabels: Record<string, pulumi.Input<string>> = {
         app: partFullName,
       };
+
+      const volumes: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.Volume>[]> = [];
+      if (configMap) {
+        volumes.concat({
+          name: "config",
+          configMap: {
+            name: configMap.id.apply((s) => s.split("/")[s.split("/").length - 1]),
+          },
+        })
+      }
+      pvcs.apply(pvcArr => pvcArr.forEach((pvcName, index) => volumes.concat({
+        name: `pvc-${index}`,
+        persistentVolumeClaim: {
+          claimName: pvcName,
+          readOnly: false,
+        },
+      })));
+
+      const volumeMounts: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.VolumeMount>[]> = [];
+      volumeMounts.concat(allConfigFiles.map((file) => ({
+        name: "config",
+        mountPath: pulumi.output(file).apply(f => f.path),
+        subPath: pulumi
+          .output(file)
+          .apply(f => f.path.replace(/\//g, "_")),
+      })));
+      pulumi.output(part.pvcs).apply(pvcRequests => pvcRequests?.forEach((pvcRequest, index) =>
+        volumeMounts.concat({
+          name: `pvc-${index}`,
+          mountPath: pvcRequest.path
+        }))
+      );
 
       const deployment = new k8s.apps.v1.Deployment(
         partFullName,
@@ -120,29 +172,10 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                       .apply((x) =>
                         this.getResourceRequirements(x ?? defaultResources)
                       ),
-                    volumeMounts: allConfigFiles.map((file) => {
-                      return {
-                        mountPath: pulumi.output(file).apply((f) => f.path),
-                        subPath: pulumi
-                          .output(file)
-                          .apply((f) => f.path.replace(/\//g, "_")),
-                        name: "config",
-                      };
-                    }),
+                    volumeMounts: volumeMounts,
                   },
                 ],
-                volumes: configMap
-                  ? [
-                      {
-                        name: "config",
-                        configMap: {
-                          name: configMap.id.apply(
-                            (s) => s.split("/")[s.split("/").length - 1]
-                          ),
-                        },
-                      },
-                    ]
-                  : undefined,
+                volumes: volumes,
               },
             },
           },
@@ -310,8 +343,14 @@ export interface ServiceAppPart {
   metrics?: pulumi.Input<Metrics>;
   deployStrategy?: pulumi.Input<DeployStrategy>;
   configFiles?: ConfigFile[];
+  pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
   disabled?: boolean;
   scale?: pulumi.Input<number>;
+}
+
+export interface PvcRequest {
+  storage: pulumi.Input<Storage>;
+  path: string;
 }
 
 export interface DeployStrategy {

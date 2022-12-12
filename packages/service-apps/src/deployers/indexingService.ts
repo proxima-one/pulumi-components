@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import { AppDeployerBase, DeployParams } from "./base";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
-import { MongoDbStorage } from "@proxima-one/pulumi-proxima-node";
+import {MongoDbStorage, PvcRequest} from "@proxima-one/pulumi-proxima-node";
 import * as yaml from "js-yaml";
 import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
@@ -242,6 +242,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
                   containerPort: 26000,
                 },
               ],
+              pvcs: app.pvcs,
             },
             server: {
               disabled: mode == "consumer-only" || mode == "fast-sync",
@@ -281,6 +282,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
                   },
                 },
               ],
+              pvcs: app.pvcs,
             },
           },
         });
@@ -398,6 +400,7 @@ export interface IndexingServiceAppV2 {
   mode?: IndexingServiceMode;
   // {filePath: content};
   configFiles?: k8sServices.ConfigFile[];
+  pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
 }
 
 export type IndexingServiceMode =
