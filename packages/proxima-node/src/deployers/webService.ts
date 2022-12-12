@@ -50,7 +50,6 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         {
           metadata: {
             namespace: this.namespace,
-            //labels: labels,
             annotations: {
               "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
             },
