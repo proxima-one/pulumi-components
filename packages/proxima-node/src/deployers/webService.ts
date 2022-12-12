@@ -56,7 +56,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             },
           },
           spec: {
-            storageClassName: this.storageClass(pvcRequest.storage.class),
+            storageClassName: this.storageClass(pvcRequest.storage.class, {failIfNoMatch: true}).apply(x => x!),
             accessModes: ["ReadWriteOnce"],
             resources: {
               requests: {

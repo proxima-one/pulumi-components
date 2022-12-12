@@ -16,16 +16,16 @@ export class KafkaDeployer extends KubernetesServiceDeployer {
         kafka: {
           storage: this.storageClass(args.storage.class, {
             failIfNoMatch: true,
-          })!.apply((storageClass) => ({
-            class: storageClass,
+          }).apply((storageClass) => ({
+            class: storageClass!,
             size: args.storage.size,
           })),
         },
         zookeeper: {
           storage: this.storageClass(args.zookeeperStorage.class, {
             failIfNoMatch: true,
-          })!.apply((storageClass) => ({
-            class: storageClass,
+          }).apply((storageClass) => ({
+            class: storageClass!,
             size: args.zookeeperStorage.size,
           })),
         },
