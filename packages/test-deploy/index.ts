@@ -1,8 +1,12 @@
 //require("./tsfix");
-import * as proxima from "@proxima-one/pulumi-service-apps";
-import { AppDeployerBase } from "@proxima-one/pulumi-service-apps";
+//import * as proxima from "@proxima-one/pulumi-service-apps";
+import {
+  AppDeployerBase,
+  IndexingServiceDeployer,
+} from "@proxima-one/pulumi-service-apps";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
 
+/*
 const streamingAppDeployer = new proxima.StreamingAppDeployer({
   targetStack: "buh",
   targetDb: { type: "import-kafka", name: "core-us" },
@@ -57,6 +61,7 @@ const app2 = new proxima.StreamingApp({
 });
 streamingAppDeployer.deploy(app);
 streamingAppDeployer.deploy(app2);
+ */
 
 //export const streamDbs = [streamingAppDeployer.targetDb];
 
@@ -87,50 +92,75 @@ streamingAppDeployer.deploy(app2);
 //
 // new TestDeployer({targetStack: "buh", project: "dev-test"}).deploy();
 
-//
-// const indexDeployer = new IndexingServiceDeployer({
-//   targetStack: "buh",
-//   project: "dev-test",
-// });
+const indexDeployer = new IndexingServiceDeployer({
+  targetStack: "buh",
+  project: "dev-test",
+});
 
-//
-// const shard0 = indexDeployer.deploy({
-//   apiKind: "indexing-service/v1",
-//
-//   imageName: "quay.io/proxima.one/services:fungible-token-apis-0.0.29-29769d6",
-//   name: "ft-test-0",
-//   network: "eth-goerli",
-//   stream:
-//     "v1.eth-goerli.fungible-token.streams.proxima.one;" +
-//     "v1.new-tokens.eth-goerli.fungible-token.streams.proxima.one",
-//   db: {
-//     endpoint: {
-//       type: "provision",
-//       resources: "50m/500m,100Mi/600Mi",
-//       storage: {
-//         type: "new",
-//         size: "100Gi",
-//         class: "premium-rwo-xfs",
-//       },
-//     },
-//   },
-//   resources: {
-//     consumer: "50m/1000m,100Mi/400Mi",
-//     server: "50m/500m,100Mi/300Mi",
-//   },
-// });
-//
-// const cloudShard = indexDeployer.deploy({
-//   apiKind: "indexing-service/v1",
-//   name: "ft-test-1",
-//
-//   imageName: "quay.io/proxima.one/services:fungible-token-apis-0.0.29-29769d6",
-//   network: "eth-goerli",
-//   stream:
-//     "v1.eth-goerli.fungible-token.streams.proxima.one;" +
-//     "v1.new-tokens.eth-goerli.fungible-token.streams.proxima.one",
-//   db: {
-//     endpoint: { type: "import", name: "indexingservices-01" },
-//     name: "dev-test-db-delete-me",
-//   },
-// });
+import * as k8s from "@pulumi/kubernetes";
+
+const pvc = new k8s.core.v1.PersistentVolumeClaim(
+  `test-pvc`,
+  {
+    metadata: {
+      namespace: "apps-indexing",
+      annotations: {
+        "pulumi.com/skipAwait": "true",
+      },
+    },
+    spec: {
+      storageClassName: "premium-rwo",
+      accessModes: ["ReadWriteOnce"],
+      resources: {
+        requests: {
+          storage: "100Mi",
+        },
+      },
+    },
+  })
+
+const shard0 = indexDeployer.deploy({
+  apiKind: "indexing-service/v2",
+  imageName: "quay.io/proxima.one/services:tokens-v1.0.1",
+  mode: "live",
+  name: "tokens-test",
+  shardName: "tokens-test",
+  indexName: "tokens-test",
+  streams: {
+    ft: [
+      {
+        id: "v1.new-tokens.eth-main.fungible-token.streams.proxima.one",
+        metadata: {
+          networks: ["eth-main"],
+        },
+      },
+    ],
+    nft: [
+      {
+        id: "v1.new-collections.eth-main.nft.streams.proxima.one",
+        metadata: {
+          networks: ["eth-main"],
+        },
+      },
+    ],
+  },
+  pvcs: [
+    {
+      path: "/path1",
+      storage: pvc.metadata.name,
+    },
+  ],
+
+  db: {
+    endpoint: {
+      type: "provision",
+      resources: "50m/1000m,200Mi/500Mi",
+      webUI: false,
+      storage: {
+        type: "new",
+        size: "1Gi",
+        class: "premium-rwo-xfs",
+      },
+    },
+  },
+});

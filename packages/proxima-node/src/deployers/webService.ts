@@ -46,24 +46,24 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
 
       const pvcs = pulumi.output(part.pvcs).apply(pvcs => pvcs?.map((pvcRequest, index) =>
         typeof pvcRequest.storage == "string" ? pulumi.output(pvcRequest.storage) : new k8s.core.v1.PersistentVolumeClaim(
-        `${partFullName}-pvc-${index}`,
-        {
-          metadata: {
-            namespace: this.namespace,
-            annotations: {
-              "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
-            },
-          },
-          spec: {
-            storageClassName: this.storageClass(pvcRequest.storage.class, {failIfNoMatch: true}).apply(x => x!),
-            accessModes: ["ReadWriteOnce"],
-            resources: {
-              requests: {
-                storage: pvcRequest.storage.size,
+          `${partFullName}-pvc-${index}`,
+          {
+            metadata: {
+              namespace: this.namespace,
+              annotations: {
+                "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
               },
             },
-          },
-        }, this.options()).metadata.name
+            spec: {
+              storageClassName: this.storageClass(pvcRequest.storage.class, {failIfNoMatch: true}).apply(x => x!),
+              accessModes: ["ReadWriteOnce"],
+              resources: {
+                requests: {
+                  storage: pvcRequest.storage.size,
+                },
+              },
+            },
+          }, this.options()).metadata.name
       ) ?? []);
 
       const imageName = pulumi
@@ -78,9 +78,9 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
       const metricsLabels = pulumi.output(part.metrics).apply((x) =>
         x
           ? {
-              monitoring: "true",
-              ...x.labels,
-            }
+            monitoring: "true",
+            ...x.labels,
+          }
           : {}
       );
 
@@ -88,37 +88,33 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         app: partFullName,
       };
 
-      const volumes: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.Volume>[]> = [];
-      if (configMap) {
-        volumes.concat({
+      const volumes: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.Volume>[]> =
+        pvcs.apply(pvcArr => pvcArr.map((pvcName, index) => ({
+          name: `pvc-${index}`,
+          persistentVolumeClaim: {
+            claimName: pvcName,
+            readOnly: false,
+          },
+        } as k8s.types.input.core.v1.Volume)).concat(configMap ? [{
           name: "config",
           configMap: {
             name: configMap.id.apply((s) => s.split("/")[s.split("/").length - 1]),
           },
-        })
-      }
-      pvcs.apply(pvcArr => pvcArr.forEach((pvcName, index) => volumes.concat({
-        name: `pvc-${index}`,
-        persistentVolumeClaim: {
-          claimName: pvcName,
-          readOnly: false,
-        },
-      })));
+        }] : []));
 
-      const volumeMounts: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.VolumeMount>[]> = [];
-      volumeMounts.concat(allConfigFiles.map((file) => ({
-        name: "config",
-        mountPath: pulumi.output(file).apply(f => f.path),
-        subPath: pulumi
-          .output(file)
-          .apply(f => f.path.replace(/\//g, "_")),
-      })));
-      pulumi.output(part.pvcs).apply(pvcRequests => pvcRequests?.forEach((pvcRequest, index) =>
-        volumeMounts.concat({
-          name: `pvc-${index}`,
-          mountPath: pvcRequest.path
-        }))
-      );
+      let volumeMounts: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.VolumeMount>[]> =
+        allConfigFiles.map((file) => (pulumi.output({
+          name: "config",
+          mountPath: pulumi.output(file).apply(f => f.path),
+          subPath: pulumi.output(file).apply(f => f.path.replace(/\//g, "_")),
+        }) as pulumi.Output<k8s.types.input.core.v1.VolumeMount>));
+      if (part.pvcs) {
+        volumeMounts = pulumi.all([volumeMounts, part.pvcs]).apply(([vms, pvcs]) => vms.concat(
+          ...pvcs.map((pvcRequest, index) => ({
+            name: `pvc-${index}`,
+            mountPath: pvcRequest.path
+          }))))
+      }
 
       const deployment = new k8s.apps.v1.Deployment(
         partFullName,
@@ -133,8 +129,8 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             },
             strategy: part.deployStrategy
               ? {
-                  type: pulumi.output(part.deployStrategy).type,
-                }
+                type: pulumi.output(part.deployStrategy).type,
+              }
               : undefined,
             template: {
               metadata: {
@@ -152,18 +148,18 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                     env: pulumi.output(part.env).apply((env) =>
                       env
                         ? Object.entries(env).map(([key, value]) => ({
-                            name: key,
-                            value: value,
-                          }))
+                          name: key,
+                          value: value,
+                        }))
                         : []
                     ),
                     ports: pulumi.output(part.ports).apply((x) =>
                       x
                         ? x.map((port) => ({
-                            name: port.name,
-                            containerPort: port.containerPort,
-                            protocol: port.protocol ?? "TCP",
-                          }))
+                          name: port.name,
+                          containerPort: port.containerPort,
+                          protocol: port.protocol ?? "TCP",
+                        }))
                         : []
                     ),
                     resources: pulumi
@@ -216,35 +212,35 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             .apply(([publicHost, ports]) =>
               ports
                 ? ports
-                    .filter((x) => x.ingress)
-                    .map<IngressDef>((port) => {
-                      const hosts: string[] = [];
-                      if (port.ingress?.overrideHost) {
-                        hosts.push(...port.ingress.overrideHost);
-                      } else {
-                        if (publicHost)
-                          hosts.push(
-                            `${port.ingress?.subDomain ?? name}.${publicHost}`
-                          );
-                        if (port.ingress?.host)
-                          hosts.push(...port.ingress.host);
-                      }
+                  .filter((x) => x.ingress)
+                  .map<IngressDef>((port) => {
+                    const hosts: string[] = [];
+                    if (port.ingress?.overrideHost) {
+                      hosts.push(...port.ingress.overrideHost);
+                    } else {
+                      if (publicHost)
+                        hosts.push(
+                          `${port.ingress?.subDomain ?? name}.${publicHost}`
+                        );
+                      if (port.ingress?.host)
+                        hosts.push(...port.ingress.host);
+                    }
 
-                      assert(
-                        hosts.length > 0,
-                        "no hosts specified for ingress"
-                      );
+                    assert(
+                      hosts.length > 0,
+                      "no hosts specified for ingress"
+                    );
 
-                      return {
-                        hosts: hosts,
-                        path: port.ingress?.path ?? "/",
-                        backend: {
-                          serviceName: service.metadata.name,
-                          servicePort: port.servicePort ?? port.containerPort,
-                          protocol: port.ingress?.protocol ?? "http",
-                        },
-                      };
-                    })
+                    return {
+                      hosts: hosts,
+                      path: port.ingress?.path ?? "/",
+                      backend: {
+                        serviceName: service.metadata.name,
+                        servicePort: port.servicePort ?? port.containerPort,
+                        protocol: port.ingress?.protocol ?? "http",
+                      },
+                    };
+                  })
                 : []
             );
 
