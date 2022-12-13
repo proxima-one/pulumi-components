@@ -110,6 +110,12 @@ export class PrometheusStack extends pulumi.ComponentResource {
               //   },
               // ],
               rbac: { pspEnabled: false },
+              sidecar: {
+                dashboard:{
+                  enabled:true,
+                  labelValue: "1"
+                },
+              }
             },
             prometheus: {
               ingress:

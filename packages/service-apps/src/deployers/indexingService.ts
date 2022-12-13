@@ -309,7 +309,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
           timeRange: pulumi.output({
             from: app.timeRange?.from?.toISOString(),
-            to: app.timeRange?.to?.toISOString()
+            to: app.timeRange?.to?.toISOString(),
           } as DeployedServiceTimeRange),
           internalEndpoint: internalHost
             ? internalHost.apply((host) => `${host}:27000`)
