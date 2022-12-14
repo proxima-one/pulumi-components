@@ -3,7 +3,7 @@ import { AppDeployerBase, DeployParams } from "./base";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
 import {MongoDbStorage, PvcRequest} from "@proxima-one/pulumi-proxima-node";
 import * as yaml from "js-yaml";
-import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
+import {ComputeResources, Storage} from "@proxima-one/pulumi-k8s-base";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
   private webService: k8sServices.WebServiceDeployer;
@@ -401,6 +401,45 @@ export interface IndexingServiceAppV2 {
   // {filePath: content};
   configFiles?: k8sServices.ConfigFile[];
   pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
+}
+
+export interface IndexingServiceV3Db {
+  endpoint: {
+    type: "mongo-import";
+    clusterName: string;
+    dbName: string
+  } | {
+    type: "mongo-provision";
+    storage: pulumi.Input<MongoDbStorage>;
+    replicaSet?: number;
+    webUI?: boolean;
+    resources?: pulumi.Input<ComputeResources>;
+  } | {
+    type: "pvc";
+    storage: pulumi.Input<Storage>;
+    mountPath: string;
+  };
+}
+
+export interface IndexingServiceAppV3 {
+  apiKind: "indexing-service/v3";
+
+  type: "consumer-server" | "single-pod";
+  imageName?: pulumi.Input<string>;
+  streamRegistryUrl?: string;
+  timeRange?: TimeRange;
+  streams: Record<string, { id: string; metadata?: { networks?: string[] } }[]>;
+  db: IndexingServiceV3Db;
+  resources?: pulumi.Input<{
+    consumer?: pulumi.Input<ComputeResources>;
+    server?: pulumi.Input<ComputeResources>;
+  }>;
+
+  // Default "live"
+  mode?: IndexingServiceMode;
+
+  // {filePath: content};
+  configFiles?: k8sServices.ConfigFile[];
 }
 
 export type IndexingServiceMode =
