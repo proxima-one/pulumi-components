@@ -155,12 +155,19 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           : undefined;
         return {
           name: pulumi.output(name),
+          mode : pulumi.output(mode),
+          shardName: pulumi.output("shard-" + app.network),
           networks: pulumi.output(app.network).apply((x) => [x]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
+          restEndpoint: this.publicHost.apply((x) => `${name}-rest.${x}`),
           timeRange: pulumi.output({}),
           internalEndpoint: internalHost
             ? internalHost.apply((host) => `${host}:27000`)
             : undefined,
+          internalRestEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:8080`)
+            : undefined,
+          dbType: pulumi.output(app.db.endpoint.type),
         };
       }
 
@@ -305,6 +312,9 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             ),
           ]),
           endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
+          restEndpoint: this.publicHost.apply((x) => `${name}-rest.${x}`),
+          mode: pulumi.output(app.mode ?? "live"),
+          shardName: pulumi.output(app.shardName),
           timeRange: pulumi.output({
             from: app.timeRange?.from?.toISOString(),
             to: app.timeRange?.to?.toISOString(),
@@ -312,6 +322,10 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           internalEndpoint: internalHost
             ? internalHost.apply((host) => `${host}:27000`)
             : undefined,
+          internalRestEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:8080`)
+            : undefined,
+          dbType: pulumi.output(app.db.endpoint.type),
         };
       }
     }
@@ -415,6 +429,11 @@ export interface DeployedIndexingService {
   name: pulumi.Output<string>;
   networks: pulumi.Output<string[]>;
   internalEndpoint: pulumi.Output<string> | undefined;
+  internalRestEndpoint: pulumi.Output<string> | undefined;
+  shardName: pulumi.Output<string> | undefined;
+  mode: pulumi.Output<string>;
+  dbType: pulumi.Output<string>;
   endpoint: pulumi.Output<string>;
+  restEndpoint: pulumi.Output<string>;
   timeRange: pulumi.Output<DeployedServiceTimeRange>;
 }
