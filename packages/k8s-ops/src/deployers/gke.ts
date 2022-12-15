@@ -13,7 +13,7 @@ export class GkeOpsDeployer extends KubernetesOpsDeployer {
     const host = `cluster.${this.name}.proxima.one`;
     const args: KubernetesOperatorsArgs = {
       publicHost: host,
-      ingress: { namespace: "ingress" },
+      ingress: {namespace: "ingress"},
       kafka: {
         watchAnyNamespace: true,
         watchNamespaces: [],
@@ -59,10 +59,10 @@ export class GkeOpsDeployer extends KubernetesOpsDeployer {
             sizeGB: 2,
             storageClass: "premium-rwo",
           },
-          pagerDuty: {
+          pagerDuty: cfg.get("pagerduty.key") ? {
             url: "https://events.pagerduty.com/generic/2010-04-15/create_event.json",
             secret: cfg.require("pagerduty.key"),
-          },
+          } : undefined,
         },
         grafana: {
           persistence: {
