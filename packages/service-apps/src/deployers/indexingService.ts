@@ -4,6 +4,7 @@ import * as k8sServices from "@proxima-one/pulumi-proxima-node";
 import {MongoDbStorage, PvcRequest} from "@proxima-one/pulumi-proxima-node";
 import * as yaml from "js-yaml";
 import {ComputeResources, Storage} from "@proxima-one/pulumi-k8s-base";
+import { strict as assert } from "assert";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
   private webService: k8sServices.WebServiceDeployer;
@@ -21,150 +22,47 @@ export class IndexingServiceDeployer extends AppDeployerBase {
   }
 
   public deploy(app: IndexingServiceApp): DeployedIndexingService {
-    const name = app.name ?? this.project;
-    const indexName = app.indexName ?? this.project;
-    const dbName = app.db.name ?? "proxima";
-    const mode = app.mode ?? "live";
-    const streamDbUrl = app.streamDbUrl ?? "streams.proxima.one:443";
-    const consumerAddr = streamDbUrl.split(":")[0];
-    const consumerPort = streamDbUrl.split(":")[1] ?? "443";
-
-    const db = app.db.endpoint;
-    let mongoUri: pulumi.Input<string>;
-
-    if (db.type == "provision") {
-      const mongo = this.mongo.deploy({
-        storage: pulumi.output(db.storage).apply((x) => {
-          if (x.type == "new")
-            return { type: "provision", size: x.size, class: x.class };
-          return x.name;
-        }),
-        name: `${name}-db`,
-        webUI: db.webUI,
-        resources: db.resources,
-        replicaSet: db.replicaSet,
-        publicHost: pulumi.interpolate`${name}-db.${this.publicHost}`,
-        version: "4.4",
-        auth: {
-          user: "proxima",
-          password: { type: "random", name: `${name}-db` },
-          database: dbName,
-        },
-      });
-
-      mongoUri = mongo.connectionDetails.endpoint;
-    } else {
-      mongoUri = this.requireService<{ endpoint: string }>(
-        db.name,
-        "mongodb"
-      ).endpoint;
-    }
-
     switch (app.apiKind) {
-      case "indexing-service/v1": {
-        const env = pulumi.all({
-          CONSUME_STREAM_IDS: app.stream,
-          CONSUME_STREAM_ID: app.stream,
-          MONGO_DB_NAMES: dbName,
-          MONGO_DB_NAME: dbName,
-          MONGO_URI: mongoUri,
-          FAST_SYNC_MODE: "false",
-          METRICS_SHARD_ID: pulumi
-            .output(app.network)
-            .apply((x) => x.toUpperCase().replace(/—/g, "_") + "_EVENTS"),
-          METRICS_PORT: "2112",
-        });
-
-        const consumerEnv: Record<string, string> = {
-          CONSUME_HOST: consumerAddr,
-          CONSUME_PORT: consumerPort,
-        };
-
-        if (mode == "fast-sync") consumerEnv["FAST_SYNC_MODE"] = "true";
-
-        const serverEnv = {
-          PORT: "27000",
-          GRPC_PORT: "27000",
-          HTTP_PORT: "8080",
-        };
-
-        const metricsLabels = {
-          env: this.env,
-          index: indexName,
-          shard: app.network,
-        };
-
-        const resources = pulumi.output(app.resources);
-        const deployedWebService = this.webService.deploy({
-          name: name,
-          imageName: app.imageName,
-          publicHost: this.publicHost,
-          parts: {
-            consumer: {
-              disabled: mode == "server-only",
-              env: env.apply((x) => ({ ...x, ...consumerEnv })),
-              args: ["./consumer"],
-              resources: resources.apply((x) => x?.consumer),
-              metrics: {
-                labels: metricsLabels,
-              },
-              ports: [
-                {
-                  name: "http-metrics",
-                  containerPort: 2112,
-                },
-              ],
-            },
-            server: {
-              disabled: mode == "consumer-only" || mode == "fast-sync",
-              env: env.apply((x) => ({ ...x, ...serverEnv })),
-              args: ["./server"],
-              resources: resources.apply((x) => x?.server),
-              metrics: {
-                labels: metricsLabels,
-              },
-              ports: [
-                {
-                  name: "http-metrics",
-                  containerPort: 2112,
-                },
-                {
-                  name: "http",
-                  containerPort: 8080,
-                  ingress: {
-                    protocol: "http",
-                    subDomain: `${name}-rest`,
-                  },
-                },
-                {
-                  name: "grpc",
-                  containerPort: 27000,
-                  ingress: {
-                    protocol: "grpc",
-                    subDomain: name,
-                  },
-                },
-              ],
-            },
-          },
-        });
-
-        const deployedServer = deployedWebService.parts["server"];
-        const internalHost = deployedServer
-          ? deployedServer.internalHost
-          : undefined;
-        return {
-          name: pulumi.output(name),
-          networks: pulumi.output(app.network).apply((x) => [x]),
-          endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
-          timeRange: pulumi.output({}),
-          internalEndpoint: internalHost
-            ? internalHost.apply((host) => `${host}:27000`)
-            : undefined,
-        };
-      }
-
       case "indexing-service/v2": {
+        const name = app.name ?? this.project;
+        const indexName = app.indexName ?? this.project;
+        const dbName = app.db.name ?? "proxima";
+        const mode = app.mode ?? "live";
+        const streamDbUrl = app.streamDbUrl ?? "streams.proxima.one:443";
+        const consumerAddr = streamDbUrl.split(":")[0];
+        const consumerPort = streamDbUrl.split(":")[1] ?? "443";
+
+        const db = app.db.endpoint;
+        let mongoUri: pulumi.Input<string>;
+
+        if (db.type == "provision") {
+          const mongo = this.mongo.deploy({
+            storage: pulumi.output(db.storage).apply((x) => {
+              if (x.type == "new")
+                return { type: "provision", size: x.size, class: x.class };
+              return x.name;
+            }),
+            name: `${name}-db`,
+            webUI: db.webUI,
+            resources: db.resources,
+            replicaSet: db.replicaSet,
+            publicHost: pulumi.interpolate`${name}-db.${this.publicHost}`,
+            version: "4.4",
+            auth: {
+              user: "proxima",
+              password: { type: "random", name: `${name}-db` },
+              database: dbName,
+            },
+          });
+
+          mongoUri = mongo.connectionDetails.endpoint;
+        } else {
+          mongoUri = this.requireService<{ endpoint: string }>(
+            db.name,
+            "mongodb"
+          ).endpoint;
+        }
+
         const env = pulumi.all({
           MODE: app.mode ?? "live",
           METRICS_PORT: "2112",
@@ -316,45 +214,224 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             : undefined,
         };
       }
+
+      case "indexing-service/v3": {
+        const name = `${app.indexName}-${app.shardName}`;
+        const mode = app.mode ?? "live";
+        const streamRegistryUrl = app.streamRegistryUrl ?? "https://streams.api.proxima.one";
+
+        let target: pulumi.Output<any>;
+        let pvc: pulumi.Input<k8sServices.PvcRequest> | undefined = undefined;
+        switch (app.db.type) {
+          case "mongo-provision": {
+            const mongo = this.mongo.deploy({
+              storage: pulumi.output(app.db.storage).apply((x) => {
+                if (x.type == "new")
+                  return { type: "provision", size: x.size, class: x.class };
+                return x.name;
+              }),
+              name: `${name}-db`,
+              webUI: app.db.webUI,
+              resources: app.db.resources,
+              replicaSet: app.db.replicaSet,
+              publicHost: pulumi.interpolate`${name}-db.${this.publicHost}`,
+              version: "4.4",
+              auth: {
+                user: "proxima",
+                password: { type: "random", name: `${name}-db` },
+                database: "proxima",
+              },
+            });
+            target = mongo.connectionDetails.endpoint.apply(endpoint => ({
+              dbUri: endpoint,
+              dbName: "proxima",
+            }));
+            break
+          }
+
+          case "mongo-import": {
+            const dbName = app.db.dbName;
+            target = this.requireService<{ endpoint: string }>(app.db.serviceName, "mongodb").endpoint.apply(
+              endpoint => ({
+                dbUri: endpoint,
+                dbName: dbName,
+              })
+            );
+            break
+          }
+
+          case "pvc": {
+            pvc = pulumi.output(app.db.storage).apply(storage => ({
+              path: "/app/data",
+              storage: storage,
+            }));
+            target = pulumi.output({
+              dataPath: "/app/data"
+            })
+            break
+          }
+        }
+
+        const env = pulumi.all({
+          MODE: mode,
+        });
+
+        const consumerEnv = {
+          STREAM_REGISTRY_URL: streamRegistryUrl
+        };
+
+        const serverEnv = {};
+
+        const metricsLabels = {
+          env: this.env,
+          index: app.indexName,
+          shard: app.shardName,
+        };
+
+        const configs: k8sServices.ConfigFile[] = [{
+          path: "/app/config/config.yaml",
+          content: target.apply(appTarget =>
+            yaml.dump({
+              streams: app.streams,
+              timeRange: app.timeRange ? TimeRangeToIso8601(app.timeRange) : undefined,
+              target: appTarget,
+              shard: {
+                name: app.shardName,
+              },
+            })
+          ),
+        }];
+        if (app.configFiles) {
+          configs.push(...app.configFiles);
+        }
+
+        const resources = pulumi.output(app.resources);
+
+        const consumer = {
+          disabled: mode == "server-only",
+          env: env.apply((x) => ({ ...x, ...consumerEnv })),
+          args: ["./consumer"],
+          resources: resources.apply((x) => x?.consumer),
+          metrics: {
+            labels: metricsLabels,
+          },
+          ports: [
+            {
+              name: "http-metrics",
+              containerPort: 2112,
+            },
+            {
+              name: "http-status",
+              containerPort: 9090,
+            },
+            {
+              name: "grpc-status",
+              containerPort: 26000,
+            },
+          ],
+          pvcs: pvc ? [pvc] : [],
+        };
+        let server: any = {disabled: true};
+        if (app.type == "consumer-server") {
+          assert(app.db.type != "pvc");
+          server = {
+            disabled: mode == "consumer-only" || mode == "fast-sync",
+            env: env.apply((x) => ({ ...x, ...serverEnv })),
+            args: ["./server"],
+            resources: resources.apply((x) => x?.server),
+            metrics: {
+              labels: metricsLabels,
+            },
+            ports: [
+              {
+                name: "http-metrics",
+                containerPort: 2112,
+              },
+              {
+                name: "http-status",
+                containerPort: 9090,
+              },
+              {
+                name: "grpc-status",
+                containerPort: 26000,
+              },
+              {
+                name: "http",
+                containerPort: 8080,
+                ingress: {
+                  protocol: "http",
+                  subDomain: `${name}-rest`,
+                },
+              },
+              {
+                name: "grpc",
+                containerPort: 27000,
+                ingress: {
+                  protocol: "grpc",
+                  subDomain: name,
+                },
+              },
+            ],
+            pvcs: pvc ? [pvc] : [],
+          };
+        }
+
+        const deployedWebService = this.webService.deploy({
+          name: name,
+          imageName: app.imageName,
+          configFiles: configs,
+          publicHost: this.publicHost,
+          parts: {
+            consumer: consumer,
+            server: server,
+          },
+        });
+
+        const deployedServer = deployedWebService.parts["server"];
+        const internalHost = deployedServer
+          ? deployedServer.internalHost
+          : undefined;
+        return {
+          name: pulumi.output(name),
+          networks: pulumi.output([
+            ...new Set<string>( // unique networks from all streams
+              Object.entries(app.streams).reduce<string[]>((acc, cur) => {
+                return acc.concat(
+                  cur[1].reduce<string[]>((acc, cur) => {
+                    return cur.metadata?.networks
+                      ? acc.concat(cur.metadata?.networks)
+                      : acc;
+                  }, [])
+                );
+              }, [])
+            ),
+          ]),
+          endpoint: this.publicHost.apply((x) => `${name}.${x}:443`),
+          timeRange: pulumi.output({
+            from: app.timeRange?.from?.toISOString(),
+            to: app.timeRange?.to?.toISOString(),
+          } as DeployedServiceTimeRange),
+          internalEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:27000`)
+            : undefined,
+        };
+      }
     }
   }
 }
 
-export type IndexingServiceApp = (
-  | IndexingServiceAppV1
-  | IndexingServiceAppV2
-) & { name?: string };
+export type IndexingServiceApp = (IndexingServiceAppV2 & { name?: string }) | IndexingServiceAppV3;
 
 export interface IndexingServiceDb {
   name?: string;
   endpoint:
     | { type: "import"; name: string }
     | ({ type: "provision" } & {
-        storage: pulumi.Input<MongoDbStorage>;
-        replicaSet?: number;
-        webUI?: boolean;
-        resources?: pulumi.Input<ComputeResources>;
-      });
-}
-
-export interface IndexingServiceAppV1 {
-  apiKind: "indexing-service/v1";
-
-  network: pulumi.Input<string>;
-  streamDbUrl?: string;
-  stream: pulumi.Input<string>;
-  db: IndexingServiceDb;
-
-  imageName?: pulumi.Input<string>;
-  indexName?: string;
-  resources?: pulumi.Input<{
-    consumer?: pulumi.Input<ComputeResources>;
-    server?: pulumi.Input<ComputeResources>;
-  }>;
-  /*
-  Default "live"
-   */
-  mode?: IndexingServiceMode;
+    storage: pulumi.Input<MongoDbStorage>;
+    replicaSet?: number;
+    webUI?: boolean;
+    resources?: pulumi.Input<ComputeResources>;
+  });
 }
 
 function TimeRangeToIso8601(range: TimeRange): {
@@ -403,27 +480,26 @@ export interface IndexingServiceAppV2 {
   pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
 }
 
-export interface IndexingServiceV3Db {
-  endpoint: {
-    type: "mongo-import";
-    clusterName: string;
-    dbName: string
-  } | {
-    type: "mongo-provision";
-    storage: pulumi.Input<MongoDbStorage>;
-    replicaSet?: number;
-    webUI?: boolean;
-    resources?: pulumi.Input<ComputeResources>;
-  } | {
-    type: "pvc";
-    storage: pulumi.Input<Storage>;
-    mountPath: string;
-  };
+export type IndexingServiceV3Db = {
+  type: "mongo-import";
+  serviceName: string;
+  dbName: string;
+} | {
+  type: "mongo-provision";
+  storage: pulumi.Input<MongoDbStorage>;
+  replicaSet?: number;
+  webUI?: boolean;
+  resources?: pulumi.Input<ComputeResources>;
+} | {
+  type: "pvc";
+  storage: pulumi.Input<Storage>;
 }
 
 export interface IndexingServiceAppV3 {
   apiKind: "indexing-service/v3";
 
+  indexName: string;
+  shardName: string;
   type: "consumer-server" | "single-pod";
   imageName?: pulumi.Input<string>;
   streamRegistryUrl?: string;
