@@ -30,7 +30,7 @@ const defaultOptions: BorOptions = {
   dataDir: "/var/bor/data",
 };
 
-const defaultImageName = "maticnetwork/bor:v0.2.14";
+const defaultImageName = "0xpolygon/bor:v0.3.0";
 
 export class DockerBor extends pulumi.ComponentResource {
   public readonly borOptions: pulumi.Output<BorOptions>;
@@ -69,7 +69,7 @@ export class DockerBor extends pulumi.ComponentResource {
       .apply(([imageName, options]) => {
       const args = [];
 
-      if (imageName.startsWith("maticnetwork/bor:v0.3"))
+      if (imageName.startsWith("0xpolygon/bor:v0.3"))
         args.push("server");
 
       args.push(...optionsToArgs(options));
