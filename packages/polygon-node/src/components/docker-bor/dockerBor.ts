@@ -70,13 +70,8 @@ export class DockerBor extends pulumi.ComponentResource {
     this.cliArgs = pulumi
       .all([imageName, this.borOptions])
       .apply(([imageName, options]) => {
-        const args = [];
-
-        if (imageName.startsWith("0xpolygon/bor:0.3")) args.push("server");
-
-        args.push(...optionsToArgs(options));
-
-        return args;
+        const v3 = imageName.startsWith("0xpolygon/bor:0.3");
+        return optionsToArgs(options, v3);
       });
 
     if (args.existingDataVolume == undefined)
