@@ -87,7 +87,7 @@ export class DockerPolygonNode extends pulumi.ComponentResource {
                 heimdallUrl: `http://${restServ}:1317`,
                 borLogs: true,
               },
-              extraArgs: ["--ipcdisable", "--nousb"],
+              extraArgs: ["--ipcdisable"],
               network: configs[args.network].borNetwork,
               txLookupLimit: 0,
               networking: {

@@ -22,7 +22,6 @@ export function optionsToArgs(options: BorOptions, v3: boolean): string[] {
     delete options.network;
 
     args.push(...geth.optionsToArgs(options));
-
     args.push("--chain", network == "bor-mumbai" ? "mumbai" : "mainnet");
   } else {
     args.push(...geth.optionsToArgs(options));
