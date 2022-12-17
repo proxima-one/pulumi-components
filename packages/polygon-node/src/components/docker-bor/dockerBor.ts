@@ -51,10 +51,11 @@ export class DockerBor extends pulumi.ComponentResource {
 
     const networkName = args.existingNetwork ?? this.network!.name;
 
+    const imageName = pulumi.output(args.imageName).apply(x => x ?? defaultImageName);
     const borImage = new docker.RemoteImage(
       name,
       {
-        name: args.imageName ?? defaultImageName,
+        name: imageName,
         keepLocally: true,
       },
       { parent: this }
@@ -63,7 +64,18 @@ export class DockerBor extends pulumi.ComponentResource {
     this.borOptions = pulumi.Output.create(args.borOptions ?? {}).apply(
       (options) => _.merge(defaultOptions, options)
     );
-    this.cliArgs = this.borOptions.apply((options) => optionsToArgs(options));
+
+    this.cliArgs = pulumi.all([imageName, this.borOptions])
+      .apply(([imageName, options]) => {
+      const args = [];
+
+      if (imageName.startsWith("maticnetwork/bor:v0.3"))
+        args.push("server");
+
+      args.push(...optionsToArgs(options));
+
+      return args;
+    });
 
     if (args.existingDataVolume == undefined)
       this.dataVolume = new docker.Volume(name, {}, { parent: this });

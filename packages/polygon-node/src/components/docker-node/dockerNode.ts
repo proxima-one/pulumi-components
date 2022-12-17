@@ -146,7 +146,7 @@ const configs: Record<PolygonNodeNetwork, PolygonNetworkConfig> = {
       "enode://f0f48a8781629f95ff02606081e6e43e4aebd503f3d07fc931fad7dd5ca1ba52bd849a6f6c3be0e375cf13c9ae04d859c4a9ae3546dc8ed4f10aa5dbb47d4998@34.226.134.117:30303",
     ],
     borNetwork: "bor-mumbai",
-    borImage: "0xpolygon/bor:0.2.16",
-    heimdallImage: "0xpolygon/heimdall:0.2.11",
+    borImage: "0xpolygon/bor:0.3.1-mumbai",
+    heimdallImage: "0xpolygon/heimdall:0.3.0",
   },
 };
