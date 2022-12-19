@@ -308,30 +308,63 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           configs.push(...app.configFiles);
         }
 
+        const serverPorts = [
+          {
+            name: "http-metrics",
+            containerPort: 2112,
+          },
+          {
+            name: "http-status",
+            containerPort: 9090,
+          },
+          {
+            name: "grpc-status",
+            containerPort: 26000,
+          },
+          {
+            name: "http",
+            containerPort: 8080,
+            ingress: {
+              protocol: "http",
+              subDomain: `${name}-rest`,
+            },
+          },
+          {
+            name: "grpc",
+            containerPort: 27000,
+            ingress: {
+              protocol: "grpc",
+              subDomain: name,
+            },
+          },
+        ];
+        const consumerPorts = [
+          {
+            name: "http-metrics",
+            containerPort: 2112,
+          },
+          {
+            name: "http-status",
+            containerPort: 9090,
+          },
+          {
+            name: "grpc-status",
+            containerPort: 26000,
+          },
+        ];
         const resources = pulumi.output(app.resources);
 
         const consumer = {
           disabled: mode == "server-only",
-          env: env.apply((x) => ({ ...x, ...consumerEnv })),
+          env: app.type == "single-pod" ?
+            env.apply((x) => ({ ...x, ...consumerEnv, ...serverEnv })) :
+            env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),
           metrics: {
             labels: metricsLabels,
           },
-          ports: [
-            {
-              name: "http-metrics",
-              containerPort: 2112,
-            },
-            {
-              name: "http-status",
-              containerPort: 9090,
-            },
-            {
-              name: "grpc-status",
-              containerPort: 26000,
-            },
-          ],
+          ports: (app.type == "single-pod" ? serverPorts : []).concat(consumerPorts),
           pvcs: pvc ? [pvc] : [],
         };
         let server: any = {disabled: true};
@@ -345,36 +378,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             metrics: {
               labels: metricsLabels,
             },
-            ports: [
-              {
-                name: "http-metrics",
-                containerPort: 2112,
-              },
-              {
-                name: "http-status",
-                containerPort: 9090,
-              },
-              {
-                name: "grpc-status",
-                containerPort: 26000,
-              },
-              {
-                name: "http",
-                containerPort: 8080,
-                ingress: {
-                  protocol: "http",
-                  subDomain: `${name}-rest`,
-                },
-              },
-              {
-                name: "grpc",
-                containerPort: 27000,
-                ingress: {
-                  protocol: "grpc",
-                  subDomain: name,
-                },
-              },
-            ],
+            ports: serverPorts,
             pvcs: pvc ? [pvc] : [],
           };
         }
