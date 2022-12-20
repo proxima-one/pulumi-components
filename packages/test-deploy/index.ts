@@ -99,68 +99,32 @@ const indexDeployer = new IndexingServiceDeployer({
 
 import * as k8s from "@pulumi/kubernetes";
 
-const pvc = new k8s.core.v1.PersistentVolumeClaim(
-  `test-pvc`,
-  {
-    metadata: {
-      namespace: "apps-indexing",
-      annotations: {
-        "pulumi.com/skipAwait": "true",
-      },
-    },
-    spec: {
-      storageClassName: "premium-rwo",
-      accessModes: ["ReadWriteOnce"],
-      resources: {
-        requests: {
-          storage: "100Mi",
-        },
-      },
-    },
-  })
+indexDeployer.deploy({
+  apiKind: "indexing-service/v3",
 
-const shard0 = indexDeployer.deploy({
-  apiKind: "indexing-service/v2",
-  imageName: "quay.io/proxima.one/services:tokens-v1.0.1",
-  mode: "live",
-  name: "tokens-test",
-  shardName: "tokens-test",
-  indexName: "tokens-test",
+  imageName: "quay.io/proxima.one/services:index-ft-balances-v1.0.10",
+  indexName: "ft-balances-test",
+  shardName: "0",
+  type: "single-pod",
   streams: {
-    ft: [
+    Transfers: [
       {
-        id: "v1.new-tokens.eth-main.fungible-token.streams.proxima.one",
+        id: "proxima.erc20.polygon-mumbai.events.1_0",
         metadata: {
-          networks: ["eth-main"],
-        },
-      },
-    ],
-    nft: [
-      {
-        id: "v1.new-collections.eth-main.nft.streams.proxima.one",
-        metadata: {
-          networks: ["eth-main"],
+          networks: ["polygon-mumbai"],
         },
       },
     ],
   },
-  pvcs: [
-    {
-      path: "/path1",
-      storage: pvc.metadata.name,
-    },
-  ],
-
+  resources: {
+    consumer: "100m/1000m,100Mi/2Gi",
+  },
+  mode: "fast-sync",
   db: {
-    endpoint: {
-      type: "provision",
-      resources: "50m/1000m,200Mi/500Mi",
-      webUI: false,
-      storage: {
-        type: "new",
-        size: "1Gi",
-        class: "premium-rwo-xfs",
-      },
+    type: "pvc",
+    storage: {
+      class: "premium-rwo",
+      size: "5Gi",
     },
   },
 });

@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import { AppDeployerBase, DeployParams } from "./base";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
-import {MongoDbStorage, PvcRequest} from "@proxima-one/pulumi-proxima-node";
+import {MongoDbStorage, PvcRequest, ServicePort} from "@proxima-one/pulumi-proxima-node";
 import * as yaml from "js-yaml";
 import {ComputeResources, Storage} from "@proxima-one/pulumi-k8s-base";
 import { strict as assert } from "assert";
@@ -308,7 +308,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           configs.push(...app.configFiles);
         }
 
-        const serverPorts = [
+        const commonPorts: ServicePort[] = [
           {
             name: "http-metrics",
             containerPort: 2112,
@@ -321,6 +321,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             name: "grpc-status",
             containerPort: 26000,
           },
+        ];
+        const serverPorts: ServicePort[] = [
           {
             name: "http",
             containerPort: 8080,
@@ -338,20 +340,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             },
           },
         ];
-        const consumerPorts = [
-          {
-            name: "http-metrics",
-            containerPort: 2112,
-          },
-          {
-            name: "http-status",
-            containerPort: 9090,
-          },
-          {
-            name: "grpc-status",
-            containerPort: 26000,
-          },
-        ];
         const resources = pulumi.output(app.resources);
 
         const consumer = {
@@ -364,7 +352,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           metrics: {
             labels: metricsLabels,
           },
-          ports: (app.type == "single-pod" ? serverPorts : []).concat(consumerPorts),
+          ports: (app.type == "single-pod" ? serverPorts : []).concat(commonPorts),
           pvcs: pvc ? [pvc] : [],
         };
         let server: any = {disabled: true};
@@ -378,7 +366,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             metrics: {
               labels: metricsLabels,
             },
-            ports: serverPorts,
+            ports: commonPorts.concat(serverPorts),
             pvcs: pvc ? [pvc] : [],
           };
         }
