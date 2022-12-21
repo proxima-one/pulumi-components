@@ -275,16 +275,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           }
         }
 
-        const env = pulumi.all({
-          MODE: mode,
-        });
-
-        const consumerEnv = {
-          STREAM_REGISTRY_URL: streamRegistryUrl
-        };
-
-        const serverEnv = {};
-
         const metricsLabels = {
           env: this.env,
           index: app.indexName,
@@ -298,6 +288,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
               streams: app.streams,
               timeRange: app.timeRange ? TimeRangeToIso8601(app.timeRange) : undefined,
               target: appTarget,
+              streamRegistryUrl: streamRegistryUrl,
+              mode: indexingServiceModeToConfigMode(mode),
               shard: {
                 name: app.shardName,
               },
@@ -344,9 +336,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
         const consumer = {
           disabled: mode == "server-only",
-          env: app.type == "single-pod" ?
-            env.apply((x) => ({ ...x, ...consumerEnv, ...serverEnv })) :
-            env.apply((x) => ({ ...x, ...consumerEnv })),
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),
           metrics: {
@@ -360,7 +349,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           assert(app.db.type != "pvc");
           server = {
             disabled: mode == "consumer-only" || mode == "fast-sync",
-            env: env.apply((x) => ({ ...x, ...serverEnv })),
             args: ["./server"],
             resources: resources.apply((x) => x?.server),
             metrics: {
@@ -514,6 +502,17 @@ export interface IndexingServiceAppV3 {
 
   // {filePath: content};
   configFiles?: k8sServices.ConfigFile[];
+}
+
+function indexingServiceModeToConfigMode(mode: IndexingServiceMode): "fast-sync" | "live" {
+  switch (mode) {
+    case "live":
+    case "server-only":
+      return "live"
+    case "fast-sync":
+    case "consumer-only":
+      return "fast-sync"
+  }
 }
 
 export type IndexingServiceMode =
