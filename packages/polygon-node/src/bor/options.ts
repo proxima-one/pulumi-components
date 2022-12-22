@@ -13,10 +13,19 @@ interface MiscOptions {
 
 export type BorNetwork = "bor-mainnet" | "bor-mumbai" | string;
 
-export function optionsToArgs(options: BorOptions): string[] {
+export function optionsToArgs(options: BorOptions, v3: boolean): string[] {
   const args: string[] = [];
 
-  args.push(...geth.optionsToArgs(options));
+  if (v3) {
+    args.push("server");
+    const network = options.network;
+    delete options.network;
+
+    args.push(...geth.optionsToArgs(options));
+    args.push("--chain", network == "bor-mumbai" ? "mumbai" : "mainnet");
+  } else {
+    args.push(...geth.optionsToArgs(options));
+  }
 
   if (options.misc) args.push(...miscArgs(options.misc));
 

@@ -46,6 +46,11 @@ interface NetworkingOptions {
   Maximum number of network peers (network disabled if set to 0) (default: 50)
    */
   maxpeers: number;
+
+  /*
+  P2p port, default 30303
+   */
+  port?: number;
 }
 
 interface CacheOptions {
@@ -131,6 +136,10 @@ export function optionsToArgs(options: GethOptions): string[] {
 
 function networkingArgs(opts: NetworkingOptions): string[] {
   const args: string[] = [];
+
+  if (opts.port != undefined)
+    args.push("--port", opts.port.toString());
+
   if (opts.maxpeers != undefined)
     args.push("--maxpeers", opts.maxpeers.toString());
 

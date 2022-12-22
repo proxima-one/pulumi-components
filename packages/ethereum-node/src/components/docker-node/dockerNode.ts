@@ -76,6 +76,7 @@ export class DockerEthNode extends pulumi.ComponentResource {
             archival: args.archival,
             networking: {
               maxpeers: 100,
+              port: args.ports?.geth?.peers
             },
             cache: {
               memory: 25000,
