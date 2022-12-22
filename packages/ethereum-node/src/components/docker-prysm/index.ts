@@ -130,7 +130,7 @@ export class DockerPrysm extends pulumi.ComponentResource {
             ? [{ external: ports?.p2pTcp, internal: 13000 }]
             : []),
           ...(ports?.p2pUdp
-            ? [{ external: ports?.rpc, internal: 12000, protocol: "udp" }]
+            ? [{ external: ports?.p2pUdp, internal: 12000, protocol: "udp" }]
             : []),
         ]),
         uploads: uploads,
