@@ -44,26 +44,32 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         }, this.options()
       ) : undefined;
 
-      const pvcs = pulumi.output(part.pvcs).apply(pvcs => pvcs?.map((pvcRequest, index) =>
-        typeof pvcRequest.storage == "string" ? pulumi.output(pvcRequest.storage) : new k8s.core.v1.PersistentVolumeClaim(
-          `${partFullName}-pvc-${index}`,
-          {
-            metadata: {
-              namespace: this.namespace,
-              annotations: {
-                "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
-              },
-            },
-            spec: {
-              storageClassName: this.storageClass(pvcRequest.storage.class, {failIfNoMatch: true}).apply(x => x!),
-              accessModes: ["ReadWriteOnce"],
-              resources: {
-                requests: {
-                  storage: pvcRequest.storage.size,
+      const pvcs = pulumi.output(part.pvcs).apply(pvcs => pvcs?.map(pvcRequest =>
+        typeof pvcRequest.storage == "string" ? {
+          name: pvcRequest.name,
+          k8sName: pulumi.output(pvcRequest.storage)
+        } : {
+          name: pvcRequest.name,
+          k8sName: new k8s.core.v1.PersistentVolumeClaim(
+            `${partFullName}-pvc-${pvcRequest.name}`,
+            {
+              metadata: {
+                namespace: this.namespace,
+                annotations: {
+                  "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
                 },
               },
-            },
-          }, this.options()).metadata.name
+              spec: {
+                storageClassName: this.storageClass(pvcRequest.storage.class, {failIfNoMatch: true}).apply(x => x!),
+                accessModes: ["ReadWriteOnce"],
+                resources: {
+                  requests: {
+                    storage: pvcRequest.storage.size,
+                  },
+                },
+              },
+            }, this.options()).metadata.name,
+        }
       ) ?? []);
 
       const imageName = pulumi
@@ -89,10 +95,10 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
       };
 
       const volumes: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.Volume>[]> =
-        pvcs.apply(pvcArr => pvcArr.map((pvcName, index) => ({
-          name: `pvc-${index}`,
+        pvcs.apply(pvcArr => pvcArr.map(pvcData => ({
+          name: `pvc-${pvcData.name}`,
           persistentVolumeClaim: {
-            claimName: pvcName,
+            claimName: pvcData.k8sName,
             readOnly: false,
           },
         } as k8s.types.input.core.v1.Volume)).concat(configMap ? [{
@@ -110,8 +116,8 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         }) as pulumi.Output<k8s.types.input.core.v1.VolumeMount>));
       if (part.pvcs) {
         volumeMounts = pulumi.all([volumeMounts, part.pvcs]).apply(([vms, pvcs]) => vms.concat(
-          ...pvcs.map((pvcRequest, index) => ({
-            name: `pvc-${index}`,
+          ...pvcs.map(pvcRequest => ({
+            name: `pvc-${pvcRequest.name}`,
             mountPath: pvcRequest.path
           }))))
       }
@@ -344,6 +350,7 @@ export interface ServiceAppPart {
 }
 
 export interface PvcRequest {
+  name: string;
   storage: pulumi.Input<Storage>;
   path: string;
 }

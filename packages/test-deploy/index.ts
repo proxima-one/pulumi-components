@@ -102,7 +102,7 @@ import * as k8s from "@pulumi/kubernetes";
 indexDeployer.deploy({
   apiKind: "indexing-service/v3",
 
-  imageName: "quay.io/proxima.one/services:index-ft-balances-v1.0.10",
+  imageName: "quay.io/proxima.one/services:index-ft-balances-v1.0.12",
   indexName: "ft-balances-test",
   shardName: "0",
   type: "single-pod",
@@ -117,14 +117,14 @@ indexDeployer.deploy({
     ],
   },
   resources: {
-    consumer: "100m/1000m,100Mi/2Gi",
+    consumer: "100m/2000m,100Mi/2Gi",
   },
   mode: "fast-sync",
   db: {
     type: "pvc",
     storage: {
       class: "premium-rwo",
-      size: "5Gi",
+      size: "10Gi",
     },
   },
 });

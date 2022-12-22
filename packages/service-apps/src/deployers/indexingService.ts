@@ -265,6 +265,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
           case "pvc": {
             pvc = pulumi.output(app.db.storage).apply(storage => ({
+              name: "app-data",
               path: "/app/data",
               storage: storage,
             }));
