@@ -123,12 +123,16 @@ export class DockerGeth extends pulumi.ComponentResource {
             ? [
                 {
                   external: ports?.peers,
-                  internal: 30303,
+                  internal: this.gethOptions.apply(
+                    (x) => x.networking?.port ?? 30303
+                  ),
                   protocol: "tcp",
                 },
                 {
                   external: ports?.peers,
-                  internal: 30303,
+                  internal: this.gethOptions.apply(
+                    (x) => x.networking?.port ?? 30303
+                  ),
                   protocol: "udp",
                 },
               ]
