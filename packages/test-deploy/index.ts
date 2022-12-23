@@ -128,3 +128,26 @@ indexDeployer.deploy({
     },
   },
 });
+
+indexDeployer.deploy({
+  apiKind: "indexing-service/v3",
+
+  imageName: "quay.io/proxima.one/services:index-exchange-rates-v1.0.3",
+  indexName: "exchange-rates-test",
+  shardName: "0",
+  type: "single-pod",
+  streams: {
+    ExchangeRatesV0: [
+      {
+        id: "proxima.exchange-rates.0_1",
+        metadata: {
+          networks: ["exchange-rates"],
+        },
+      },
+    ],
+  },
+  resources: {
+    consumer: "100m/500m,100Mi/1Gi",
+  },
+  mode: "fast-sync",
+});

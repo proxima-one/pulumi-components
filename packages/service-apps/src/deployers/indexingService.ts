@@ -223,56 +223,58 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const mode = app.mode ?? "live";
         const streamRegistryUrl = app.streamRegistryUrl ?? "https://streams.api.proxima.one";
 
-        let target: pulumi.Output<any>;
+        let target: pulumi.Output<any> = pulumi.output({db: "none"});
         let pvc: pulumi.Input<k8sServices.PvcRequest> | undefined = undefined;
-        switch (app.db.type) {
-          case "mongo-provision": {
-            const mongo = this.mongo.deploy({
-              storage: pulumi.output(app.db.storage).apply((x) => {
-                if (x.type == "new")
-                  return { type: "provision", size: x.size, class: x.class };
-                return x.name;
-              }),
-              name: `${name}-db`,
-              webUI: app.db.webUI,
-              resources: app.db.resources,
-              replicaSet: app.db.replicaSet,
-              publicHost: pulumi.interpolate`${name}-db.${this.publicHost}`,
-              version: "4.4",
-              auth: {
-                user: "proxima",
-                password: { type: "random", name: `${name}-db` },
-                database: "proxima",
-              },
-            });
-            target = mongo.connectionDetails.endpoint.apply(endpoint => ({
-              dbUri: endpoint,
-              dbName: "proxima",
-            }));
-            break
-          }
-
-          case "mongo-import": {
-            const dbName = app.db.dbName;
-            target = this.requireService<{ endpoint: string }>(app.db.serviceName, "mongodb").endpoint.apply(
-              endpoint => ({
+        if (app.db) {
+          switch (app.db.type) {
+            case "mongo-provision": {
+              const mongo = this.mongo.deploy({
+                storage: pulumi.output(app.db.storage).apply((x) => {
+                  if (x.type == "new")
+                    return {type: "provision", size: x.size, class: x.class};
+                  return x.name;
+                }),
+                name: `${name}-db`,
+                webUI: app.db.webUI,
+                resources: app.db.resources,
+                replicaSet: app.db.replicaSet,
+                publicHost: pulumi.interpolate`${name}-db.${this.publicHost}`,
+                version: "4.4",
+                auth: {
+                  user: "proxima",
+                  password: {type: "random", name: `${name}-db`},
+                  database: "proxima",
+                },
+              });
+              target = mongo.connectionDetails.endpoint.apply(endpoint => ({
                 dbUri: endpoint,
-                dbName: dbName,
-              })
-            );
-            break
-          }
+                dbName: "proxima",
+              }));
+              break
+            }
 
-          case "pvc": {
-            pvc = pulumi.output(app.db.storage).apply(storage => ({
-              name: "app-data",
-              path: "/app/data",
-              storage: storage,
-            }));
-            target = pulumi.output({
-              dataPath: "/app/data"
-            })
-            break
+            case "mongo-import": {
+              const dbName = app.db.dbName;
+              target = this.requireService<{ endpoint: string }>(app.db.serviceName, "mongodb").endpoint.apply(
+                endpoint => ({
+                  dbUri: endpoint,
+                  dbName: dbName,
+                })
+              );
+              break
+            }
+
+            case "pvc": {
+              pvc = pulumi.output(app.db.storage).apply(storage => ({
+                name: "app-data",
+                path: "/app/data",
+                storage: storage,
+              }));
+              target = pulumi.output({
+                dataPath: "/app/data"
+              })
+              break
+            }
           }
         }
 
@@ -347,7 +349,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         };
         let server: any = {disabled: true};
         if (app.type == "consumer-server") {
-          assert(app.db.type != "pvc");
+          assert(app.db?.type != "pvc");
           server = {
             disabled: mode == "consumer-only" || mode == "fast-sync",
             args: ["./server"],
@@ -400,7 +402,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           } as DeployedServiceTimeRange),
           internalEndpoint: internalHost ? internalHost.apply((host) => `${host}:27000`) : undefined,
           internalRestEndpoint: internalHost ? internalHost.apply((host) => `${host}:8080`) : undefined,
-          dbType: pulumi.output(app.db.type),
+          dbType: pulumi.output(app.db?.type ?? "none"),
         };
       }
     }
@@ -492,7 +494,7 @@ export interface IndexingServiceAppV3 {
   streamRegistryUrl?: string;
   timeRange?: TimeRange;
   streams: Record<string, { id: string; metadata?: { networks?: string[] } }[]>;
-  db: IndexingServiceV3Db;
+  db?: IndexingServiceV3Db;
   resources?: pulumi.Input<{
     consumer?: pulumi.Input<ComputeResources>;
     server?: pulumi.Input<ComputeResources>;
