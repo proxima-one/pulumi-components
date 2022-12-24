@@ -134,6 +134,7 @@ indexDeployer.deploy({
 
   imageName: "quay.io/proxima.one/services:index-exchange-rates-v1.0.3",
   indexName: "exchange-rates-test",
+  overrideStreamDb: "core-us-relayer-api-fb6bbb8d.services.svc.cluster.local:50051",
   shardName: "0",
   type: "single-pod",
   streams: {

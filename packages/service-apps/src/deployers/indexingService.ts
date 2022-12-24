@@ -291,6 +291,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
               streams: app.streams,
               timeRange: app.timeRange ? TimeRangeToIso8601(app.timeRange) : undefined,
               target: appTarget,
+              overrideStreamDbUrl: app.overrideStreamDbUrl,
               streamRegistryUrl: streamRegistryUrl,
               mode: indexingServiceModeToConfigMode(mode),
               shard: {
@@ -492,6 +493,7 @@ export interface IndexingServiceAppV3 {
   type: "consumer-server" | "single-pod";
   imageName?: pulumi.Input<string>;
   streamRegistryUrl?: string;
+  overrideStreamDbUrl?: string;
   timeRange?: TimeRange;
   streams: Record<string, { id: string; metadata?: { networks?: string[] } }[]>;
   db?: IndexingServiceV3Db;
