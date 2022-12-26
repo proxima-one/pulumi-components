@@ -104,6 +104,7 @@ indexDeployer.deploy({
 
   imageName: "quay.io/proxima.one/services:index-ft-balances-v1.0.12",
   indexName: "ft-balances-test",
+  overrideStreamDbUrl: "core-us-relayer-api-fb6bbb8d.services.svc.cluster.local:50051",
   shardName: "0",
   type: "single-pod",
   streams: {
@@ -132,9 +133,9 @@ indexDeployer.deploy({
 indexDeployer.deploy({
   apiKind: "indexing-service/v3",
 
-  imageName: "quay.io/proxima.one/services:index-exchange-rates-v1.0.3",
+  imageName: "quay.io/proxima.one/services:index-exchange-rates-v1.0.5",
   indexName: "exchange-rates-test",
-  overrideStreamDb: "core-us-relayer-api-fb6bbb8d.services.svc.cluster.local:50051",
+  overrideStreamDbUrl: "core-us-relayer-api-fb6bbb8d.services.svc.cluster.local:50051",
   shardName: "0",
   type: "single-pod",
   streams: {
