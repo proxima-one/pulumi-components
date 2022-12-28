@@ -30,7 +30,7 @@ const defaultOptions: BorOptions = {
   dataDir: "/var/bor/data",
 };
 
-const defaultImageName = "maticnetwork/bor:v0.2.14";
+const defaultImageName = "0xpolygon/bor:v0.3.0";
 
 export class DockerBor extends pulumi.ComponentResource {
   public readonly borOptions: pulumi.Output<BorOptions>;
@@ -51,10 +51,13 @@ export class DockerBor extends pulumi.ComponentResource {
 
     const networkName = args.existingNetwork ?? this.network!.name;
 
+    const imageName = pulumi
+      .output(args.imageName)
+      .apply((x) => x ?? defaultImageName);
     const borImage = new docker.RemoteImage(
       name,
       {
-        name: args.imageName ?? defaultImageName,
+        name: imageName,
         keepLocally: true,
       },
       { parent: this }
@@ -63,7 +66,13 @@ export class DockerBor extends pulumi.ComponentResource {
     this.borOptions = pulumi.Output.create(args.borOptions ?? {}).apply(
       (options) => _.merge(defaultOptions, options)
     );
-    this.cliArgs = this.borOptions.apply((options) => optionsToArgs(options));
+
+    this.cliArgs = pulumi
+      .all([imageName, this.borOptions])
+      .apply(([imageName, options]) => {
+        const v3 = imageName.startsWith("0xpolygon/bor:0.3");
+        return optionsToArgs(options, v3);
+      });
 
     if (args.existingDataVolume == undefined)
       this.dataVolume = new docker.Volume(name, {}, { parent: this });

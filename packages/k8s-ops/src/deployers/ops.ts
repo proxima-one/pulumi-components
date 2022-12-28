@@ -138,19 +138,21 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
         this.options()
       );
 
-      loki = new components.loki.Loki(
-        "loki",
-        {
-          namespace: monitoringNS.metadata.name,
-          persistence: args.monitoring.loki.persistence,
-          retentionHours: args.monitoring.loki.retentionHours,
-        },
-        this.options({
-          dependsOn: getPersistenceDependencies(
-            args.monitoring.loki.persistence
-          ),
-        })
-      );
+      if (!args.monitoring.loki.disabled) {
+        loki = new components.loki.Loki(
+          "loki",
+          {
+            namespace: monitoringNS.metadata.name,
+            persistence: args.monitoring.loki.persistence,
+            retentionHours: args.monitoring.loki.retentionHours,
+          },
+          this.options({
+            dependsOn: getPersistenceDependencies(
+              args.monitoring.loki.persistence
+            ),
+          })
+        );
+      }
 
       prometheus = new components.prometheus.PrometheusStack(
         "prometheus",
@@ -340,7 +342,8 @@ export interface KubernetesOperatorsArgs {
         loki: {
           retentionHours: number;
           persistence: Persistence;
-        };
+          disabled?: false;
+        } | Disabled;
         grafana: {
           persistence: Persistence;
         };
