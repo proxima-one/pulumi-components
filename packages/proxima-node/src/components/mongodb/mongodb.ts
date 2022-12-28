@@ -64,7 +64,7 @@ export class MongoDB extends pulumi.ComponentResource {
       name,
       {
         fetchOpts: {
-          repo: "https://charts.bitnami.com/bitnami",
+          repo: "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         },
         chart: "mongodb",
         version: "11.2.0",
