@@ -67,7 +67,6 @@ export class PrometheusStack extends pulumi.ComponentResource {
         namespace: args?.namespace,
         chart: this.meta.apply((meta) => meta.chart),
         repositoryOpts: { repo: this.meta.apply((meta) => meta.repo) },
-        skipCrds: true,
         values: merge(
           {},
           {
