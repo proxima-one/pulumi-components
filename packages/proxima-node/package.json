@@ -1,6 +1,6 @@
 {
   "name": "@proxima-one/pulumi-proxima-node",
-  "version": "0.14.17",
+  "version": "0.14.18",
   "description": "pulumi components for proxima",
   "repository": "git@github.com:proxima-one/pulumi-components.git",
   "main": "dist/index.js",
