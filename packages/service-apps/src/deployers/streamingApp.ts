@@ -16,6 +16,7 @@ export interface StreamingAppDeployParams extends DeployParams {
   availableDbs?: pulumi.Input<pulumi.Input<StreamDb>[]>;
   stateManager?: { type: "import"; name: string };
   tuningArgs?: JsonObject;
+  maxUndoMs?: pulumi.Input<number>;
 }
 
 export interface StreamDb {
@@ -32,6 +33,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
   private readonly tuningArgs: JsonObject;
   private readonly stateManager?: pulumi.Output<StreamingAppService>;
   private readonly availableDbs: pulumi.Output<StreamDb[]>;
+  private readonly maxUndoMs: pulumi.Output<number | undefined>;
 
   public constructor(params: StreamingAppDeployParams) {
     super(params);
@@ -47,6 +49,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
     this.stateManager = params.stateManager
       ? this.getStateManagerService(params.stateManager.name)
       : undefined;
+    this.maxUndoMs = pulumi.output(params.maxUndoMs);
   }
 
   public getTargetDb(): pulumi.Output<StreamDb> {
@@ -147,11 +150,11 @@ export class StreamingAppDeployer extends AppDeployerBase {
         return { args, services };
       });
 
-    const env: Record<string, pulumi.Input<string>> = {};
-
-    if (app.maxUndoMs != undefined) {
-      env["PROXIMA_MAX_UNDO_TIME"] = pulumi.output(app.maxUndoMs).apply(x => x.toString());
-    }
+    const env = {
+      "PROXIMA_MAX_UNDO_TIME": pulumi.all([app.maxUndoMs, this.maxUndoMs])
+        .apply(([appUndo, defaultUndo]) => appUndo ?? defaultUndo)
+        .apply(x => x ? x.toString() : "")
+    };
 
     this.streamingApp.deploy({
       name: app.id,
@@ -323,7 +326,7 @@ export interface StreamingAppOptions<
   tuningArgs?: JsonObject;
   requirements?: AppRequirements;
   resources?: pulumi.Input<ComputeResources>;
-  maxUndoMs?: pulumi.Input<number>;
+  maxUndoMs?: pulumi.Input<number | undefined>;
 }
 
 export interface AppRequirements {
@@ -365,7 +368,7 @@ export class StreamingApp<
   public readonly name: string;
   public readonly id: string;
   public readonly resources?: pulumi.Input<ComputeResources>;
-  public readonly maxUndoMs?: pulumi.Input<number>;
+  public readonly maxUndoMs?: pulumi.Input<number | undefined>;
 
   public constructor(
     opts: StreamingAppOptions<
