@@ -147,6 +147,12 @@ export class StreamingAppDeployer extends AppDeployerBase {
         return { args, services };
       });
 
+    const env: Record<string, pulumi.Input<string>> = {};
+
+    if (app.maxUndoMs != undefined) {
+      env["PROXIMA_MAX_UNDO_TIME"] = pulumi.output(app.maxUndoMs).apply(x => x.toString());
+    }
+
     this.streamingApp.deploy({
       name: app.id,
       args: args,
@@ -156,6 +162,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
         imageName: app.executable.image,
         appName: app.executable.app,
       },
+      env,
       services: services,
       stackName: this.stack,
       resources: app.resources ?? "50m/1100m,50Mi/2Gi",
@@ -316,6 +323,7 @@ export interface StreamingAppOptions<
   tuningArgs?: JsonObject;
   requirements?: AppRequirements;
   resources?: pulumi.Input<ComputeResources>;
+  maxUndoMs?: pulumi.Input<number>;
 }
 
 export interface AppRequirements {
@@ -357,6 +365,7 @@ export class StreamingApp<
   public readonly name: string;
   public readonly id: string;
   public readonly resources?: pulumi.Input<ComputeResources>;
+  public readonly maxUndoMs?: pulumi.Input<number>;
 
   public constructor(
     opts: StreamingAppOptions<
@@ -389,6 +398,7 @@ export class StreamingApp<
     this.args = opts.args ?? {};
     this.tuningArgs = opts.tuningArgs ?? {};
     this.requirements = opts.requirements ?? {};
+    this.maxUndoMs = opts.maxUndoMs;
 
     const hash = this.buildHash();
     this.id = `${this.name}-${hash.substring(0, 12)}`;

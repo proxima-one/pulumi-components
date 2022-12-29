@@ -48,12 +48,13 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         app.stackName ?? "default",
         ...(app.dryRun ? ["--dry-run"] : []),
       ];
-      const env = {
+      const env = pulumi.output(app.env).apply(appEnv => ({
+        ...appEnv,
         PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
         NODE_EXTRA_CA_CERTS:
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB}`,
-      };
+      }));
 
       const argsLine = JSON.stringify(app.args);
       if (argsLine.length > 1500) {
@@ -96,6 +97,7 @@ export interface StreamingApp {
   services?: pulumi.Input<pulumi.Input<StreamingAppService>[]>;
   resources?: pulumi.Input<ComputeResources>;
   stackName?: string;
+  env?: pulumi.Input<Record<string, pulumi.Input<string>>>;
 }
 
 export interface StreamingAppService {
