@@ -306,10 +306,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
         const commonPorts: ServicePort[] = [
           {
-            name: "http-metrics",
-            containerPort: 2112,
-          },
-          {
             name: "http-status",
             containerPort: 9090,
           },
@@ -318,7 +314,17 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             containerPort: 26000,
           },
         ];
+        const consumerPorts: ServicePort[] = [
+          {
+            name: "consumer-http-metrics",
+            containerPort: 2113,
+          },
+        ];
         const serverPorts: ServicePort[] = [
+          {
+            name: "server-http-metrics",
+            containerPort: 2112,
+          },
           {
             name: "http",
             containerPort: 8080,
@@ -345,7 +351,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           metrics: {
             labels: metricsLabels,
           },
-          ports: (app.type == "single-pod" ? serverPorts : []).concat(commonPorts),
+          ports: consumerPorts.concat(commonPorts).concat(app.type == "single-pod" ? serverPorts : []),
           pvcs: pvc ? [pvc] : [],
         };
         let server: any = {disabled: true};
