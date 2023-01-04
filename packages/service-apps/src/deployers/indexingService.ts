@@ -504,6 +504,7 @@ export interface IndexingServiceAppV3 {
   streams: Record<string, { id: string; metadata?: { networks?: string[] } }[]>;
   db?: IndexingServiceV3Db;
   resources?: pulumi.Input<{
+    // consumer resources are used in single-pod mode
     consumer?: pulumi.Input<ComputeResources>;
     server?: pulumi.Input<ComputeResources>;
   }>;
