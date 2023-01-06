@@ -309,6 +309,9 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             name: "http-metrics",
             containerPort: 2112,
           },
+        ];
+        const consumerPorts: ServicePort[] = [];
+        const serverPorts: ServicePort[] = [
           {
             name: "http-status",
             containerPort: 9090,
@@ -317,8 +320,6 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             name: "grpc-status",
             containerPort: 26000,
           },
-        ];
-        const serverPorts: ServicePort[] = [
           {
             name: "http",
             containerPort: 8080,
@@ -341,11 +342,11 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const consumer = {
           disabled: mode == "server-only",
           args: ["./consumer"],
-          resources: resources.apply((x) => x?.consumer),
+          resources: resources.apply(x => x?.consumer),
           metrics: {
             labels: metricsLabels,
           },
-          ports: (app.type == "single-pod" ? serverPorts : []).concat(commonPorts),
+          ports: consumerPorts.concat(commonPorts).concat(app.type == "single-pod" ? serverPorts : []),
           pvcs: pvc ? [pvc] : [],
         };
         let server: any = {disabled: true};
@@ -354,11 +355,11 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           server = {
             disabled: mode == "consumer-only" || mode == "fast-sync",
             args: ["./server"],
-            resources: resources.apply((x) => x?.server),
+            resources: resources.apply(x => x?.server),
             metrics: {
               labels: metricsLabels,
             },
-            ports: commonPorts.concat(serverPorts),
+            ports: serverPorts.concat(commonPorts),
             pvcs: pvc ? [pvc] : [],
           };
         }
@@ -498,6 +499,7 @@ export interface IndexingServiceAppV3 {
   streams: Record<string, { id: string; metadata?: { networks?: string[] } }[]>;
   db?: IndexingServiceV3Db;
   resources?: pulumi.Input<{
+    // consumer resources are used in single-pod mode
     consumer?: pulumi.Input<ComputeResources>;
     server?: pulumi.Input<ComputeResources>;
   }>;
