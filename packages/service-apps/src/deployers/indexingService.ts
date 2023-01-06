@@ -306,24 +306,19 @@ export class IndexingServiceDeployer extends AppDeployerBase {
 
         const commonPorts: ServicePort[] = [
           {
+            name: "http-metrics",
+            containerPort: 2112,
+          },
+        ];
+        const consumerPorts: ServicePort[] = [];
+        const serverPorts: ServicePort[] = [
+          {
             name: "http-status",
             containerPort: 9090,
           },
           {
             name: "grpc-status",
             containerPort: 26000,
-          },
-        ];
-        const consumerPorts: ServicePort[] = [
-          {
-            name: "consumer-http-metrics",
-            containerPort: 2113,
-          },
-        ];
-        const serverPorts: ServicePort[] = [
-          {
-            name: "server-http-metrics",
-            containerPort: 2112,
           },
           {
             name: "http",
@@ -347,7 +342,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const consumer = {
           disabled: mode == "server-only",
           args: ["./consumer"],
-          resources: resources.apply((x) => x?.consumer),
+          resources: resources.apply(x => x?.consumer),
           metrics: {
             labels: metricsLabels,
           },
@@ -364,7 +359,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             metrics: {
               labels: metricsLabels,
             },
-            ports: commonPorts.concat(serverPorts),
+            ports: serverPorts.concat(commonPorts),
             pvcs: pvc ? [pvc] : [],
           };
         }
