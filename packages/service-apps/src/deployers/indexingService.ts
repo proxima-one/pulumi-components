@@ -355,7 +355,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           server = {
             disabled: mode == "consumer-only" || mode == "fast-sync",
             args: ["./server"],
-            resources: resources.apply((x) => x?.server),
+            resources: resources.apply(x => x?.server),
             metrics: {
               labels: metricsLabels,
             },
