@@ -53,7 +53,7 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
         NODE_EXTRA_CA_CERTS:
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-        NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB}`,
+        NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB} --report-on-signal`,
       }));
 
       const argsLine = JSON.stringify(app.args);
