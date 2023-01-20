@@ -43,7 +43,7 @@ export interface HeimdallOptions {
   logLevel?: string;
 }
 
-const dataDir = "/root/.heimdalld";
+const dataDir = "/var/lib/heimdall";
 const defaultImageName = "0xpolygon/heimdall:0.2.9";
 
 export class DockerHeimdall extends pulumi.ComponentResource {
