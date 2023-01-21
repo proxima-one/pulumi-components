@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.10](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-k8s-app-stack@0.1.9...@proxima-one/pulumi-k8s-app-stack@0.1.10) (2023-01-21)
+
+**Note:** Version bump only for package @proxima-one/pulumi-k8s-app-stack
+
+
+
+
+
 ## [0.1.9](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-k8s-app-stack@0.1.8...@proxima-one/pulumi-k8s-app-stack@0.1.9) (2022-12-28)
 
 **Note:** Version bump only for package @proxima-one/pulumi-k8s-app-stack
