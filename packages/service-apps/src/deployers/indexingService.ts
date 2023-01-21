@@ -1,9 +1,13 @@
 import * as pulumi from "@pulumi/pulumi";
 import { AppDeployerBase, DeployParams } from "./base";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
-import {MongoDbStorage, PvcRequest, ServicePort} from "@proxima-one/pulumi-proxima-node";
+import {
+  MongoDbStorage,
+  PvcRequest,
+  ServicePort,
+} from "@proxima-one/pulumi-proxima-node";
 import * as yaml from "js-yaml";
-import {ComputeResources, Storage} from "@proxima-one/pulumi-k8s-base";
+import { ComputeResources, Storage } from "@proxima-one/pulumi-k8s-base";
 import { strict as assert } from "assert";
 
 export class IndexingServiceDeployer extends AppDeployerBase {
@@ -212,8 +216,12 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             from: app.timeRange?.from?.toISOString(),
             to: app.timeRange?.to?.toISOString(),
           } as DeployedServiceTimeRange),
-          internalEndpoint: internalHost ? internalHost.apply((host) => `${host}:27000`) : undefined,
-          internalRestEndpoint: internalHost ? internalHost.apply((host) => `${host}:8080`) : undefined,
+          internalEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:27000`)
+            : undefined,
+          internalRestEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:8080`)
+            : undefined,
           dbType: pulumi.output(app.db.endpoint.type),
         };
       }
@@ -221,9 +229,10 @@ export class IndexingServiceDeployer extends AppDeployerBase {
       case "indexing-service/v3": {
         const name = `${app.indexName}-${app.shardName}`;
         const mode = app.mode ?? "live";
-        const streamRegistryUrl = app.streamRegistryUrl ?? "https://streams.api.proxima.one";
+        const streamRegistryUrl =
+          app.streamRegistryUrl ?? "https://streams.api.proxima.one";
 
-        let target: pulumi.Output<any> = pulumi.output({db: "none"});
+        let target: pulumi.Output<any> = pulumi.output({ db: "none" });
         let pvc: pulumi.Input<k8sServices.PvcRequest> | undefined = undefined;
         if (app.db) {
           switch (app.db.type) {
@@ -231,7 +240,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
               const mongo = this.mongo.deploy({
                 storage: pulumi.output(app.db.storage).apply((x) => {
                   if (x.type == "new")
-                    return {type: "provision", size: x.size, class: x.class};
+                    return { type: "provision", size: x.size, class: x.class };
                   return x.name;
                 }),
                 name: `${name}-db`,
@@ -242,38 +251,39 @@ export class IndexingServiceDeployer extends AppDeployerBase {
                 version: "4.4",
                 auth: {
                   user: "proxima",
-                  password: {type: "random", name: `${name}-db`},
+                  password: { type: "random", name: `${name}-db` },
                   database: "proxima",
                 },
               });
-              target = mongo.connectionDetails.endpoint.apply(endpoint => ({
+              target = mongo.connectionDetails.endpoint.apply((endpoint) => ({
                 dbUri: endpoint,
                 dbName: "proxima",
               }));
-              break
+              break;
             }
 
             case "mongo-import": {
               const dbName = app.db.dbName;
-              target = this.requireService<{ endpoint: string }>(app.db.serviceName, "mongodb").endpoint.apply(
-                endpoint => ({
-                  dbUri: endpoint,
-                  dbName: dbName,
-                })
-              );
-              break
+              target = this.requireService<{ endpoint: string }>(
+                app.db.serviceName,
+                "mongodb"
+              ).endpoint.apply((endpoint) => ({
+                dbUri: endpoint,
+                dbName: dbName,
+              }));
+              break;
             }
 
             case "pvc": {
-              pvc = pulumi.output(app.db.storage).apply(storage => ({
+              pvc = pulumi.output(app.db.storage).apply((storage) => ({
                 name: "app-data",
                 path: "/app/data",
                 storage: storage,
               }));
               target = pulumi.output({
-                dataPath: "/app/data"
-              })
-              break
+                dataPath: "/app/data",
+              });
+              break;
             }
           }
         }
@@ -284,22 +294,26 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           shard: app.shardName,
         };
 
-        const configs: k8sServices.ConfigFile[] = [{
-          path: "/app/config/config.yaml",
-          content: target.apply(appTarget =>
-            yaml.dump({
-              streams: app.streams,
-              timeRange: app.timeRange ? TimeRangeToIso8601(app.timeRange) : undefined,
-              target: appTarget,
-              overrideStreamDbUrl: app.overrideStreamDbUrl,
-              streamRegistryUrl: streamRegistryUrl,
-              mode: indexingServiceModeToConfigMode(mode),
-              shard: {
-                name: app.shardName,
-              },
-            })
-          ),
-        }];
+        const configs: k8sServices.ConfigFile[] = [
+          {
+            path: "/app/config/config.yaml",
+            content: target.apply((appTarget) =>
+              yaml.dump({
+                streams: app.streams,
+                timeRange: app.timeRange
+                  ? TimeRangeToIso8601(app.timeRange)
+                  : undefined,
+                target: appTarget,
+                overrideStreamDbUrl: app.overrideStreamDbUrl,
+                streamRegistryUrl: streamRegistryUrl,
+                mode: indexingServiceModeToConfigMode(mode),
+                shard: {
+                  name: app.shardName,
+                },
+              })
+            ),
+          },
+        ];
         if (app.configFiles) {
           configs.push(...app.configFiles);
         }
@@ -342,20 +356,22 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         const consumer = {
           disabled: mode == "server-only",
           args: ["./consumer"],
-          resources: resources.apply(x => x?.consumer),
+          resources: resources.apply((x) => x?.consumer),
           metrics: {
             labels: metricsLabels,
           },
-          ports: consumerPorts.concat(commonPorts).concat(app.type == "single-pod" ? serverPorts : []),
+          ports: consumerPorts
+            .concat(commonPorts)
+            .concat(app.type == "single-pod" ? serverPorts : []),
           pvcs: pvc ? [pvc] : [],
         };
-        let server: any = {disabled: true};
+        let server: any = { disabled: true };
         if (app.type == "consumer-server") {
           assert(app.db?.type != "pvc");
           server = {
             disabled: mode == "consumer-only" || mode == "fast-sync",
             args: ["./server"],
-            resources: resources.apply(x => x?.server),
+            resources: resources.apply((x) => x?.server),
             metrics: {
               labels: metricsLabels,
             },
@@ -402,8 +418,12 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             from: app.timeRange?.from?.toISOString(),
             to: app.timeRange?.to?.toISOString(),
           } as DeployedServiceTimeRange),
-          internalEndpoint: internalHost ? internalHost.apply((host) => `${host}:27000`) : undefined,
-          internalRestEndpoint: internalHost ? internalHost.apply((host) => `${host}:8080`) : undefined,
+          internalEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:27000`)
+            : undefined,
+          internalRestEndpoint: internalHost
+            ? internalHost.apply((host) => `${host}:8080`)
+            : undefined,
           dbType: pulumi.output(app.db?.type ?? "none"),
         };
       }
@@ -411,18 +431,20 @@ export class IndexingServiceDeployer extends AppDeployerBase {
   }
 }
 
-export type IndexingServiceApp = (IndexingServiceAppV2 & { name?: string }) | IndexingServiceAppV3;
+export type IndexingServiceApp =
+  | (IndexingServiceAppV2 & { name?: string })
+  | IndexingServiceAppV3;
 
 export interface IndexingServiceDb {
   name?: string;
   endpoint:
     | { type: "import"; name: string }
     | ({ type: "provision" } & {
-    storage: pulumi.Input<MongoDbStorage>;
-    replicaSet?: number;
-    webUI?: boolean;
-    resources?: pulumi.Input<ComputeResources>;
-  });
+        storage: pulumi.Input<MongoDbStorage>;
+        replicaSet?: number;
+        webUI?: boolean;
+        resources?: pulumi.Input<ComputeResources>;
+      });
 }
 
 function TimeRangeToIso8601(range: TimeRange): {
@@ -471,20 +493,23 @@ export interface IndexingServiceAppV2 {
   pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
 }
 
-export type IndexingServiceV3Db = {
-  type: "mongo-import";
-  serviceName: string;
-  dbName: string;
-} | {
-  type: "mongo-provision";
-  storage: pulumi.Input<MongoDbStorage>;
-  replicaSet?: number;
-  webUI?: boolean;
-  resources?: pulumi.Input<ComputeResources>;
-} | {
-  type: "pvc";
-  storage: pulumi.Input<Storage>;
-}
+export type IndexingServiceV3Db =
+  | {
+      type: "mongo-import";
+      serviceName: string;
+      dbName: string;
+    }
+  | {
+      type: "mongo-provision";
+      storage: pulumi.Input<MongoDbStorage>;
+      replicaSet?: number;
+      webUI?: boolean;
+      resources?: pulumi.Input<ComputeResources>;
+    }
+  | {
+      type: "pvc";
+      storage: pulumi.Input<Storage>;
+    };
 
 export interface IndexingServiceAppV3 {
   apiKind: "indexing-service/v3";
@@ -511,14 +536,16 @@ export interface IndexingServiceAppV3 {
   configFiles?: k8sServices.ConfigFile[];
 }
 
-function indexingServiceModeToConfigMode(mode: IndexingServiceMode): "fast-sync" | "live" {
+function indexingServiceModeToConfigMode(
+  mode: IndexingServiceMode
+): "fast-sync" | "live" {
   switch (mode) {
     case "live":
     case "server-only":
-      return "live"
+      return "live";
     case "fast-sync":
     case "consumer-only":
-      return "fast-sync"
+      return "fast-sync";
   }
 }
 

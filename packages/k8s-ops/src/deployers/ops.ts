@@ -231,6 +231,7 @@ export class KubernetesOpsDeployer extends KubernetesDeployer {
             consoleHost: `minio-operator.${args.publicHost}`,
             certificateIssuer: certificateIssuer,
           },
+          version: "4.5.8",
         },
         this.options({ dependsOn: certManager })
       );
@@ -339,11 +340,13 @@ export interface KubernetesOperatorsArgs {
             secret: pulumi.Input<string>;
           };
         };
-        loki: {
-          retentionHours: number;
-          persistence: Persistence;
-          disabled?: false;
-        } | Disabled;
+        loki:
+          | {
+              retentionHours: number;
+              persistence: Persistence;
+              disabled?: false;
+            }
+          | Disabled;
         grafana: {
           persistence: Persistence;
         };

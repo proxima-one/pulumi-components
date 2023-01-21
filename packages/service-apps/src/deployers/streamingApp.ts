@@ -151,9 +151,10 @@ export class StreamingAppDeployer extends AppDeployerBase {
       });
 
     const env = {
-      "PROXIMA_MAX_UNDO_TIME": pulumi.all([app.maxUndoMs, this.maxUndoMs])
+      PROXIMA_MAX_UNDO_TIME: pulumi
+        .all([app.maxUndoMs, this.maxUndoMs])
         .apply(([appUndo, defaultUndo]) => appUndo ?? defaultUndo)
-        .apply(x => x ? x.toString() : "")
+        .apply((x) => (x ? x.toString() : "")),
     };
 
     this.streamingApp.deploy({

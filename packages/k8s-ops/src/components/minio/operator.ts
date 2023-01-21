@@ -5,6 +5,7 @@ import { Certificate } from "../cert-manager/certificate";
 export interface MinioOperatorArgs {
   namespace: pulumi.Input<string>;
   nodeSelector?: pulumi.Input<Record<string, string>>;
+  version?: pulumi.Input<string>;
   ingress?: {
     consoleHost: string;
     consolePath?: string;
@@ -63,7 +64,7 @@ export class MinioOperator extends pulumi.ComponentResource {
           repo: "https://operator.min.io/",
         },
         chart: "operator",
-        version: "4.5.0",
+        version: args.version ?? "4.5.0",
         namespace: args.namespace,
         values: {
           operator: {

@@ -63,8 +63,8 @@ export class MinioTenant extends pulumi.ComponentResource {
                 return {
                   servers: p.servers,
                   volumesPerServer: p.volumesPerServer,
-                  size: p.storage.size,
-                  storageClassName: p.storage.class,
+                  size: pulumi.output(p.storage).size,
+                  storageClassName: pulumi.output(p.storage).class,
                   nodeSelector: p.nodeSelector ?? args.nodeSelector,
                   resources: p.resources ?? {
                     requests: {
@@ -150,6 +150,7 @@ export class MinioTenant extends pulumi.ComponentResource {
             namespace: args.namespace,
             annotations: helpers.ingressAnnotations({
               bodySize: "1000m",
+              certIssuer: args?.ingress?.certIssuer,
             }),
           },
           spec: helpers.ingressSpec({
@@ -192,11 +193,12 @@ export class MinioTenant extends pulumi.ComponentResource {
 export interface MinioTenantArgs {
   namespace: pulumi.Input<string>;
   nodeSelector?: pulumi.Input<Record<string, string>>;
+  version?: pulumi.Input<string>;
   pools: {
     servers: number;
     volumesPerServer: number;
     nodeSelector?: pulumi.Input<Record<string, string>>;
-    storage: NewStorageClaim;
+    storage: pulumi.Input<NewStorageClaim>;
     resources?: ResourceRequirements;
   }[];
   auth?: {
@@ -212,6 +214,10 @@ export interface MinioTenantArgs {
   api?: {
     publicHost?: string;
     path?: string;
+  };
+
+  ingress?: {
+    certIssuer?: string;
   };
 }
 

@@ -137,8 +137,7 @@ export function optionsToArgs(options: GethOptions): string[] {
 function networkingArgs(opts: NetworkingOptions): string[] {
   const args: string[] = [];
 
-  if (opts.port != undefined)
-    args.push("--port", opts.port.toString());
+  if (opts.port != undefined) args.push("--port", opts.port.toString());
 
   if (opts.maxpeers != undefined)
     args.push("--maxpeers", opts.maxpeers.toString());

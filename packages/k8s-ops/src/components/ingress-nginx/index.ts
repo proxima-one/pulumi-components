@@ -45,8 +45,8 @@ export class IngressNginxController extends pulumi.ComponentResource {
                 enabled: true,
                 service: {
                   labels: {
-                    name: "nginx-controller"
-                  }
+                    name: "nginx-controller",
+                  },
                 },
               },
               enableLatencyMetrics: true,
