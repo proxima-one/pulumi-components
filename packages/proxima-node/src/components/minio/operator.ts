@@ -59,7 +59,7 @@ export class MinioOperator extends pulumi.ComponentResource {
           repo: "https://operator.min.io/",
         },
         chart: "operator",
-        version: "4.4.2",
+        version: args.version ?? "4.4.2",
         namespace: args.namespace,
         values: {
           operator: {
@@ -80,6 +80,7 @@ export class MinioOperator extends pulumi.ComponentResource {
 
 export interface MinIOOperatorArgs {
   namespace: pulumi.Input<string>;
+  version?: pulumi.Input<string>;
   nodeSelector?: pulumi.Input<Record<string, string>>;
   console?: {
     publicHost?: string;
