@@ -26,51 +26,65 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         ...(app.configFiles ?? []),
         ...(part.configFiles ?? []),
       ];
-      const configMap = allConfigFiles.length > 0 ? new k8s.core.v1.ConfigMap(
-        `${partFullName}-config`,
-        {
-          metadata: {
-            namespace: this.namespace,
-          },
-          data: allConfigFiles
-            .map<[string, any]>((file) => [file.path, file.content])
-            .reduce(
-              (acc, [k, v]: [string, any]) => ({
-                ...acc,
-                [k.replace(/\//g, "_")]: v, // replace / with _ as it can't be used
-              }),
-              {}
-            ),
-        }, this.options()
-      ) : undefined;
+      const configMap =
+        allConfigFiles.length > 0
+          ? new k8s.core.v1.ConfigMap(
+              `${partFullName}-config`,
+              {
+                metadata: {
+                  namespace: this.namespace,
+                },
+                data: allConfigFiles
+                  .map<[string, any]>((file) => [file.path, file.content])
+                  .reduce(
+                    (acc, [k, v]: [string, any]) => ({
+                      ...acc,
+                      [k.replace(/\//g, "_")]: v, // replace / with _ as it can't be used
+                    }),
+                    {}
+                  ),
+              },
+              this.options()
+            )
+          : undefined;
 
-      const pvcs = pulumi.output(part.pvcs).apply(pvcs => pvcs?.map(pvcRequest =>
-        typeof pvcRequest.storage == "string" ? {
-          name: pvcRequest.name,
-          k8sName: pulumi.output(pvcRequest.storage)
-        } : {
-          name: pvcRequest.name,
-          k8sName: new k8s.core.v1.PersistentVolumeClaim(
-            `${partFullName}-pvc-${pvcRequest.name}`,
-            {
-              metadata: {
-                namespace: this.namespace,
-                annotations: {
-                  "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
-                },
-              },
-              spec: {
-                storageClassName: this.storageClass(pvcRequest.storage.class, {failIfNoMatch: true}).apply(x => x!),
-                accessModes: ["ReadWriteOnce"],
-                resources: {
-                  requests: {
-                    storage: pvcRequest.storage.size,
-                  },
-                },
-              },
-            }, this.options()).metadata.name,
-        }
-      ) ?? []);
+      const pvcs = pulumi.output(part.pvcs).apply(
+        (pvcs) =>
+          pvcs?.map((pvcRequest) =>
+            typeof pvcRequest.storage == "string"
+              ? {
+                  name: pvcRequest.name,
+                  k8sName: pulumi.output(pvcRequest.storage),
+                }
+              : {
+                  name: pvcRequest.name,
+                  k8sName: new k8s.core.v1.PersistentVolumeClaim(
+                    `${partFullName}-pvc-${pvcRequest.name}`,
+                    {
+                      metadata: {
+                        namespace: this.namespace,
+                        annotations: {
+                          "pulumi.com/skipAwait": "true", // otherwise pvc is waiting for the first consumer, and first consumer is waiting for this pvc: deadlock
+                        },
+                      },
+                      spec: {
+                        storageClassName: this.storageClass(
+                          pvcRequest.storage.class,
+                          { failIfNoMatch: true }
+                        ).apply((x) => x!),
+                        accessModes: ["ReadWriteOnce"],
+                        resources: {
+                          requests: {
+                            storage: pvcRequest.storage.size,
+                          },
+                        },
+                      },
+                    },
+                    this.options()
+                  ).metadata.name,
+                }
+          ) ?? []
+      );
 
       const imageName = pulumi
         .all([pulumi.output(app.imageName), pulumi.output(part.imageName)])
@@ -84,9 +98,9 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
       const metricsLabels = pulumi.output(part.metrics).apply((x) =>
         x
           ? {
-            monitoring: "true",
-            ...x.labels,
-          }
+              monitoring: "true",
+              ...x.labels,
+            }
           : {}
       );
 
@@ -94,32 +108,59 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         app: partFullName,
       };
 
-      const volumes: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.Volume>[]> =
-        pvcs.apply(pvcArr => pvcArr.map(pvcData => ({
-          name: `pvc-${pvcData.name}`,
-          persistentVolumeClaim: {
-            claimName: pvcData.k8sName,
-            readOnly: false,
-          },
-        } as k8s.types.input.core.v1.Volume)).concat(configMap ? [{
-          name: "config",
-          configMap: {
-            name: configMap.id.apply((s) => s.split("/")[s.split("/").length - 1]),
-          },
-        }] : []));
+      const volumes: pulumi.Input<
+        pulumi.Input<k8s.types.input.core.v1.Volume>[]
+      > = pvcs.apply((pvcArr) =>
+        pvcArr
+          .map(
+            (pvcData) =>
+              ({
+                name: `pvc-${pvcData.name}`,
+                persistentVolumeClaim: {
+                  claimName: pvcData.k8sName,
+                  readOnly: false,
+                },
+              } as k8s.types.input.core.v1.Volume)
+          )
+          .concat(
+            configMap
+              ? [
+                  {
+                    name: "config",
+                    configMap: {
+                      name: configMap.id.apply(
+                        (s) => s.split("/")[s.split("/").length - 1]
+                      ),
+                    },
+                  },
+                ]
+              : []
+          )
+      );
 
-      let volumeMounts: pulumi.Input<pulumi.Input<k8s.types.input.core.v1.VolumeMount>[]> =
-        allConfigFiles.map((file) => (pulumi.output({
-          name: "config",
-          mountPath: pulumi.output(file).apply(f => f.path),
-          subPath: pulumi.output(file).apply(f => f.path.replace(/\//g, "_")),
-        }) as pulumi.Output<k8s.types.input.core.v1.VolumeMount>));
+      let volumeMounts: pulumi.Input<
+        pulumi.Input<k8s.types.input.core.v1.VolumeMount>[]
+      > = allConfigFiles.map(
+        (file) =>
+          pulumi.output({
+            name: "config",
+            mountPath: pulumi.output(file).apply((f) => f.path),
+            subPath: pulumi
+              .output(file)
+              .apply((f) => f.path.replace(/\//g, "_")),
+          }) as pulumi.Output<k8s.types.input.core.v1.VolumeMount>
+      );
       if (part.pvcs) {
-        volumeMounts = pulumi.all([volumeMounts, part.pvcs]).apply(([vms, pvcs]) => vms.concat(
-          ...pvcs.map(pvcRequest => ({
-            name: `pvc-${pvcRequest.name}`,
-            mountPath: pvcRequest.path
-          }))))
+        volumeMounts = pulumi
+          .all([volumeMounts, part.pvcs])
+          .apply(([vms, pvcs]) =>
+            vms.concat(
+              ...pvcs.map((pvcRequest) => ({
+                name: `pvc-${pvcRequest.name}`,
+                mountPath: pvcRequest.path,
+              }))
+            )
+          );
       }
 
       const deployment = new k8s.apps.v1.Deployment(
@@ -135,8 +176,8 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             },
             strategy: part.deployStrategy
               ? {
-                type: pulumi.output(part.deployStrategy).type,
-              }
+                  type: pulumi.output(part.deployStrategy).type,
+                }
               : undefined,
             template: {
               metadata: {
@@ -154,18 +195,18 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                     env: pulumi.output(part.env).apply((env) =>
                       env
                         ? Object.entries(env).map(([key, value]) => ({
-                          name: key,
-                          value: value,
-                        }))
+                            name: key,
+                            value: value,
+                          }))
                         : []
                     ),
                     ports: pulumi.output(part.ports).apply((x) =>
                       x
                         ? x.map((port) => ({
-                          name: port.name,
-                          containerPort: port.containerPort,
-                          protocol: port.protocol ?? "TCP",
-                        }))
+                            name: port.name,
+                            containerPort: port.containerPort,
+                            protocol: port.protocol ?? "TCP",
+                          }))
                         : []
                     ),
                     resources: pulumi
@@ -218,35 +259,35 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
             .apply(([publicHost, ports]) =>
               ports
                 ? ports
-                  .filter((x) => x.ingress)
-                  .map<IngressDef>((port) => {
-                    const hosts: string[] = [];
-                    if (port.ingress?.overrideHost) {
-                      hosts.push(...port.ingress.overrideHost);
-                    } else {
-                      if (publicHost)
-                        hosts.push(
-                          `${port.ingress?.subDomain ?? name}.${publicHost}`
-                        );
-                      if (port.ingress?.host)
-                        hosts.push(...port.ingress.host);
-                    }
+                    .filter((x) => x.ingress)
+                    .map<IngressDef>((port) => {
+                      const hosts: string[] = [];
+                      if (port.ingress?.overrideHost) {
+                        hosts.push(...port.ingress.overrideHost);
+                      } else {
+                        if (publicHost)
+                          hosts.push(
+                            `${port.ingress?.subDomain ?? name}.${publicHost}`
+                          );
+                        if (port.ingress?.host)
+                          hosts.push(...port.ingress.host);
+                      }
 
-                    assert(
-                      hosts.length > 0,
-                      "no hosts specified for ingress"
-                    );
+                      assert(
+                        hosts.length > 0,
+                        "no hosts specified for ingress"
+                      );
 
-                    return {
-                      hosts: hosts,
-                      path: port.ingress?.path ?? "/",
-                      backend: {
-                        serviceName: service.metadata.name,
-                        servicePort: port.servicePort ?? port.containerPort,
-                        protocol: port.ingress?.protocol ?? "http",
-                      },
-                    };
-                  })
+                      return {
+                        hosts: hosts,
+                        path: port.ingress?.path ?? "/",
+                        backend: {
+                          serviceName: service.metadata.name,
+                          servicePort: port.servicePort ?? port.containerPort,
+                          protocol: port.ingress?.protocol ?? "http",
+                        },
+                      };
+                    })
                 : []
             );
 

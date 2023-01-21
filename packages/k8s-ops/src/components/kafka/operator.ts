@@ -6,6 +6,7 @@ export interface KafkaOperatorArgs {
   watchNamespaces: pulumi.Input<string[]>;
   nodeSelector?: pulumi.Input<Record<string, string>>;
   watchAnyNamespace: boolean;
+  version?: pulumi.Input<string>;
 }
 
 /**
@@ -41,7 +42,7 @@ export class KafkaOperator extends pulumi.ComponentResource {
           repo: "https://strimzi.io/charts",
         },
         chart: "strimzi-kafka-operator",
-        version: "0.31.0",
+        version: args.version ?? "0.32.0",
         namespace: args.namespace,
         values: values,
       },

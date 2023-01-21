@@ -48,7 +48,7 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         app.stackName ?? "default",
         ...(app.dryRun ? ["--dry-run"] : []),
       ];
-      const env = pulumi.output(app.env).apply(appEnv => ({
+      const env = pulumi.output(app.env).apply((appEnv) => ({
         ...appEnv,
         PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
         NODE_EXTRA_CA_CERTS:
