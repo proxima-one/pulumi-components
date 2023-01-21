@@ -78,7 +78,6 @@ interface MinioTenantArgs {
   pools: {
     servers: number;
     volumesPerServer: number;
-    nodeSelector?: pulumi.Input<Record<string, string>>;
     storage: {
       size: StorageSize;
       class: StorageClassRequest;
