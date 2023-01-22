@@ -24,14 +24,18 @@ export class KafkaProxyDeployer extends KubernetesServiceDeployer {
       clientId: connection.clientId,
       brokers: connection.brokers,
       connectionTimeout: timeout,
-      authenticationTimeout: timeout,
       replicationFactor: connection.replicationFactor ?? 1,
-      ssl: true,
-      sasl: {
-        mechanism: "plain",
-        username: connection.username,
-        password: connection.password,
-      },
+      ssl: connection.ssl,
+      ...(connection.username
+        ? {
+            authenticationTimeout: timeout,
+            sasl: {
+              mechanism: "plain",
+              username: connection.username,
+              password: connection.password,
+            },
+          }
+        : {}),
     };
     return JSON.stringify(config, undefined, 4);
   }
@@ -110,8 +114,9 @@ export interface KafkaEnvConnectionDetails {
   replicationFactor?: number;
 
   clientId: string;
-  username: string;
-  password: string;
+  username?: string;
+  password?: string;
+  ssl?: boolean;
 }
 
 export interface KafkaProxy {

@@ -265,12 +265,16 @@ export class StreamingAppDeployer extends AppDeployerBase {
           ssl: params.connectionDetails.ssl,
           replicationFactor: params.connectionDetails.replicationFactor ?? 1,
           connectionTimeout: 10000,
-          authenticationTimeout: 10000,
-          sasl: {
-            mechanism: "plain",
-            username: params.credentials.username,
-            password: params.credentials.password,
-          },
+          ...(params.credentials
+            ? {
+                authenticationTimeout: 10000,
+                sasl: {
+                  mechanism: "plain",
+                  username: params.credentials.username,
+                  password: params.credentials.password,
+                },
+              }
+            : {}),
         },
       };
     });

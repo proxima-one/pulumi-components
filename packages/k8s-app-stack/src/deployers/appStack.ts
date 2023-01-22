@@ -92,15 +92,16 @@ export class AppStack<TNamespace extends string = string> {
     >
   ) {}
 
-  public deployService(
+  public deployService<
+    TParams,
+    T extends DeployedService<TParams> | DeployedService<TParams>[]
+  >(
     target: {
       namespace: TNamespace;
       nodeSelectors?: pulumi.Input<Record<string, string>>;
     },
-    func: (
-      params: k8sBase.ServiceDeployParameters
-    ) => DeployedService | DeployedService[]
-  ) {
+    func: (params: k8sBase.ServiceDeployParameters) => T
+  ): pulumi.Output<pulumi.Unwrap<T>> {
     const params = {
       ...this.kubernetesDeployParams,
       namespace: this.namespaces[target.namespace],
@@ -111,10 +112,19 @@ export class AppStack<TNamespace extends string = string> {
     const deployed = func(params);
     if (Array.isArray(deployed)) this.services.push(...deployed);
     else this.services.push(deployed);
+
+    return pulumi.output(deployed);
   }
 
-  public service(name: string, type: string, params: pulumi.Input<any>) {
-    this.services.push({ name, type, params });
+  public service<TParams>(
+    name: string,
+    type: string,
+    params: pulumi.Input<TParams>
+  ): pulumi.Output<pulumi.Unwrap<DeployedService<TParams>>> {
+    const deployed = { name, type, params: params };
+    this.services.push(deployed);
+
+    return pulumi.output(deployed);
   }
 
   public appGroup(

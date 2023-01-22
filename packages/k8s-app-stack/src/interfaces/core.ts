@@ -19,8 +19,8 @@ export interface AppGroup {
   nodeSelectors: pulumi.Input<Record<string, string>>;
 }
 
-export interface DeployedService {
+export interface DeployedService<T = any> {
   name: pulumi.Input<string>;
   type: pulumi.Input<string>;
-  params: pulumi.Input<any>;
+  params: pulumi.Input<T>;
 }
