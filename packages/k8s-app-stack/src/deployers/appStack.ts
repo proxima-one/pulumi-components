@@ -101,7 +101,7 @@ export class AppStack<TNamespace extends string = string> {
       nodeSelectors?: pulumi.Input<Record<string, string>>;
     },
     func: (params: k8sBase.ServiceDeployParameters) => T
-  ): T {
+  ): pulumi.Output<pulumi.Unwrap<T>> {
     const params = {
       ...this.kubernetesDeployParams,
       namespace: this.namespaces[target.namespace],
@@ -113,18 +113,18 @@ export class AppStack<TNamespace extends string = string> {
     if (Array.isArray(deployed)) this.services.push(...deployed);
     else this.services.push(deployed);
 
-    return deployed;
+    return pulumi.output(deployed);
   }
 
   public service<TParams>(
     name: string,
     type: string,
     params: pulumi.Input<TParams>
-  ): DeployedService<TParams> {
+  ): pulumi.Output<pulumi.Unwrap<DeployedService<TParams>>> {
     const deployed = { name, type, params: params };
     this.services.push(deployed);
 
-    return deployed;
+    return pulumi.output(deployed);
   }
 
   public appGroup(
