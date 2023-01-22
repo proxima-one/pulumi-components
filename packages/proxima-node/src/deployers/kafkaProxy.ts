@@ -114,8 +114,8 @@ export interface KafkaEnvConnectionDetails {
   replicationFactor?: number;
 
   clientId: string;
-  username: string;
-  password: string;
+  username?: string;
+  password?: string;
   ssl?: boolean;
 }
 
