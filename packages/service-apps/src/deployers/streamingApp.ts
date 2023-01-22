@@ -266,11 +266,11 @@ export class StreamingAppDeployer extends AppDeployerBase {
           replicationFactor: params.connectionDetails.replicationFactor ?? 1,
           connectionTimeout: 10000,
           authenticationTimeout: 10000,
-          sasl: {
+          sasl: params.credentials ? {
             mechanism: "plain",
             username: params.credentials.username,
             password: params.credentials.password,
-          },
+          } : {},
         },
       };
     });
