@@ -31,6 +31,7 @@ export class StateManagerDeployer extends KubernetesServiceDeployer {
         resources: args.resource
           ? this.getResourceRequirements(args.resource)
           : undefined,
+        snapshot_storage: args.snapshot_storage,
       },
       this.options()
     );
@@ -61,4 +62,10 @@ interface StateManagerArgs {
     size: StorageSize;
     class: StorageClassRequest;
   };
+  snapshot_storage?: {
+    type: "s3",
+    endpoint: pulumi.Input<string>;
+    accessKey: pulumi.Input<string>;
+    secretKey: pulumi.Input<string>;
+  }
 }

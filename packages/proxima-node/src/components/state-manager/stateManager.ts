@@ -12,6 +12,12 @@ export interface StateManagerArgs {
   resources?: ResourceRequirements;
   storage: pulumi.Input<NewStorageClaim>;
   publicHost?: pulumi.Input<string | string[]>;
+  snapshot_storage?: {
+    type: "s3",
+    endpoint: pulumi.Input<string>;
+    accessKey: pulumi.Input<string>;
+    secretKey: pulumi.Input<string>;
+  }
 }
 
 export interface StateManagerConnectionDetails {
@@ -101,8 +107,8 @@ export class StateManager extends pulumi.ComponentResource {
               restartPolicy: "Always",
               imagePullSecrets: args.imagePullSecrets
                 ? pulumi.Output.create(args.imagePullSecrets).apply((x) =>
-                    x.map((name) => ({ name }))
-                  )
+                  x.map((name) => ({ name }))
+                )
                 : undefined,
               containers: [
                 {
@@ -118,6 +124,20 @@ export class StateManager extends pulumi.ComponentResource {
                       name: "DB_PATH",
                       value: dbPath,
                     },
+                    ...(args.snapshot_storage ? [
+                      {
+                        name: "S3_ENDPOINT",
+                        value: args.snapshot_storage.endpoint,
+                      },
+                      {
+                        name: "AWS_ACCESS_KEY_ID",
+                        value: args.snapshot_storage.accessKey,
+                      },
+                      {
+                        name: "AWS_SECRET_ACCESS_KEY",
+                        value: args.snapshot_storage.secretKey,
+                      },
+                    ] : [])
                   ],
                   ports: [
                     {
