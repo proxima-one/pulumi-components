@@ -391,7 +391,8 @@ export class IndexingServiceDeployer extends AppDeployerBase {
           },
         });
 
-        const deployedServer = deployedWebService.parts["server"];
+        const deployedServer = app.type == "consumer-server" ?
+          deployedWebService.parts["server"] : deployedWebService.parts["consumer"];
         const internalHost = deployedServer
           ? deployedServer.internalHost
           : undefined;
