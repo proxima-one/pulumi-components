@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { AppDeployerBase, DeployParams } from "./base";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
 import {
-  mapLookup,
+  mapLookup, StreamingAppHealthcheckOpts,
   StreamingAppService,
 } from "@proxima-one/pulumi-proxima-node";
 import queryString from "query-string";
@@ -163,6 +163,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
       name: app.id,
       args: args,
       dryRun: false,
+      healthcheckOptions: app.healthcheckOptions,
       executable: {
         type: "node-runtime-v1",
         imageName: app.executable.image,
@@ -334,6 +335,7 @@ export interface StreamingAppOptions<
   requirements?: AppRequirements;
   resources?: pulumi.Input<ComputeResources>;
   maxUndoMs?: pulumi.Input<number | undefined>;
+  healthcheckOptions?: pulumi.Input<StreamingAppHealthcheckOpts>;
 }
 
 export interface AppRequirements {
@@ -376,6 +378,7 @@ export class StreamingApp<
   public readonly id: string;
   public readonly resources?: pulumi.Input<ComputeResources>;
   public readonly maxUndoMs?: pulumi.Input<number | undefined>;
+  public readonly healthcheckOptions?: pulumi.Input<StreamingAppHealthcheckOpts>;
 
   public constructor(
     opts: StreamingAppOptions<
@@ -409,6 +412,7 @@ export class StreamingApp<
     this.tuningArgs = opts.tuningArgs ?? {};
     this.requirements = opts.requirements ?? {};
     this.maxUndoMs = opts.maxUndoMs;
+    this.healthcheckOptions = opts.healthcheckOptions;
 
     const hash = this.buildHash();
     this.id = `${this.name}-${hash.substring(0, 12)}`;

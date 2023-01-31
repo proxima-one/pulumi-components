@@ -215,6 +215,18 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                         this.getResourceRequirements(x ?? defaultResources)
                       ),
                     volumeMounts: volumeMounts,
+                    livenessProbe: pulumi.output(part).apply((x) =>
+                      x && x.env && x.env["HEARTBEAT_LIMIT_MS"]
+                        ? {
+                            exec: {
+                              command: ["sh", "/app/healthcheck.sh"],
+                            },
+                            initialDelaySeconds:
+                              x.healthcheckOptions?.initialDelaySeconds,
+                            periodSeconds: x.healthcheckOptions?.periodSeconds,
+                          }
+                        : {}
+                    ),
                   },
                 ],
                 volumes: volumes,
@@ -388,6 +400,12 @@ export interface ServiceAppPart {
   pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
   disabled?: boolean;
   scale?: pulumi.Input<number>;
+  healthcheckOptions?: pulumi.Input<HealthcheckOptions>;
+}
+
+export interface HealthcheckOptions {
+  initialDelaySeconds: pulumi.Input<number>;
+  periodSeconds: pulumi.Input<number>;
 }
 
 export interface PvcRequest {
