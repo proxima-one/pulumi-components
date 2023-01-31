@@ -56,8 +56,8 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         NODE_EXTRA_CA_CERTS:
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB} --report-on-signal`,
-        HEARTBEAT_LIMIT_MS: (
-          app.healthcheckOptions?.heartbeatLimitMs || ""
+        HEARTBEAT_LIMIT_SECONDS: (
+          app.healthcheckOptions?.heartbeatLimitSeconds || ""
         ).toString(),
         APP_ID: app.name,
       }));
@@ -73,7 +73,7 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         args.push("--app-args", JSON.stringify(app.args));
       }
 
-      if (app.healthcheckOptions && app.healthcheckOptions.heartbeatLimitMs) {
+      if (app.healthcheckOptions && app.healthcheckOptions.heartbeatLimitSeconds) {
         configFiles.push({
           path: "/app/healthcheck.sh",
           content: fs
@@ -122,7 +122,7 @@ export interface StreamingApp {
 }
 
 export interface StreamingAppHealthcheckOpts {
-  heartbeatLimitMs?: number;
+  heartbeatLimitSeconds?: number;
   initialDelaySeconds?: number;
   periodSeconds?: number;
 }

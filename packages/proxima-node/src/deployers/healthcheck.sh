@@ -1,10 +1,9 @@
-currentMs=$(date +%s%3N)
-lastTouchS=$(stat --format='%.3Y' "/var/proxima/$APP_ID/last_event")
+currentSeconds=$(date +%s)
+lastTouchSeconds=$(date -r "/var/proxima/$APP_ID/last_event" +%s)
 
-delay=$(echo - | awk -v lastTouchS="$lastTouchS" -v currentMs="$currentMs" '{print currentMs-lastTouchS*1000}')
-
-if  [ $delay -gt $HEARTBEAT_LIMIT_MS ] ; then
-  echo "delay is greater than ${HEARTBEAT_LIMIT_MS}."
+delay=$(expr $currentSeconds - $lastTouchSeconds)
+if  [ $delay -gt $HEARTBEAT_LIMIT_SECONDS ] ; then
+  echo "delay is greater than ${HEARTBEAT_LIMIT_SECONDS}."
   exit 1
 fi
 
