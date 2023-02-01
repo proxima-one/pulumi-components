@@ -73,7 +73,10 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         args.push("--app-args", JSON.stringify(app.args));
       }
 
-      if (app.healthcheckOptions && app.healthcheckOptions.heartbeatLimitSeconds) {
+      if (
+        app.healthcheckOptions &&
+        app.healthcheckOptions.heartbeatLimitSeconds
+      ) {
         configFiles.push({
           path: "/app/healthcheck.sh",
           content: fs
@@ -91,11 +94,15 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
             deployStrategy: { type: "Recreate" },
             resources: resources,
             env: env,
-            healthcheckOptions: {
-              initialDelaySeconds:
-                app.healthcheckOptions?.initialDelaySeconds || 10,
-              periodSeconds: app.healthcheckOptions?.periodSeconds || 5,
-            },
+            healthcheckOptions: app.healthcheckOptions
+              ? {
+                  heartbeatLimitSeconds:
+                    app.healthcheckOptions?.heartbeatLimitSeconds || 60,
+                  initialDelaySeconds:
+                    app.healthcheckOptions?.initialDelaySeconds || 10,
+                  periodSeconds: app.healthcheckOptions?.periodSeconds || 5,
+                }
+              : undefined,
           },
         },
         configFiles: configFiles,
