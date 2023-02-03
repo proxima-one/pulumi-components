@@ -11,6 +11,7 @@ import {
   Storage,
 } from "@proxima-one/pulumi-k8s-base";
 import { strict as assert } from "assert";
+import { input as inputs } from "@pulumi/kubernetes/types";
 
 export class WebServiceDeployer extends KubernetesServiceDeployer {
   public deploy(app: WebService): DeployedServiceApp {
@@ -163,6 +164,45 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
           );
       }
 
+      const container: pulumi.Input<k8s.types.input.core.v1.Container> = {
+        image: imageName,
+        name: partFullName,
+        args: part.args,
+        env: pulumi.output(part.env).apply((env) =>
+          env
+            ? Object.entries(env).map(([key, value]) => ({
+                name: key,
+                value: value,
+              }))
+            : []
+        ),
+        ports: pulumi.output(part.ports).apply((x) =>
+          x
+            ? x.map((port) => ({
+                name: port.name,
+                containerPort: port.containerPort,
+                protocol: port.protocol ?? "TCP",
+              }))
+            : []
+        ),
+        resources: pulumi
+          .output(part.resources)
+          .apply((x) => this.getResourceRequirements(x ?? defaultResources)),
+        volumeMounts: volumeMounts,
+      };
+
+      pulumi.output(part.probes).apply((probes) => {
+        container.livenessProbe = probes?.liveness
+          ? pulumi.output(probes.liveness).apply((x) => this.mapProbe(x))
+          : undefined;
+        container.readinessProbe = probes?.readiness
+          ? pulumi.output(probes.readiness).apply((x) => this.mapProbe(x))
+          : undefined;
+        container.startupProbe = probes?.startup
+          ? pulumi.output(probes.startup).apply((x) => this.mapProbe(x))
+          : undefined;
+      });
+
       const deployment = new k8s.apps.v1.Deployment(
         partFullName,
         {
@@ -187,47 +227,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                 restartPolicy: "Always",
                 imagePullSecrets: this.imagePullSecrets({ image: imageName }),
                 nodeSelector: this.nodeSelectors,
-                containers: [
-                  {
-                    image: imageName,
-                    name: partFullName,
-                    args: part.args,
-                    env: pulumi.output(part.env).apply((env) =>
-                      env
-                        ? Object.entries(env).map(([key, value]) => ({
-                            name: key,
-                            value: value,
-                          }))
-                        : []
-                    ),
-                    ports: pulumi.output(part.ports).apply((x) =>
-                      x
-                        ? x.map((port) => ({
-                            name: port.name,
-                            containerPort: port.containerPort,
-                            protocol: port.protocol ?? "TCP",
-                          }))
-                        : []
-                    ),
-                    resources: pulumi
-                      .output(part.resources)
-                      .apply((x) =>
-                        this.getResourceRequirements(x ?? defaultResources)
-                      ),
-                    volumeMounts: volumeMounts,
-                    livenessProbe: part.healthcheckOptions
-                      ? pulumi.output(part.healthcheckOptions).apply((x) => {
-                          return {
-                            exec: {
-                              command: ["sh", "/app/healthcheck.sh"],
-                            },
-                            initialDelaySeconds: x.initialDelaySeconds,
-                            periodSeconds: x.periodSeconds,
-                          };
-                        })
-                      : undefined,
-                  },
-                ],
+                containers: [container],
                 volumes: volumes,
               },
             },
@@ -372,6 +372,33 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
       parts: deployedParts,
     };
   }
+
+  private mapProbe<U2, U1>(x: Probe) {
+    const actionType = x.action.type;
+
+    const probe: inputs.core.v1.Probe = {
+      initialDelaySeconds: x.initialDelaySeconds,
+      periodSeconds: x.periodSeconds,
+      timeoutSeconds: x.timeoutSeconds,
+      failureThreshold: x.failureThreshold,
+      successThreshold: x.successThreshold,
+    };
+    switch (actionType) {
+      case "exec":
+        probe.exec = {
+          command: x.action.command,
+        };
+        break;
+      case "http-get":
+        probe.httpGet = {
+          path: x.action.httpGet.path,
+          port: x.action.httpGet.port,
+        };
+      default:
+        throw new Error(`Action type ${actionType} is not supported`);
+    }
+    return probe;
+  }
 }
 
 const defaultResources = {
@@ -399,13 +426,36 @@ export interface ServiceAppPart {
   pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
   disabled?: boolean;
   scale?: pulumi.Input<number>;
-  healthcheckOptions?: pulumi.Input<HealthcheckOptions>;
+  probes?: pulumi.Input<HealthcheckOptions>;
 }
 
 export interface HealthcheckOptions {
-  heartbeatLimitSeconds: number;
-  initialDelaySeconds: number;
-  periodSeconds: number;
+  startup?: Probe;
+  readiness?: Probe;
+  liveness?: pulumi.Input<Probe>;
+}
+
+export interface Probe {
+  initialDelaySeconds?: number;
+  timeoutSeconds?: number;
+  periodSeconds?: number;
+  successThreshold?: number;
+  failureThreshold?: number;
+  action: ExecProbeAction | HttpGetProbeAction;
+}
+
+interface ExecProbeAction {
+  type: "exec";
+  command: string[];
+}
+
+interface HttpGetProbeAction {
+  type: "http-get";
+  httpGet: {
+    path: string;
+    port: number;
+    httpHeaders: Record<string, string>;
+  };
 }
 
 export interface PvcRequest {

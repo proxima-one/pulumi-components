@@ -57,7 +57,7 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB} --report-on-signal`,
         HEARTBEAT_LIMIT_SECONDS: (
-          app.healthcheckOptions?.heartbeatLimitSeconds || ""
+          app.healthcheckOptions?.heartbeatLimitSeconds ?? ""
         ).toString(),
         APP_ID: app.name,
       }));
@@ -85,6 +85,20 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         });
       }
 
+      const healthcheck = app.healthcheckOptions
+        ? {
+            liveness: {
+              action: {
+                type: "exec",
+                command: ["sh", "/app/healthcheck.sh"],
+              },
+              initialDelaySeconds:
+                app.healthcheckOptions?.initialDelaySeconds || 10,
+              periodSeconds: app.healthcheckOptions?.periodSeconds || 5,
+            },
+          }
+        : undefined;
+
       this.webServiceDeployer.deploy({
         name: app.name,
         imageName: app.executable.imageName,
@@ -94,13 +108,17 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
             deployStrategy: { type: "Recreate" },
             resources: resources,
             env: env,
-            healthcheckOptions: app.healthcheckOptions
+            probes: app.healthcheckOptions
               ? {
-                  heartbeatLimitSeconds:
-                    app.healthcheckOptions?.heartbeatLimitSeconds || 60,
-                  initialDelaySeconds:
-                    app.healthcheckOptions?.initialDelaySeconds || 10,
-                  periodSeconds: app.healthcheckOptions?.periodSeconds || 5,
+                  liveness: {
+                    action: {
+                      type: "exec",
+                      command: ["sh", "/app/healthcheck.sh"],
+                    },
+                    initialDelaySeconds:
+                      app.healthcheckOptions?.initialDelaySeconds || 10,
+                    periodSeconds: app.healthcheckOptions?.periodSeconds || 5,
+                  },
                 }
               : undefined,
           },
