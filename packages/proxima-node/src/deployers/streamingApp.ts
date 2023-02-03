@@ -8,6 +8,8 @@ import {
 } from "@proxima-one/pulumi-k8s-base";
 import { parseMemory } from "../helpers/resources-parser";
 import { WebServiceDeployer } from "@proxima-one/pulumi-proxima-node";
+import * as fs from "fs";
+import path from "path";
 
 export class StreamingAppDeployer extends KubernetesServiceDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
@@ -54,6 +56,10 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         NODE_EXTRA_CA_CERTS:
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB} --report-on-signal`,
+        HEARTBEAT_LIMIT_SECONDS: (
+          app.healthcheckOptions?.heartbeatLimitSeconds ?? ""
+        ).toString(),
+        APP_ID: app.name,
       }));
 
       const argsLine = JSON.stringify(app.args);
@@ -67,6 +73,18 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         args.push("--app-args", JSON.stringify(app.args));
       }
 
+      if (
+        app.healthcheckOptions &&
+        app.healthcheckOptions.heartbeatLimitSeconds
+      ) {
+        configFiles.push({
+          path: "/app/healthcheck.sh",
+          content: fs
+            .readFileSync(path.resolve(__dirname, "healthcheck.sh"))
+            .toString("utf-8"),
+        });
+      }
+
       this.webServiceDeployer.deploy({
         name: app.name,
         imageName: app.executable.imageName,
@@ -76,6 +94,19 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
             deployStrategy: { type: "Recreate" },
             resources: resources,
             env: env,
+            probes: app.healthcheckOptions
+              ? {
+                  liveness: {
+                    action: {
+                      type: "exec",
+                      command: ["sh", "/app/healthcheck.sh"],
+                    },
+                    initialDelaySeconds:
+                      app.healthcheckOptions?.initialDelaySeconds || 10,
+                    periodSeconds: app.healthcheckOptions?.periodSeconds || 5,
+                  },
+                }
+              : undefined,
           },
         },
         configFiles: configFiles,
@@ -94,10 +125,17 @@ export interface StreamingApp {
   args: pulumi.Input<any>;
   executable: pulumi.Input<StreamingAppExecutable>;
   dryRun?: pulumi.Input<boolean>;
+  healthcheckOptions?: pulumi.Input<StreamingAppHealthcheckOpts>;
   services?: pulumi.Input<pulumi.Input<StreamingAppService>[]>;
   resources?: pulumi.Input<ComputeResources>;
   stackName?: string;
   env?: pulumi.Input<Record<string, pulumi.Input<string>>>;
+}
+
+export interface StreamingAppHealthcheckOpts {
+  heartbeatLimitSeconds?: number;
+  initialDelaySeconds?: number;
+  periodSeconds?: number;
 }
 
 export interface StreamingAppService {

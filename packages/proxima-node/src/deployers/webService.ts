@@ -11,6 +11,7 @@ import {
   Storage,
 } from "@proxima-one/pulumi-k8s-base";
 import { strict as assert } from "assert";
+import { input as inputs } from "@pulumi/kubernetes/types";
 
 export class WebServiceDeployer extends KubernetesServiceDeployer {
   public deploy(app: WebService): DeployedServiceApp {
@@ -209,6 +210,9 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                           }))
                         : []
                     ),
+                    livenessProbe: this.mapProbe(part.probes?.liveness),
+                    readinessProbe: this.mapProbe(part.probes?.readiness),
+                    startupProbe: this.mapProbe(part.probes?.startup),
                     resources: pulumi
                       .output(part.resources)
                       .apply((x) =>
@@ -361,6 +365,34 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
       parts: deployedParts,
     };
   }
+
+  private mapProbe(x?: Probe) {
+    if (!x) return undefined;
+
+    const actionType = x.action.type;
+
+    const probe: inputs.core.v1.Probe = {
+      initialDelaySeconds: x.initialDelaySeconds,
+      periodSeconds: x.periodSeconds,
+      timeoutSeconds: x.timeoutSeconds,
+      failureThreshold: x.failureThreshold,
+      successThreshold: x.successThreshold,
+    };
+    switch (actionType) {
+      case "exec":
+        probe.exec = {
+          command: x.action.command,
+        };
+        break;
+      case "http-get":
+        throw new Error(
+          `Action type ${actionType} is not supported in current version`
+        );
+      default:
+        throw new Error(`Action type ${actionType} is not supported`);
+    }
+    return probe;
+  }
 }
 
 const defaultResources = {
@@ -388,6 +420,35 @@ export interface ServiceAppPart {
   pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
   disabled?: boolean;
   scale?: pulumi.Input<number>;
+  probes?: HealthcheckOptions;
+}
+
+export interface HealthcheckOptions {
+  startup?: Probe;
+  readiness?: Probe;
+  liveness?: Probe;
+}
+
+export interface Probe {
+  initialDelaySeconds?: number;
+  timeoutSeconds?: number;
+  periodSeconds?: number;
+  successThreshold?: number;
+  failureThreshold?: number;
+  action: ExecProbeAction | HttpGetProbeAction;
+}
+
+interface ExecProbeAction {
+  type: "exec";
+  command: string[];
+}
+
+interface HttpGetProbeAction {
+  type: "http-get";
+  httpGet: {
+    path: string;
+    port: number;
+  };
 }
 
 export interface PvcRequest {
