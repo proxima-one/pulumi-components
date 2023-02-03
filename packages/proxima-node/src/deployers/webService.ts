@@ -164,45 +164,6 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
           );
       }
 
-      const container: pulumi.Input<k8s.types.input.core.v1.Container> = {
-        image: imageName,
-        name: partFullName,
-        args: part.args,
-        env: pulumi.output(part.env).apply((env) =>
-          env
-            ? Object.entries(env).map(([key, value]) => ({
-                name: key,
-                value: value,
-              }))
-            : []
-        ),
-        ports: pulumi.output(part.ports).apply((x) =>
-          x
-            ? x.map((port) => ({
-                name: port.name,
-                containerPort: port.containerPort,
-                protocol: port.protocol ?? "TCP",
-              }))
-            : []
-        ),
-        resources: pulumi
-          .output(part.resources)
-          .apply((x) => this.getResourceRequirements(x ?? defaultResources)),
-        volumeMounts: volumeMounts,
-      };
-
-      pulumi.output(part.probes).apply((probes) => {
-        container.livenessProbe = probes?.liveness
-          ? pulumi.output(probes.liveness).apply((x) => this.mapProbe(x))
-          : undefined;
-        container.readinessProbe = probes?.readiness
-          ? pulumi.output(probes.readiness).apply((x) => this.mapProbe(x))
-          : undefined;
-        container.startupProbe = probes?.startup
-          ? pulumi.output(probes.startup).apply((x) => this.mapProbe(x))
-          : undefined;
-      });
-
       const deployment = new k8s.apps.v1.Deployment(
         partFullName,
         {
@@ -227,7 +188,39 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                 restartPolicy: "Always",
                 imagePullSecrets: this.imagePullSecrets({ image: imageName }),
                 nodeSelector: this.nodeSelectors,
-                containers: [container],
+                containers: [
+                  {
+                    image: imageName,
+                    name: partFullName,
+                    args: part.args,
+                    env: pulumi.output(part.env).apply((env) =>
+                      env
+                        ? Object.entries(env).map(([key, value]) => ({
+                            name: key,
+                            value: value,
+                          }))
+                        : []
+                    ),
+                    ports: pulumi.output(part.ports).apply((x) =>
+                      x
+                        ? x.map((port) => ({
+                            name: port.name,
+                            containerPort: port.containerPort,
+                            protocol: port.protocol ?? "TCP",
+                          }))
+                        : []
+                    ),
+                    livenessProbe: this.mapProbe(part.probes?.liveness),
+                    readinessProbe: this.mapProbe(part.probes?.readiness),
+                    startupProbe: this.mapProbe(part.probes?.startup),
+                    resources: pulumi
+                      .output(part.resources)
+                      .apply((x) =>
+                        this.getResourceRequirements(x ?? defaultResources)
+                      ),
+                    volumeMounts: volumeMounts,
+                  },
+                ],
                 volumes: volumes,
               },
             },
@@ -373,7 +366,9 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
     };
   }
 
-  private mapProbe<U2, U1>(x: Probe) {
+  private mapProbe(x?: Probe) {
+    if (!x) return undefined;
+
     const actionType = x.action.type;
 
     const probe: inputs.core.v1.Probe = {
@@ -390,10 +385,9 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
         };
         break;
       case "http-get":
-        probe.httpGet = {
-          path: x.action.httpGet.path,
-          port: x.action.httpGet.port,
-        };
+        throw new Error(
+          `Action type ${actionType} is not supported in current version`
+        );
       default:
         throw new Error(`Action type ${actionType} is not supported`);
     }
@@ -426,13 +420,13 @@ export interface ServiceAppPart {
   pvcs?: pulumi.Input<pulumi.Input<PvcRequest>[]>;
   disabled?: boolean;
   scale?: pulumi.Input<number>;
-  probes?: pulumi.Input<HealthcheckOptions>;
+  probes?: HealthcheckOptions;
 }
 
 export interface HealthcheckOptions {
   startup?: Probe;
   readiness?: Probe;
-  liveness?: pulumi.Input<Probe>;
+  liveness?: Probe;
 }
 
 export interface Probe {
@@ -454,7 +448,6 @@ interface HttpGetProbeAction {
   httpGet: {
     path: string;
     port: number;
-    httpHeaders: Record<string, string>;
   };
 }
 

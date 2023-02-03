@@ -19,7 +19,7 @@ fi
 currentSeconds=$(date +%s)
 lastTouchSeconds=$(date -r "$lastEventFile" +%s)
 
-delay=$(expr $currentSeconds - $lastTouchSeconds)
+delay=$(($currentSeconds - $lastTouchSeconds))
 if  [ $delay -gt $HEARTBEAT_LIMIT_SECONDS ] ; then
   echo "Delay is greater than ${HEARTBEAT_LIMIT_SECONDS}.\n CurrentSeconds: ${currentSeconds}\n LastTouchSeconds: ${lastTouchSeconds}"
   exit 1

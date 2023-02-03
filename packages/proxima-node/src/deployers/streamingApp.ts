@@ -85,20 +85,6 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         });
       }
 
-      const healthcheck = app.healthcheckOptions
-        ? {
-            liveness: {
-              action: {
-                type: "exec",
-                command: ["sh", "/app/healthcheck.sh"],
-              },
-              initialDelaySeconds:
-                app.healthcheckOptions?.initialDelaySeconds || 10,
-              periodSeconds: app.healthcheckOptions?.periodSeconds || 5,
-            },
-          }
-        : undefined;
-
       this.webServiceDeployer.deploy({
         name: app.name,
         imageName: app.executable.imageName,
