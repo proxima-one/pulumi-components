@@ -50,17 +50,23 @@ export class StreamingAppDeployer extends KubernetesServiceDeployer {
         app.stackName ?? "default",
         ...(app.dryRun ? ["--dry-run"] : []),
       ];
-      const env = pulumi.output(app.env).apply((appEnv) => ({
-        ...appEnv,
-        PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
-        NODE_EXTRA_CA_CERTS:
-          "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-        NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB} --report-on-signal`,
-        HEARTBEAT_LIMIT_SECONDS: (
-          app.healthcheckOptions?.heartbeatLimitSeconds ?? ""
-        ).toString(),
-        APP_ID: app.name,
-      }));
+      const env = pulumi.output(app.env).apply((appEnv) => {
+        const variables: Record<string, string> = {
+          ...appEnv,
+          PROXIMA_APP_SERVICES_PATH: "/app/services.yml",
+          NODE_EXTRA_CA_CERTS:
+            "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+          NODE_OPTIONS: `--max_old_space_size=${memoryLimitMB} --report-on-signal`,
+        };
+
+        if (app.healthcheckOptions?.heartbeatLimitSeconds != undefined) {
+          variables["HEARTBEAT_LIMIT_SECONDS"] =
+            app.healthcheckOptions.heartbeatLimitSeconds.toString();
+          variables["APP_ID"] = app.name;
+        }
+
+        return variables;
+      });
 
       const argsLine = JSON.stringify(app.args);
       if (argsLine.length > 1500) {
