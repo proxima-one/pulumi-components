@@ -13,7 +13,7 @@ fi
 if [ ! -e $lastEventFile ] ;
 then
     echo "last event file doesn't exist"
-    exit 0
+    exit 1
 fi
 
 currentSeconds=$(date +%s)
