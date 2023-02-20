@@ -57,6 +57,7 @@ export class StreamRegistryDeployer {
               ingress: app.publicHost
                 ? {
                     host: [app.publicHost],
+                    enableCors: true,
                   }
                 : undefined,
             },

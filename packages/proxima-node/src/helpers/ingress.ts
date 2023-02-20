@@ -71,6 +71,9 @@ export function ingressAnnotations(
     res["nginx.ingress.kubernetes.io/configuration-snippet"] =
       "grpc_read_timeout 999999s;";
   }
+  if (args.enableCors) {
+    res["nginx.ingress.kubernetes.io/enable-cors"] = "true";
+  }
 
   if (args.hsts != undefined) res["nginx.org/hsts"] = args.hsts.toString();
 
@@ -89,6 +92,7 @@ export function ingressAnnotations(
 
 export interface SimpleIngressAnnotations {
   backendHttps?: boolean;
+  enableCors?: boolean;
   bodySize?: string;
   certIssuer?: string;
   sslRedirect?: boolean;
