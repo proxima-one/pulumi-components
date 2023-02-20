@@ -133,13 +133,24 @@ export class StreamDbDeployer {
               containerPort: 2112,
             },
             {
-              name: "api",
+              name: "api-grpc",
               containerPort: 50051,
               ingress: app.publicHost
                 ? {
-                    protocol: "grpc",
-                    overrideHost: [app.publicHost],
-                  }
+                  protocol: "grpc",
+                  overrideHost: [app.publicHost],
+                }
+                : undefined,
+            },
+            {
+              name: "api-http",
+              containerPort: 8080,
+              ingress: app.publicHostHttp
+                ? {
+                  protocol: "http",
+                  enableCors: true,
+                  overrideHost: [app.publicHostHttp],
+                }
                 : undefined,
             },
           ],
@@ -156,6 +167,7 @@ export class StreamDbDeployer {
         return {
           authToken: pass,
           endpoint: `${host}:${50051}`,
+          httpEndpoint: `${host}:${8080}`,
         };
       });
 
@@ -163,12 +175,14 @@ export class StreamDbDeployer {
       ? pulumi
           .all([
             pulumi.Output.create(app.publicHost),
+            pulumi.Output.create(app.publicHostHttp),
             passwords.resolve(auth.password),
           ])
-          .apply(([publicHost, pass]) => {
+          .apply(([publicHost, publicHostHttp, pass]) => {
             return {
               authToken: pass,
               endpoint: `${publicHost}:443`,
+              httpEndpoint: `${publicHostHttp}:443`,
             };
           })
       : undefined;
@@ -192,6 +206,7 @@ export interface StreamDb {
   };
   resources?: pulumi.Input<ComputeResources>;
   publicHost?: pulumi.Input<string>;
+  publicHostHttp?: pulumi.Input<string>;
   imageName?: pulumi.Input<string>;
   env?: pulumi.Input<string>;
   relayFrom?: pulumi.Input<
