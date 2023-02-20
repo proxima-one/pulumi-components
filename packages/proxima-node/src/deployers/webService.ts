@@ -306,6 +306,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
                         certIssuer: "zerossl",
                         sslRedirect: true,
                         bodySize: "100m",
+                        enableCors: rule.cors,
                         backendGrpc:
                           rule.backend.protocol.toLowerCase() == "grpc",
                         backendHttps:
