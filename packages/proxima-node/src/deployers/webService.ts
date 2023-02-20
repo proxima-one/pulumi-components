@@ -280,6 +280,7 @@ export class WebServiceDeployer extends KubernetesServiceDeployer {
 
                       return {
                         hosts: hosts,
+                        cors: port.ingress?.enableCors ?? false,
                         path: port.ingress?.path ?? "/",
                         backend: {
                           serviceName: service.metadata.name,
@@ -426,7 +427,7 @@ export interface Ingress {
   Default "/"
    */
   path?: pulumi.Input<string>;
-
+  enableCors?: pulumi.Input<boolean>;
   protocol?: pulumi.Input<string>;
   overrideHost?: pulumi.Input<pulumi.Input<string>[]>;
   host?: pulumi.Input<pulumi.Input<string>[]>;
@@ -447,6 +448,7 @@ interface DeployedPart {
 
 interface IngressDef {
   hosts: string[];
+  cors: boolean;
   path: string;
   backend: {
     serviceName: pulumi.Output<string>;
