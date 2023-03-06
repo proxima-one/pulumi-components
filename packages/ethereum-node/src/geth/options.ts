@@ -1,3 +1,4 @@
+import _ from "lodash";
 /*
 --syncmode "snap" --mainnet --http --txlookuplimit 0 --http.vhosts "*" --cache 4096 --http.addr "0.0.0.0" --http.corsdomain ""
 --http.port "8545" --http.api "eth, net, web3, personal" --ws --ws.port "8546" --ws.addr "0.0.0.0" --ws.origins "*"
@@ -20,6 +21,8 @@ export interface GethOptions {
   txLookupLimit?: number;
 
   dataDir?: string;
+
+  snapshot?: boolean;
 
   /*
   Network to connect to, default "mainnet"
@@ -115,6 +118,8 @@ export function optionsToArgs(options: GethOptions): string[] {
   if (options.archival) args.push("--gcmode", "archive");
 
   if (options.dataDir != undefined) args.push("--datadir", options.dataDir);
+
+  if (options.snapshot != undefined) args.push("--snapshot", _.toString(options.snapshot));
 
   if (options.network != undefined) args.push(`--${options.network}`);
 
