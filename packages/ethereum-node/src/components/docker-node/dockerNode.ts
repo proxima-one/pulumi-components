@@ -17,7 +17,10 @@ export interface DockerEthNodeArgs {
   }>;
   gethDataVolume?: pulumi.Input<string>;
   archival?: pulumi.Input<boolean>;
+  snapshot?: pulumi.Input<boolean>;
   checkpointUrl?: pulumi.Input<string>;
+  gethImage?: pulumi.Input<string>;
+  prysmImage?: pulumi.Input<string>;
 }
 
 export interface EthNetworkConfig {
@@ -62,7 +65,7 @@ export class DockerEthNode extends pulumi.ComponentResource {
       {
         existingNetwork: networkName,
         imageName: resolvedArgs.apply(
-          (args) => configs[args.network].gethImage
+          (args) => args.gethImage ?? configs[args.network].gethImage
         ),
         ports: resolvedArgs.apply((x) => x.ports?.geth),
         existingDataVolume: gethDataVolumeName,
@@ -74,6 +77,7 @@ export class DockerEthNode extends pulumi.ComponentResource {
             network: args.network,
             txLookupLimit: 0,
             archival: args.archival,
+            snapshot: args.snapshot,
             networking: {
               maxpeers: 100,
               port: args.ports?.geth?.peers,
@@ -113,7 +117,7 @@ export class DockerEthNode extends pulumi.ComponentResource {
         network: toPrysmNetwork(args.network),
         ports: resolvedArgs.apply((x) => x.ports?.prysm),
         imageName: resolvedArgs.apply(
-          (args) => configs[args.network].prysmImage
+          (args) => args.prysmImage ?? configs[args.network].prysmImage
         ),
         jwtSecret: jwtSecret,
         executionEndpoint: pulumi.interpolate`http://${this.geth.container.domainname}:8551`,
