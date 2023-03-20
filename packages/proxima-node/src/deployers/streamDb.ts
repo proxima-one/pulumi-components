@@ -1,15 +1,17 @@
 import {
   ComputeResources,
-  ServiceDeployParameters,
+  ServiceDeployParameters, Storage, StorageSize,
 } from "@proxima-one/pulumi-k8s-base";
 import * as pulumi from "@pulumi/pulumi";
 import { Password } from "../components/types";
 import * as yaml from "js-yaml";
 import { strict as assert } from "assert";
-import { WebServiceDeployer } from "./webService";
+import {PvcRequest, WebServiceDeployer} from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
 import { DbSettings } from "@proxima-one/pulumi-proxima-node";
+import {Output} from "@pulumi/pulumi";
+import {isUndefined} from "lodash";
 
 export class StreamDbDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
@@ -21,7 +23,8 @@ export class StreamDbDeployer {
   }
 
   public deploy(app: StreamDb): DeployedStreamDb {
-    const imageName = app.imageName ?? "quay.io/proxima.one/streamdb:0.1.1";
+    const imageName = app.imageName ??
+      (app.type == "standalone" ? "quay.io/proxima.one/streamdb:1.0.0" : "quay.io/proxima.one/streamdb:0.1.1");
     const passwords = new PasswordResolver();
 
     const auth = app.auth ?? {
@@ -99,6 +102,24 @@ export class StreamDbDeployer {
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
 
+    const appendDbStorageConfig = app.type == "standalone" ? pulumi.output(app.appendDbStorage) : undefined;
+
+    const pvcs = appendDbStorageConfig?.apply(appendDbStorage => [
+      {
+        name: `${app.name}-append-db-data-storage`,
+        storage: appendDbStorage.data.storage,
+        path: appendDbStorage.data.path,
+      },
+      {
+        name: `${app.name}-append-db-index-storage`,
+        storage: {
+          size: appendDbStorage.index.storageSize,
+          class: { "fstype": "ext4", "type": "ssd" },
+        } as Storage,
+        path: appendDbStorage.index.path,
+      },
+    ]);
+
     const webService = this.webServiceDeployer.deploy({
       name: app.name,
       imageName: imageName,
@@ -106,7 +127,7 @@ export class StreamDbDeployer {
         worker: {
           disabled: app.relayFrom == undefined,
           configFiles: [{ path: "/app/config.yml", content: relayConfig }],
-          env: {
+          env: app.type == "standalone" ? undefined : {
             STREAMING_BATCH_SIZE: "500",
             STREAMING_SLEEP_INTERVAL: "50",
           },
@@ -154,6 +175,7 @@ export class StreamDbDeployer {
                 : undefined,
             },
           ],
+          pvcs: pvcs,
         },
       },
     });
@@ -173,18 +195,18 @@ export class StreamDbDeployer {
 
     const publicConnectionDetails = app.publicHost
       ? pulumi
-          .all([
-            pulumi.Output.create(app.publicHost),
-            pulumi.Output.create(app.publicHostHttp),
-            passwords.resolve(auth.password),
-          ])
-          .apply(([publicHost, publicHostHttp, pass]) => {
-            return {
-              authToken: pass,
-              endpoint: `${publicHost}:443`,
-              httpEndpoint: `${publicHostHttp}:443`,
-            };
-          })
+        .all([
+          pulumi.Output.create(app.publicHost),
+          pulumi.Output.create(app.publicHostHttp),
+          passwords.resolve(auth.password),
+        ])
+        .apply(([publicHost, publicHostHttp, pass]) => {
+          return {
+            authToken: pass,
+            endpoint: `${publicHost}:443`,
+            httpEndpoint: `${publicHostHttp}:443`,
+          };
+        })
       : undefined;
 
     return {
@@ -198,7 +220,27 @@ export class StreamDbDeployer {
   }
 }
 
-export interface StreamDb {
+export type StreamDb = MongoBasedStreamDb | StandaloneStreamDb;
+
+export interface MongoBasedStreamDb extends StreamDbBase {
+  type: "mongo-based";
+}
+
+export interface StandaloneStreamDb extends StreamDbBase {
+  type: "standalone";
+  appendDbStorage: {
+    data: {
+      path: pulumi.Input<string>;
+      storage: pulumi.Input<Storage>;
+    };
+    index: {
+      path: pulumi.Input<string>;
+      storageSize: pulumi.Input<StorageSize>;
+    }
+  }
+}
+
+interface StreamDbBase {
   name: string;
   db: pulumi.Input<DbSettings>;
   auth?: {
