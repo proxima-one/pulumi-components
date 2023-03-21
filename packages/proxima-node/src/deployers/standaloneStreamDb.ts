@@ -89,14 +89,6 @@ export class StandaloneStreamDbDeployer {
       name: app.name,
       imageName: imageName,
       parts: {
-        worker: {
-          disabled: app.relayFrom == undefined,
-          configFiles: [{ path: "/app/config.yml", content: relayConfig }],
-          resources: app.resources ?? "50m/2000m,300Mi/6Gi",
-          deployStrategy: {
-            type: "Recreate",
-          },
-        },
         api: {
           configFiles: [{ path: "/app/config.yml", content: apiConfig }],
           resources: app.resources ?? "50m/2000m,300Mi/6Gi",

@@ -10,6 +10,7 @@ import { WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
 import { DbSettings } from "@proxima-one/pulumi-proxima-node";
+
 export class StreamDbDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
   private readonly mongoDeployer: MongoDeployer;
@@ -197,7 +198,7 @@ export class StreamDbDeployer {
   }
 }
 
-interface StreamDb {
+export interface StreamDb {
   name: string;
   db: pulumi.Input<DbSettings>;
   auth?: {
