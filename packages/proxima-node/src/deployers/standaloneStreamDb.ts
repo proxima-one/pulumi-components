@@ -133,42 +133,9 @@ export class StandaloneStreamDbDeployer {
       },
     });
 
-    const apiPart = webService.parts["api"];
-
-    const connectionDetails = pulumi
-      .all([apiPart.internalHost, passwords.resolve(auth.password)])
-      .apply(([host, pass]) => {
-        assert(host);
-        return {
-          authToken: pass,
-          endpoint: `${host}:${50051}`,
-          httpEndpoint: `${host}:${8080}`,
-        };
-      });
-
-    const publicConnectionDetails = app.publicHost
-      ? pulumi
-        .all([
-          pulumi.Output.create(app.publicHost),
-          pulumi.Output.create(app.publicHostHttp),
-          passwords.resolve(auth.password),
-        ])
-        .apply(([publicHost, publicHostHttp, pass]) => {
-          return {
-            authToken: pass,
-            endpoint: `${publicHost}:443`,
-            httpEndpoint: `${publicHostHttp}:443`,
-          };
-        })
-      : undefined;
-
     return {
       name: app.name,
       type: "stream-db",
-      params: {
-        connectionDetails,
-        publicConnectionDetails,
-      },
     };
   }
 }
@@ -185,9 +152,6 @@ export interface StandaloneStreamDb {
       storage: pulumi.Input<Storage>;
     }
   }
-  auth?: {
-    password: Password;
-  };
   resources?: pulumi.Input<ComputeResources>;
   publicHost?: pulumi.Input<string>;
   publicHostHttp?: pulumi.Input<string>;
@@ -204,18 +168,7 @@ export interface StandaloneStreamDb {
   scale?: pulumi.Input<number>;
 }
 
-export interface DeployedStandaloneStreamDbParams {
-  connectionDetails: pulumi.Output<StandaloneStreamDbConnectionDetails>;
-  publicConnectionDetails?: pulumi.Output<StandaloneStreamDbConnectionDetails>;
-}
-
-export interface StandaloneStreamDbConnectionDetails {
-  endpoint: string;
-  authToken: string;
-}
-
 export interface DeployedStandaloneStreamDb {
   name: string;
   type: "stream-db";
-  params: DeployedStandaloneStreamDbParams;
 }
