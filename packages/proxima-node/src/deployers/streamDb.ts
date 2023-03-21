@@ -173,18 +173,18 @@ export class StreamDbDeployer {
 
     const publicConnectionDetails = app.publicHost
       ? pulumi
-          .all([
-            pulumi.Output.create(app.publicHost),
-            pulumi.Output.create(app.publicHostHttp),
-            passwords.resolve(auth.password),
-          ])
-          .apply(([publicHost, publicHostHttp, pass]) => {
-            return {
-              authToken: pass,
-              endpoint: `${publicHost}:443`,
-              httpEndpoint: `${publicHostHttp}:443`,
-            };
-          })
+        .all([
+          pulumi.Output.create(app.publicHost),
+          pulumi.Output.create(app.publicHostHttp),
+          passwords.resolve(auth.password),
+        ])
+        .apply(([publicHost, publicHostHttp, pass]) => {
+          return {
+            authToken: pass,
+            endpoint: `${publicHost}:443`,
+            httpEndpoint: `${publicHostHttp}:443`,
+          };
+        })
       : undefined;
 
     return {
