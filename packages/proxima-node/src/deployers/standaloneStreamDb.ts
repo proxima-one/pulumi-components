@@ -21,11 +21,6 @@ export class StandaloneStreamDbDeployer {
 
   public deploy(app: StandaloneStreamDb): DeployedStandaloneStreamDb {
     const imageName = app.imageName ?? "quay.io/proxima.one/streamdb:1.0.0" ;
-    const passwords = new PasswordResolver();
-
-    const auth = app.auth ?? {
-      password: { type: "random", name: app.name, length: 32 },
-    };
 
     const relaySection = pulumi.output(app.relayFrom).apply((relayFrom) => {
       if (!relayFrom) return undefined;
@@ -47,27 +42,17 @@ export class StandaloneStreamDbDeployer {
       };
     });
 
-    const commonConfig = {
-      server: {
-        host: "0.0.0.0",
-        port: 50051,
-        metricsPort: 2112,
-      },
-      storage: {
-        appendDbDataPath: app.appendDbStorage.data.path,
-        appendDbIndexPath: app.appendDbStorage.index.path,
-      },
-    };
-
-    const apiConfig = pulumi
+    const config = pulumi
       .all<any>({
-        ...commonConfig,
-      })
-      .apply((json) => yaml.dump(json, { indent: 2 }));
-
-    const relayConfig = pulumi
-      .all<any>({
-        ...commonConfig,
+        server: {
+          host: "0.0.0.0",
+          port: 50051,
+          metricsPort: 2112,
+        },
+        storage: {
+          appendDbDataPath: app.appendDbStorage.data.path,
+          appendDbIndexPath: app.appendDbStorage.index.path,
+        },
         relayer: relaySection,
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
@@ -90,7 +75,7 @@ export class StandaloneStreamDbDeployer {
       imageName: imageName,
       parts: {
         api: {
-          configFiles: [{ path: "/app/config.yml", content: apiConfig }],
+          configFiles: [{ path: "/app/config.yml", content: config }],
           resources: app.resources ?? "50m/2000m,300Mi/6Gi",
           args: [...(app.relayFrom ? ["--readonly"] : [])],
           metrics: {
