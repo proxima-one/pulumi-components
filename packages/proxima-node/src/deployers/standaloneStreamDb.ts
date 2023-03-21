@@ -57,12 +57,12 @@ export class StandaloneStreamDbDeployer {
 
     const pvcs = pulumi.output(app.appendDb).apply(appendDb => [
       {
-        name: `${app.name}-append-db-data-storage`,
+        name: `data-storage`,
         storage: appendDb.dataStorage,
         path: appendDbDataPath,
       },
       {
-        name: `${app.name}-append-db-index-storage`,
+        name: `index-storage`,
         storage: appendDb.indexStorage,
         path: appendDbIndexPath,
       },
