@@ -3,12 +3,10 @@ import {
   ServiceDeployParameters, Storage,
 } from "@proxima-one/pulumi-k8s-base";
 import * as pulumi from "@pulumi/pulumi";
-import { Password } from "../components/types";
 import * as yaml from "js-yaml";
 import { strict as assert } from "assert";
 import { WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
-import { PasswordResolver } from "../helpers";
 
 export class StandaloneStreamDbDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
@@ -39,6 +37,9 @@ export class StandaloneStreamDbDeployer {
       };
     });
 
+    const appendDbDataPath = "/append-db/data";
+    const appendDbIndexPath = "/append-db/index";
+
     const config = pulumi
       .all<any>({
         server: {
@@ -47,23 +48,23 @@ export class StandaloneStreamDbDeployer {
           metricsPort: 2112,
         },
         storage: {
-          appendDbDataPath: app.appendDbStorage.data.path,
-          appendDbIndexPath: app.appendDbStorage.index.path,
+          appendDbDataPath: appendDbDataPath,
+          appendDbIndexPath: appendDbIndexPath,
         },
         relayer: relaySection,
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
 
-    const pvcs = pulumi.output(app.appendDbStorage).apply(appendDbStorage => [
+    const pvcs = pulumi.output(app.appendDb).apply(appendDb => [
       {
         name: `${app.name}-append-db-data-storage`,
-        storage: appendDbStorage.data.storage,
-        path: appendDbStorage.data.path,
+        storage: appendDb.dataStorage,
+        path: appendDbDataPath,
       },
       {
         name: `${app.name}-append-db-index-storage`,
-        storage: appendDbStorage.index.storage,
-        path: appendDbStorage.index.path,
+        storage: appendDb.indexStorage,
+        path: appendDbIndexPath,
       },
     ]);
 
@@ -71,10 +72,10 @@ export class StandaloneStreamDbDeployer {
       name: app.name,
       imageName: imageName,
       parts: {
-        api: {
+        "stream-db": {
           configFiles: [{ path: "/app/config.yml", content: config }],
           resources: app.resources ?? "50m/2000m,300Mi/6Gi",
-          args: [...(app.relayFrom ? ["--readonly"] : [])],
+          args: app.relayFrom ? ["--readonly"] : [],
           metrics: {
             labels: {
               env: app.env ?? "dev",
@@ -115,10 +116,10 @@ export class StandaloneStreamDbDeployer {
       },
     });
 
-    const apiPart = webService.parts["api"];
+    const streamDb = webService.parts["stream-db"];
 
     const connectionDetails = pulumi
-      .all([apiPart.internalHost])
+      .all([streamDb.internalHost])
       .apply(([host]) => {
         assert(host);
         return {
@@ -154,15 +155,9 @@ export class StandaloneStreamDbDeployer {
 
 export interface StandaloneStreamDb {
   name: string;
-  appendDbStorage: {
-    data: {
-      path: pulumi.Input<string>;
-      storage: pulumi.Input<Storage>;
-    };
-    index: {
-      path: pulumi.Input<string>;
-      storage: pulumi.Input<Storage>;
-    }
+  appendDb: {
+    dataStorage: pulumi.Input<Storage>;
+    indexStorage: pulumi.Input<Storage>;
   }
   resources?: pulumi.Input<ComputeResources>;
   publicHost?: pulumi.Input<string>;
