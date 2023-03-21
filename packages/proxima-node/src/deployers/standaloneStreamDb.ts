@@ -53,6 +53,10 @@ export class StandaloneStreamDbDeployer {
         port: 50051,
         metricsPort: 2112,
       },
+      storage: {
+        appendDbDataPath: app.appendDbStorage.data.path,
+        appendDbIndexPath: app.appendDbStorage.index.path,
+      },
     };
 
     const apiConfig = pulumi
@@ -64,10 +68,6 @@ export class StandaloneStreamDbDeployer {
     const relayConfig = pulumi
       .all<any>({
         ...commonConfig,
-        storage: {
-          appendDbDataPath: app.appendDbStorage.data.path,
-          appendDbIndexPath: app.appendDbStorage.index.path,
-        },
         relayer: relaySection,
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
