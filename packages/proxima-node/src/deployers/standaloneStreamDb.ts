@@ -75,7 +75,8 @@ export class StandaloneStreamDbDeployer {
         "stream-db": {
           configFiles: [{ path: "/app/config.yml", content: config }],
           resources: app.resources ?? "50m/2000m,300Mi/6Gi",
-          args: app.relayFrom ? ["--readonly"] : [],
+          args: ["--config=/app/config.yml", ...(app.relayFrom ? ["--readonly"] : [])],
+          deployStrategy: { type: "Recreate" },
           metrics: {
             labels: {
               env: app.env ?? "dev",
