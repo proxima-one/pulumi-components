@@ -37,8 +37,10 @@ export class StandaloneStreamDbDeployer {
       };
     });
 
-    const appendDbDataPath = "/append-db/data";
-    const appendDbIndexPath = "/append-db/index";
+    const appendDbDataMountPath = "/append-db/events";
+    const appendDbIndexMountPath = "/append-db/index";
+    const appendDbDataStoragePath = `${appendDbDataMountPath}/data`;
+    const appendDbIndexStoragePath = `${appendDbIndexMountPath}/data`;
 
     const config = pulumi
       .all<any>({
@@ -48,8 +50,8 @@ export class StandaloneStreamDbDeployer {
           metricsPort: 2112,
         },
         storage: {
-          appendDbDataPath: appendDbDataPath,
-          appendDbIndexPath: appendDbIndexPath,
+          appendDbDataPath: appendDbDataStoragePath,
+          appendDbIndexPath: appendDbIndexStoragePath,
         },
         relayer: relaySection,
       })
@@ -59,12 +61,12 @@ export class StandaloneStreamDbDeployer {
       {
         name: `data-storage`,
         storage: appendDb.dataStorage,
-        path: appendDbDataPath,
+        path: appendDbDataMountPath,
       },
       {
         name: `index-storage`,
         storage: appendDb.indexStorage,
-        path: appendDbIndexPath,
+        path: appendDbIndexMountPath,
       },
     ]);
 
