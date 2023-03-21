@@ -22,23 +22,20 @@ export class StandaloneStreamDbDeployer {
   public deploy(app: StandaloneStreamDb): DeployedStandaloneStreamDb {
     const imageName = app.imageName ?? "quay.io/proxima.one/streamdb:1.0.0" ;
 
-    const relaySection = pulumi.output(app.relayFrom).apply((relayFrom) => {
+    const relaySection = pulumi.output(app.relayFrom).apply(relayFrom => {
       if (!relayFrom) return undefined;
 
       return {
         pollingIntervalMs: 5 * 60 * 1000,
-        streams: pulumi
-          .all(relayFrom)
-          .apply((x) =>
-            x.map((relay, idx) => [
-              `stream_${idx}`,
-              {
-                wildcardPatterns: relay.streams,
-                connectTo: relay.remote,
-              },
-            ])
-          )
-          .apply((arr) => Object.fromEntries(arr)),
+        streams: Object.fromEntries(
+          relayFrom.map((relay, idx) => [
+            `group_${idx}`,
+            {
+              wildcardPatterns: relay.streams,
+              connectTo: relay.remote,
+            },
+          ])
+        )
       };
     });
 
