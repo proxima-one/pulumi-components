@@ -395,12 +395,12 @@ export class StreamingApp<
     if (!opts.input) this.input = {} as StreamRecord<TInputStream>;
     else if (typeof opts.input == "string")
       this.input = { default: opts.input } as StreamRecord<TInputStream>;
-    else this.input = (opts.input ?? {}) as unknown as StreamRecord<TInputStream>;
+    else this.input = (opts.input ?? {}) as StreamRecord<TInputStream>;
 
     if (!opts.output) this.output = {} as StreamRecord<TOutputStream>;
     else if (typeof opts.output == "string")
       this.output = { default: opts.output } as StreamRecord<TOutputStream>;
-    else this.output = (opts.output ?? {}) as unknown as StreamRecord<TOutputStream>;
+    else this.output = (opts.output ?? {}) as StreamRecord<TOutputStream>;
 
     // add versions to output streams
     this.output = mapLookup(
