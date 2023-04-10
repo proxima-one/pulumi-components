@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.3.39...@proxima-one/pulumi-service-apps@0.4.0) (2023-04-10)
+
+### Features
+
+- Allow specifying node url for individual networks ([#107](https://github.com/proxima-one/pulumi-components/issues/107)) ([b98980b](https://github.com/proxima-one/pulumi-components/commit/b98980b02aa3dce2729acda37f47ce5f2e59f9d8))
+
 ## [0.3.39](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.3.38...@proxima-one/pulumi-service-apps@0.3.39) (2023-03-21)
 
 **Note:** Version bump only for package @proxima-one/pulumi-service-apps
