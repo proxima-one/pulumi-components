@@ -28,7 +28,8 @@ export interface StreamDb {
 interface BlockchainGatewayArgs {
   endpointTemplate: string;
   networks?: Record<Network, {
-    endpoint: string;
+    httpEndpoint: string;
+    wssEndpoint: string;
   }>;
 }
 
@@ -206,10 +207,15 @@ export class StreamingAppDeployer extends AppDeployerBase {
     return pulumi
       .all([blockchainGateway, evmIndexer])
       .apply(([gatewayParams, evmIndexerParams]) => {
-        const endpoint = gatewayParams.networks?.[network].endpoint ?? gatewayParams.endpointTemplate.replace(
-          "{NETWORK}",
-          network
-        );
+        let httpEndpoint: string;
+        let wssEndpoint: string;
+        if (gatewayParams.networks?.[network] !== undefined) {
+          httpEndpoint = gatewayParams.networks[network].httpEndpoint;
+          wssEndpoint = gatewayParams.networks[network].wssEndpoint;
+        } else {
+          httpEndpoint = gatewayParams.endpointTemplate.replace("{NETWORK}", network);
+          wssEndpoint = httpEndpoint.replace("https://", "wss://");
+        }
         if (!evmNetworks.includes(network as any))
           throw new Error(`network ${network} is not supported`);
 
@@ -227,17 +233,14 @@ export class StreamingAppDeployer extends AppDeployerBase {
               : undefined,
             endpoints: {
               http: {
-                connectionString: `provider=http;host=${endpoint}`,
+                connectionString: `provider=http;host=${httpEndpoint}`,
                 slots: 100,
                 dedicated: true,
                 fetch: true,
                 streaming: false,
               },
               wss: {
-                connectionString: `provider=ws;host=${endpoint.replace(
-                  "https://",
-                  "wss://"
-                )}`,
+                connectionString: `provider=ws;host=${wssEndpoint}`,
                 slots: 10,
                 dedicated: true,
                 fetch: false,
