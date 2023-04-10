@@ -25,6 +25,13 @@ export interface StreamDb {
   streams: string[];
 }
 
+interface BlockchainGatewayArgs {
+  endpointTemplate: string;
+  networks?: Record<Network, {
+    endpoint: string;
+  }>;
+}
+
 export class StreamingAppDeployer extends AppDeployerBase {
   private streamingApp: k8sServices.StreamingAppDeployer;
 
@@ -186,7 +193,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
   private getNetworkService(
     network: Network
   ): pulumi.Output<StreamingAppService> {
-    const blockchainGateway = this.requireService<{ endpointTemplate: string }>(
+    const blockchainGateway = this.requireService<BlockchainGatewayArgs>(
       "main",
       "blockchain-gateway"
     );
@@ -199,7 +206,7 @@ export class StreamingAppDeployer extends AppDeployerBase {
     return pulumi
       .all([blockchainGateway, evmIndexer])
       .apply(([gatewayParams, evmIndexerParams]) => {
-        const endpoint = gatewayParams.endpointTemplate.replace(
+        const endpoint = gatewayParams.networks?.[network].endpoint ?? gatewayParams.endpointTemplate.replace(
           "{NETWORK}",
           network
         );
