@@ -2,7 +2,8 @@ import * as pulumi from "@pulumi/pulumi";
 import { AppDeployerBase, DeployParams } from "./base";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
 import {
-  mapLookup, StreamingAppHealthcheckOpts,
+  mapLookup,
+  StreamingAppHealthcheckOpts,
   StreamingAppService,
 } from "@proxima-one/pulumi-proxima-node";
 import queryString from "query-string";
@@ -26,11 +27,14 @@ export interface StreamDb {
 }
 
 interface BlockchainGatewayArgs {
-  endpointTemplate: string;
-  networks?: Record<Network, {
-    httpEndpoint: string;
-    wssEndpoint: string;
-  }>;
+  endpointTemplate?: string;
+  networks?: Record<
+    Network,
+    {
+      httpEndpoint: string;
+      wssEndpoint: string;
+    }
+  >;
 }
 
 export class StreamingAppDeployer extends AppDeployerBase {
@@ -161,11 +165,14 @@ export class StreamingAppDeployer extends AppDeployerBase {
     const env = pulumi
       .all([app.maxUndoMs, this.maxUndoMs])
       .apply(([appUndo, defaultUndo]) => appUndo ?? defaultUndo)
-      .apply((x) => (
-        x ? {
-          PROXIMA_MAX_UNDO_TIME: x.toString()
-        } : {}
-      ) as Record<string, string>);
+      .apply(
+        (x) =>
+          (x
+            ? {
+                PROXIMA_MAX_UNDO_TIME: x.toString(),
+              }
+            : {}) as Record<string, string>
+      );
 
     this.streamingApp.deploy({
       name: app.id,
@@ -212,9 +219,16 @@ export class StreamingAppDeployer extends AppDeployerBase {
         if (gatewayParams.networks?.[network] !== undefined) {
           httpEndpoint = gatewayParams.networks[network].httpEndpoint;
           wssEndpoint = gatewayParams.networks[network].wssEndpoint;
-        } else {
-          httpEndpoint = gatewayParams.endpointTemplate.replace("{NETWORK}", network);
+        } else if (gatewayParams.endpointTemplate !== undefined) {
+          httpEndpoint = gatewayParams.endpointTemplate.replace(
+            "{NETWORK}",
+            network
+          );
           wssEndpoint = httpEndpoint.replace("https://", "wss://");
+        } else {
+          throw new Error(
+            `Can't find a blockchain gateway for network ${network}`
+          );
         }
         if (!evmNetworks.includes(network as any))
           throw new Error(`network ${network} is not supported`);
@@ -405,12 +419,15 @@ export class StreamingApp<
     if (!opts.input) this.input = {} as StreamRecord<TInputStream>;
     else if (typeof opts.input == "string")
       this.input = { default: opts.input } as StreamRecord<TInputStream>;
-    else this.input = (opts.input ?? {}) as unknown as StreamRecord<TInputStream>;
+    else
+      this.input = (opts.input ?? {}) as unknown as StreamRecord<TInputStream>;
 
     if (!opts.output) this.output = {} as StreamRecord<TOutputStream>;
     else if (typeof opts.output == "string")
       this.output = { default: opts.output } as StreamRecord<TOutputStream>;
-    else this.output = (opts.output ?? {}) as unknown as StreamRecord<TOutputStream>;
+    else
+      this.output = (opts.output ??
+        {}) as unknown as StreamRecord<TOutputStream>;
 
     // add versions to output streams
     this.output = mapLookup(
@@ -496,7 +513,9 @@ const evmNetworks = [
 ] as const;
 const nearNetworks = ["near-main"] as const;
 
-export type Network = typeof evmNetworks[number] | typeof nearNetworks[number];
+export type Network =
+  | (typeof evmNetworks)[number]
+  | (typeof nearNetworks)[number];
 
 export interface DeployedApp {
   name: string;
