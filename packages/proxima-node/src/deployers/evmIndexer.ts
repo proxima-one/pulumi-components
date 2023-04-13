@@ -10,6 +10,7 @@ import { strict as assert } from "assert";
 import { WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
 import { PasswordResolver } from "../helpers";
+import { Namespace } from "@pulumi/kubernetes/core/v1";
 
 export class EvmIndexerDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
@@ -36,7 +37,11 @@ export class EvmIndexerDeployer {
     };
 
     const db = pulumi.output(app.db).apply((db) => {
-      if (db.type == "import") return { endpoint: db.endpoint, name: db.name };
+      if (db.type == "import")
+        return {
+          endpoint: pulumi.output(db.endpoint),
+          name: pulumi.output(db.name),
+        };
 
       const mongo = this.mongoDeployer.deploy({
         name: app.name,
@@ -167,6 +172,7 @@ export class EvmIndexerDeployer {
       params: {
         connectionDetails: connectionDetails,
         publicConnectionDetails: publicConnectionDetails,
+        db: pulumi.output(db),
       },
     };
   }
@@ -223,6 +229,10 @@ export interface DeployedEvmIndexer {
 export interface EvmIndexerParams {
   connectionDetails: pulumi.Output<EvmIndexerConnectionDetails>;
   publicConnectionDetails?: pulumi.Output<EvmIndexerConnectionDetails>;
+  db: pulumi.Output<{
+    endpoint: string;
+    name: string;
+  }>;
 }
 
 export interface EvmIndexerConnectionDetails {
