@@ -21,11 +21,7 @@ export class BlockIndexerDeployer {
   }
 
   public deploy(app: BlockIndexer): DeployedBlockIndexer {
-    // if (!app.connection.http && !app.connection.wss) {
-    //   throw new Error(
-    //     "Invalid arguments: at least one argument of http.url or ws.url should be specified."
-    //   );
-    // }
+    const PORT = 50051;
     const passwords = new PasswordResolver();
 
     const auth = app.auth ?? {
@@ -69,25 +65,30 @@ export class BlockIndexerDeployer {
         },
         grpc: {
           host: "0.0.0.0",
-          port: 50051,
+          port: PORT,
           metricsPort: 2112,
           superUserToken: passwords.resolve(auth.password),
         },
         source: {
-          w3providers: app.connection.type == "legacy-db"
-            ? [{
-              name: "mongodb",
-              network: app.network,
-              uri: app.connection.uri,
-              database: app.connection.database,
-            }]
-            : [{
-              name: "chainstack",
-              network: app.network,
-              type: "ws",
-              http: app.connection.http,
-              wss: app.connection.wss,
-            }],
+          w3providers:
+            app.connection.type == "legacy-db"
+              ? [
+                  {
+                    name: "mongodb",
+                    network: app.network,
+                    uri: app.connection.uri,
+                    database: app.connection.database,
+                  },
+                ]
+              : [
+                  {
+                    name: "chainstack",
+                    network: app.network,
+                    type: "ws",
+                    http: app.connection.http,
+                    wss: app.connection.wss,
+                  },
+                ],
         },
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
@@ -97,37 +98,37 @@ export class BlockIndexerDeployer {
       configFiles: [{ path: "/app/config.yaml", content: config }],
       imageName: app.imageName,
       parts: {
-        // server: {
-        //   resources: app.server?.resources ?? "50m/2000m,300Mi/3Gi",
-        //   env: {},
-        //   args: ["server", "/app/config.yaml"],
-        //   deployStrategy: {
-        //     type: "Recreate",
-        //   },
-        //   metrics: {
-        //     labels: {
-        //       env: app.env ?? "dev",
-        //       app: app.name,
-        //       serviceType: "evm-indexer",
-        //     },
-        //   },
-        //   ports: [
-        //     {
-        //       name: "http-metrics",
-        //       containerPort: 2112,
-        //     },
-        //     {
-        //       name: "api",
-        //       containerPort: 50051,
-        //       ingress: app.publicHost
-        //         ? {
-        //             protocol: "grpc",
-        //             overrideHost: [app.publicHost],
-        //           }
-        //         : undefined,
-        //     },
-        //   ],
-        // },
+        server: {
+          resources: app.server?.resources ?? "50m/2000m,300Mi/3Gi",
+          env: {},
+          args: ["server", "/app/config.yaml"],
+          deployStrategy: {
+            type: "Recreate",
+          },
+          metrics: {
+            labels: {
+              env: app.env ?? "dev",
+              app: app.name,
+              serviceType: "evm-indexer",
+            },
+          },
+          ports: [
+            {
+              name: "http-metrics",
+              containerPort: 2112,
+            },
+            {
+              name: "api",
+              containerPort: PORT,
+              ingress: app.publicHost
+                ? {
+                    protocol: "grpc",
+                    overrideHost: [app.publicHost],
+                  }
+                : undefined,
+            },
+          ],
+        },
         indexer: {
           resources: app.indexer?.resources ?? "50m/2000m,300Mi/1Gi",
           env: {},
@@ -143,38 +144,38 @@ export class BlockIndexerDeployer {
       },
     });
 
-    // const serverPart = webService.parts["server"];
+    const serverPart = webService.parts["server"];
 
-    // const connectionDetails = pulumi
-    //   .all([serverPart.internalHost, passwords.resolve(auth.password)])
-    //   .apply(([host, pass]) => {
-    //     assert(host);
-    //     return {
-    //       authToken: pass,
-    //       endpoint: `${host}:${50051}`,
-    //     };
-    //   });
+    const connectionDetails = pulumi
+      .all([serverPart.internalHost, passwords.resolve(auth.password)])
+      .apply(([host, pass]) => {
+        assert(host);
+        return {
+          authToken: pass,
+          endpoint: `${host}:${PORT}`,
+        };
+      });
 
-    // const publicConnectionDetails = app.publicHost
-    //   ? pulumi
-    //       .all([
-    //         pulumi.Output.create(app.publicHost),
-    //         passwords.resolve(auth.password),
-    //       ])
-    //       .apply(([publicHost, pass]) => {
-    //         return {
-    //           authToken: pass,
-    //           endpoint: `${publicHost}:443`,
-    //         };
-    //       })
-    //   : undefined;
+    const publicConnectionDetails = app.publicHost
+      ? pulumi
+          .all([
+            pulumi.Output.create(app.publicHost),
+            passwords.resolve(auth.password),
+          ])
+          .apply(([publicHost, pass]) => {
+            return {
+              authToken: pass,
+              endpoint: `${publicHost}:443`,
+            };
+          })
+      : undefined;
 
     return {
       type: "block-indexer",
       name: app.name,
       params: {
-        // connectionDetails: connectionDetails,
-        // publicConnectionDetails: publicConnectionDetails,
+        connectionDetails: connectionDetails,
+        publicConnectionDetails: publicConnectionDetails,
       },
     };
   }
@@ -186,15 +187,17 @@ export interface BlockIndexer {
   auth?: {
     password: Password;
   };
-  connection: {
-    type: "node",
-    http: pulumi.Input<string>;
-    wss?: pulumi.Input<string>;
-  } | {
-    type: "legacy-db",
-    uri: pulumi.Input<string>;
-    database: pulumi.Input<string>;
-  };
+  connection:
+    | {
+        type: "node";
+        http: pulumi.Input<string>;
+        wss?: pulumi.Input<string>;
+      }
+    | {
+        type: "legacy-db";
+        uri: pulumi.Input<string>;
+        database: pulumi.Input<string>;
+      };
   indexer?: {
     resources?: pulumi.Input<ComputeResources>;
   };
@@ -215,7 +218,7 @@ export interface DeployedBlockIndexer {
 }
 
 export interface BlockIndexerParams {
-  connectionDetails?: pulumi.Output<BlockIndexerConnectionDetails>;
+  connectionDetails: pulumi.Output<BlockIndexerConnectionDetails>;
   publicConnectionDetails?: pulumi.Output<BlockIndexerConnectionDetails>;
 }
 
