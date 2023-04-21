@@ -77,7 +77,7 @@ export class StandaloneStreamDbDeployer {
         "stream-db": {
           configFiles: [{ path: "/app/config.yml", content: config }],
           resources: app.resources ?? "50m/2000m,300Mi/6Gi",
-          args: ["--config=/app/config.yml", ...(app.relayFrom ? ["--readonly"] : [])],
+          args: ["--config=/app/config.yml", ...((app.readonly ?? false) ? ["--readonly"] : [])],
           deployStrategy: { type: "Recreate" },
           metrics: {
             labels: {
@@ -176,6 +176,7 @@ export interface StandaloneStreamDb {
     >
   >;
   scale?: pulumi.Input<number>;
+  readonly?: boolean;
 }
 
 export interface DeployedStandaloneStreamDbParams {

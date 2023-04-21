@@ -13,7 +13,7 @@ import _, { parseInt } from "lodash";
 import { ComputeResources } from "@proxima-one/pulumi-k8s-base";
 
 export interface StreamingAppDeployParams extends DeployParams {
-  targetDb: { type: "import-kafka"; name: string };
+  targetDb: { type: "import-kafka" | "import-streamdb"; name: string };
   availableDbs?: pulumi.Input<pulumi.Input<StreamDb>[]>;
   stateManager?: { type: "import"; name: string };
   tuningArgs?: JsonObject;
@@ -57,7 +57,11 @@ export class StreamingAppDeployer extends AppDeployerBase {
     this.streamingApp = new k8sServices.StreamingAppDeployer(
       this.getDeployParams("streaming")
     );
-    this.targetDb = this.getKafkaStreamDbService(params.targetDb.name);
+    if (params.targetDb.type == "import-kafka") {
+      this.targetDb = this.getKafkaStreamDbService(params.targetDb.name);
+    } else { // if (params.targetDb.type == "import-streamdb")
+      this.targetDb = this.getStreamDbService(params.targetDb.name);
+    }
     this.stateManager = params.stateManager
       ? this.getStateManagerService(params.stateManager.name)
       : undefined;
@@ -302,6 +306,23 @@ export class StreamingAppDeployer extends AppDeployerBase {
                 },
               }
             : {}),
+        },
+      };
+    });
+  }
+
+  private getStreamDbService(
+    name: string
+  ): pulumi.Output<StreamingAppService> {
+    return this.requireService<any>(name, "stream-db").apply((params) => {
+      return {
+        name: name,
+        type: "streamdb",
+        params: {
+          type: "stream-db",
+          address: params.connectionDetails.endpoint,
+          connectionDetails: params.connectionDetails,
+          publicConnectionDetails: params.publicConnectionDetails ?? {},
         },
       };
     });
