@@ -55,11 +55,7 @@ export class BlockIndexerDeployer {
 
     const config = pulumi
       .all({
-        indexerRepo: {
-          uri: db.endpoint,
-          database: db.name,
-        },
-        serverRepo: {
+        db: {
           uri: db.endpoint,
           database: db.name,
         },
@@ -67,14 +63,14 @@ export class BlockIndexerDeployer {
           host: "0.0.0.0",
           port: PORT,
           metricsPort: 2112,
-          superUserToken: passwords.resolve(auth.password),
+          authToken: passwords.resolve(auth.password),
         },
         source: {
-          w3providers:
+          "block-providers":
             app.connection.type == "legacy-db"
               ? [
                   {
-                    name: "mongodb",
+                    type: "mongodb",
                     network: app.network,
                     uri: app.connection.uri,
                     database: app.connection.database,
@@ -82,9 +78,8 @@ export class BlockIndexerDeployer {
                 ]
               : [
                   {
-                    name: "chainstack",
-                    network: app.network,
                     type: "ws",
+                    network: app.network,
                     http: app.connection.http,
                     wss: app.connection.wss,
                   },
