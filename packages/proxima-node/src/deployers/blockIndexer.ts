@@ -1,7 +1,6 @@
 import {
   ComputeResources,
   ServiceDeployParameters,
-  Storage,
 } from "@proxima-one/pulumi-k8s-base";
 import * as pulumi from "@pulumi/pulumi";
 import { Password } from "../components/types";
@@ -9,10 +8,10 @@ import * as yaml from "js-yaml";
 import { strict as assert } from "assert";
 import { WebServiceDeployer } from "./webService";
 import { MongoDeployer } from "./mongo";
+import { DbSettings } from "./evmIndexer";
 import { PasswordResolver } from "../helpers";
-import { Namespace } from "@pulumi/kubernetes/core/v1";
 
-export class EvmIndexerDeployer {
+export class BlockIndexerDeployer {
   private readonly webServiceDeployer: WebServiceDeployer;
   private readonly mongoDeployer: MongoDeployer;
 
@@ -21,15 +20,8 @@ export class EvmIndexerDeployer {
     this.mongoDeployer = new MongoDeployer(params);
   }
 
-  public deploy(app: EvmIndexer): DeployedEvmIndexer {
-    if (!app.connection.http && !app.connection.wss) {
-      throw new Error(
-        "Invalid arguments: at least one argument of http.url or ws.url should be specified."
-      );
-    }
-    const imageName =
-      app.imageName ??
-      "quay.io/proxima.one/services:rpc-indexer-api-0.0.2-19a39c8";
+  public deploy(app: BlockIndexer): DeployedBlockIndexer {
+    const PORT = 50051;
     const passwords = new PasswordResolver();
 
     const auth = app.auth ?? {
@@ -37,11 +29,7 @@ export class EvmIndexerDeployer {
     };
 
     const db = pulumi.output(app.db).apply((db) => {
-      if (db.type == "import")
-        return {
-          endpoint: pulumi.output(db.endpoint),
-          name: pulumi.output(db.name),
-        };
+      if (db.type == "import") return { endpoint: db.endpoint, name: db.name };
 
       const mongo = this.mongoDeployer.deploy({
         name: app.name,
@@ -67,37 +55,48 @@ export class EvmIndexerDeployer {
 
     const config = pulumi
       .all({
-        storage: {
-          type: "MongoDB",
-          compress: "zlib",
+        db: {
           uri: db.endpoint,
           database: db.name,
         },
-        server: {
+        grpc: {
           host: "0.0.0.0",
-          port: 50052,
+          port: PORT,
           metricsPort: 2112,
-          superUserToken: passwords.resolve(auth.password),
+          authToken: passwords.resolve(auth.password),
         },
-        "rpc-endpoint": {
-          http: app.connection.http,
-          ws: app.connection.wss,
+        source: {
+          "block-providers":
+            app.connection.type == "legacy-db"
+              ? [
+                  {
+                    type: "mongodb",
+                    network: app.network,
+                    uri: app.connection.uri,
+                    database: app.connection.database,
+                  },
+                ]
+              : [
+                  {
+                    type: "ws",
+                    network: app.network,
+                    http: app.connection.http,
+                    wss: app.connection.wss,
+                  },
+                ],
         },
-        logging: true,
-        "goroutines-limit": app.indexer?.computeLimit ?? 20, // todo: don't set this option for server
-        network: app.network,
       })
       .apply((json) => yaml.dump(json, { indent: 2 }));
 
     const webService = this.webServiceDeployer.deploy({
       name: app.name,
       configFiles: [{ path: "/app/config.yaml", content: config }],
-      imageName: imageName,
+      imageName: app.imageName,
       parts: {
         server: {
           resources: app.server?.resources ?? "50m/2000m,300Mi/3Gi",
           env: {},
-          args: ["--config", "/app/config.yaml", "--server"],
+          args: ["server", "/app/config.yaml"],
           deployStrategy: {
             type: "Recreate",
           },
@@ -115,7 +114,7 @@ export class EvmIndexerDeployer {
             },
             {
               name: "api",
-              containerPort: 50052,
+              containerPort: PORT,
               ingress: app.publicHost
                 ? {
                     protocol: "grpc",
@@ -128,7 +127,7 @@ export class EvmIndexerDeployer {
         indexer: {
           resources: app.indexer?.resources ?? "50m/2000m,300Mi/1Gi",
           env: {},
-          args: ["--config", "/app/config.yaml", "--indexer"],
+          args: ["indexer", "/app/config.yaml"],
           metrics: {
             labels: {
               env: app.env ?? "dev",
@@ -148,7 +147,7 @@ export class EvmIndexerDeployer {
         assert(host);
         return {
           authToken: pass,
-          endpoint: `${host}:${50052}`,
+          endpoint: `${host}:${PORT}`,
         };
       });
 
@@ -167,75 +166,58 @@ export class EvmIndexerDeployer {
       : undefined;
 
     return {
-      type: "evm-indexer",
+      type: "block-indexer",
       name: app.name,
       params: {
         connectionDetails: connectionDetails,
         publicConnectionDetails: publicConnectionDetails,
-        db: pulumi.output(db),
       },
     };
   }
 }
 
-export interface EvmIndexer {
+export interface BlockIndexer {
   name: string;
   db: pulumi.Input<DbSettings>;
   auth?: {
     password: Password;
   };
-  connection: {
-    http?: pulumi.Input<string>;
-    wss?: pulumi.Input<string>;
-  };
+  connection:
+    | {
+        type: "node";
+        http: pulumi.Input<string>;
+        wss?: pulumi.Input<string>;
+      }
+    | {
+        type: "legacy-db";
+        uri: pulumi.Input<string>;
+        database: pulumi.Input<string>;
+      };
   indexer?: {
     resources?: pulumi.Input<ComputeResources>;
-    /*
-      Goroutines limit, default 20
-     */
-    computeLimit?: pulumi.Input<number>;
   };
   server?: {
     resources?: pulumi.Input<ComputeResources>;
   };
   publicHost?: pulumi.Input<string>;
-  imageName?: pulumi.Input<string>;
+  imageName: pulumi.Input<string>;
   env?: pulumi.Input<string>;
 
-  network?: pulumi.Input<string>;
+  network: pulumi.Input<string>;
 }
 
-export type DbSettings =
-  | { type: "import"; endpoint: string; name: string }
-  | {
-      type: "provision";
-      params: ProvisionMongoDbParams;
-    };
-
-export interface ProvisionMongoDbParams {
-  resource: ComputeResources;
-  storage: Storage;
-  webUI?: {
-    publicHost: pulumi.Input<string>;
-  };
-}
-
-export interface DeployedEvmIndexer {
-  type: "evm-indexer";
+export interface DeployedBlockIndexer {
+  type: "block-indexer";
   name: string;
-  params: EvmIndexerParams;
+  params: BlockIndexerParams;
 }
 
-export interface EvmIndexerParams {
-  connectionDetails: pulumi.Output<EvmIndexerConnectionDetails>;
-  publicConnectionDetails?: pulumi.Output<EvmIndexerConnectionDetails>;
-  db: pulumi.Output<{
-    endpoint: string;
-    name: string;
-  }>;
+export interface BlockIndexerParams {
+  connectionDetails: pulumi.Output<BlockIndexerConnectionDetails>;
+  publicConnectionDetails?: pulumi.Output<BlockIndexerConnectionDetails>;
 }
 
-export interface EvmIndexerConnectionDetails {
+export interface BlockIndexerConnectionDetails {
   endpoint: string;
   authToken: string;
 }
