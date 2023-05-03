@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.15.4...@proxima-one/pulumi-proxima-node@0.16.0) (2023-05-03)
+
+### Features
+
+- Add the new block indexer's deployer PRX-1270 ([#108](https://github.com/proxima-one/pulumi-components/issues/108)) ([b5406b7](https://github.com/proxima-one/pulumi-components/commit/b5406b79186b2aab55f3a94dab0c1ca103a330f9))
+
 ## [0.15.4](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.15.3...@proxima-one/pulumi-proxima-node@0.15.4) (2023-04-21)
 
 **Note:** Version bump only for package @proxima-one/pulumi-proxima-node
