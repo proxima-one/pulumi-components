@@ -60,6 +60,7 @@ export class KafkaProxyDeployer extends KubernetesServiceDeployer {
           resources: app.resources,
           env: {
             CONFIG_PATH: configPath,
+            ...(app.batchSize && { BATCH_SIZE: app.batchSize.toString() }),
           },
           ports: [
             {
@@ -125,6 +126,7 @@ export interface KafkaProxy {
   publicHost?: pulumi.Input<string>;
   resources?: pulumi.Input<ComputeResources>;
   connection: pulumi.Input<KafkaEnvConnectionDetails>;
+  batchSize?: number;
 }
 
 export interface KafkaProxyConnectionDetails {
