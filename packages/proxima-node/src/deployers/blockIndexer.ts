@@ -78,7 +78,7 @@ export class BlockIndexerDeployer {
                 ]
               : [
                   {
-                    type: "ws",
+                    type: "rpc",
                     network: app.network,
                     http: app.connection.http,
                     wss: app.connection.wss,
@@ -96,7 +96,7 @@ export class BlockIndexerDeployer {
         server: {
           resources: app.server?.resources ?? "50m/2000m,300Mi/3Gi",
           env: {},
-          args: ["server", "/app/config.yaml"],
+          args: ["--config", "/app/config.yaml", "server"],
           deployStrategy: {
             type: "Recreate",
           },
@@ -127,7 +127,7 @@ export class BlockIndexerDeployer {
         indexer: {
           resources: app.indexer?.resources ?? "50m/2000m,300Mi/1Gi",
           env: {},
-          args: ["indexer", "/app/config.yaml"],
+          args: ["--config", "/app/config.yaml", "indexer"],
           metrics: {
             labels: {
               env: app.env ?? "dev",
