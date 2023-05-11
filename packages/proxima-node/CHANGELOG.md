@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.17.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.16.1...@proxima-one/pulumi-proxima-node@0.17.0) (2023-05-11)
+
+### Features
+
+- Update block indexer config format ([321c647](https://github.com/proxima-one/pulumi-components/commit/321c647a3c80975f132b4e9e5cc185a2f9d5e7cd))
+
 ## [0.16.1](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-proxima-node@0.16.0...@proxima-one/pulumi-proxima-node@0.16.1) (2023-05-10)
 
 **Note:** Version bump only for package @proxima-one/pulumi-proxima-node
