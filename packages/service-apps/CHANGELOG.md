@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.4.6...@proxima-one/pulumi-service-apps@0.5.0) (2023-05-19)
+
+### Features
+
+- Add new indexer in app config ([d67ec6b](https://github.com/proxima-one/pulumi-components/commit/d67ec6ba799ee112c2f433cec7de50ea827ad7bb))
+
 ## [0.4.6](https://github.com/proxima-one/pulumi-components/compare/@proxima-one/pulumi-service-apps@0.4.5...@proxima-one/pulumi-service-apps@0.4.6) (2023-05-11)
 
 **Note:** Version bump only for package @proxima-one/pulumi-service-apps
