@@ -214,10 +214,14 @@ export class StreamingAppDeployer extends AppDeployerBase {
       [network, `${network}-indexer`],
       "evm-indexer"
     );
+    const blockIndexer = this.findAnyService(
+      [network, `block-indexer-${network}`],
+      "block-indexer"
+    );
 
     return pulumi
-      .all([blockchainGateway, evmIndexer])
-      .apply(([gatewayParams, evmIndexerParams]) => {
+      .all([blockchainGateway, evmIndexer, blockIndexer])
+      .apply(([gatewayParams, evmIndexerParams, blockIndexerParams]) => {
         let httpEndpoint: string;
         let wssEndpoint: string;
         if (gatewayParams.networks?.[network] !== undefined) {
@@ -247,6 +251,12 @@ export class StreamingAppDeployer extends AppDeployerBase {
               ? {
                   uri: evmIndexerParams.connectionDetails.endpoint,
                   authToken: evmIndexerParams.connectionDetails.authToken,
+                }
+              : undefined,
+            blockIndexer: blockIndexerParams
+              ? {
+                  uri: blockIndexerParams.connectionDetails.endpoint,
+                  authToken: blockIndexerParams.connectionDetails.authToken,
                 }
               : undefined,
             endpoints: {
