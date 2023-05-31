@@ -209,9 +209,9 @@ export interface BlockIndexer {
 
   network: {
     name: pulumi.Input<string>;
-    finalityDepth?: pulumi.Input<string>;
-    finalityDelay?: pulumi.Input<string>;
-    pollInterval?: pulumi.Input<string>;
+    finalityDepth?: pulumi.Input<number>;
+    finalityDelay?: pulumi.Input<number>;
+    pollInterval?: pulumi.Input<number>;
   }
 }
 
