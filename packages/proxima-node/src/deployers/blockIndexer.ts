@@ -65,13 +65,18 @@ export class BlockIndexerDeployer {
           metricsPort: 2112,
           authToken: passwords.resolve(auth.password),
         },
+        network: {
+          name: app.network.name,
+          "finality-depth": app.network.finalityDepth ?? 1000,
+          "finality-delay": app.network.finalityDelay ?? 600,
+          "poll-interval":  app.network.pollInterval ?? 2000,
+        },
         source: {
           "block-providers":
             app.connection.type == "legacy-db"
               ? [
                   {
                     type: "mongodb",
-                    network: app.network,
                     uri: app.connection.uri,
                     database: app.connection.database,
                   },
@@ -79,7 +84,6 @@ export class BlockIndexerDeployer {
               : [
                   {
                     type: "rpc",
-                    network: app.network,
                     http: app.connection.http,
                     wss: app.connection.wss,
                   },
@@ -203,7 +207,12 @@ export interface BlockIndexer {
   imageName: pulumi.Input<string>;
   env?: pulumi.Input<string>;
 
-  network: pulumi.Input<string>;
+  network: {
+    name: pulumi.Input<string>;
+    finalityDepth?: pulumi.Input<string>;
+    finalityDelay?: pulumi.Input<string>;
+    pollInterval?: pulumi.Input<string>;
+  }
 }
 
 export interface DeployedBlockIndexer {
