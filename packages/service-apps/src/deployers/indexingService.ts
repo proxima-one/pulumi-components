@@ -3,7 +3,7 @@ import { AppDeployerBase, DeployParams } from "./base";
 import * as k8sServices from "@proxima-one/pulumi-proxima-node";
 import {
   MongoDbStorage,
-  PvcRequest,
+  PvcRequest, ServiceAppPart,
   ServicePort,
 } from "@proxima-one/pulumi-proxima-node";
 import * as yaml from "js-yaml";
@@ -145,6 +145,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
                 },
               ],
               pvcs: app.pvcs,
+              deployStrategy: {type: "Recreate"}
             },
             server: {
               disabled: mode == "consumer-only" || mode == "fast-sync",
@@ -353,7 +354,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
         ];
         const resources = pulumi.output(app.resources);
 
-        const consumer = {
+        const consumer: ServiceAppPart = {
           disabled: mode == "server-only",
           args: ["./consumer"],
           resources: resources.apply((x) => x?.consumer),
@@ -364,6 +365,7 @@ export class IndexingServiceDeployer extends AppDeployerBase {
             .concat(commonPorts)
             .concat(app.type == "single-pod" ? serverPorts : []),
           pvcs: pvc ? [pvc] : [],
+          deployStrategy: {type: "Recreate"}
         };
         let server: any = { disabled: true };
         if (app.type == "consumer-server") {
